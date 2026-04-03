@@ -1,0 +1,39 @@
+{
+  "title": "Recipes",
+  "new": "New Recipe",
+  "servings": "Servings",
+  "prepTime": "Prep time",
+  "minutes": "min",
+  "tools": {
+    "title": "Required tools",
+    "oven": "Oven",
+    "stovetop": "Stovetop",
+    "pot": "Pot",
+    "pan": "Pan",
+    "bakingTray": "Baking tray",
+    "blender": "Blender"
+  },
+  "ingredients": {
+    "title": "Ingredients",
+    "add": "Add ingredient",
+    "note": "Note (e.g. chopped, crushed)",
+    "substitute": "Substitute",
+    "addToList": "Add to shopping list",
+    "addAllToList": "Add all to shopping list"
+  },
+  "steps": {
+    "title": "Instructions",
+    "add": "Add step",
+    "step": "Step {{number}}"
+  },
+  "addToShoppingList": {
+    "title": "Add to Shopping List",
+    "selectList": "Select list",
+    "createNew": "Create new list",
+    "alreadyInList": "{{name}} is already in the list ({{qty}} {{unit}}). Add more?",
+    "added": "Added to list!",
+    "forRecipe": "For recipe: {{name}}"
+  },
+  "empty": "No recipes yet",
+  "emptyHint": "Tap + to add your first recipe"
+}

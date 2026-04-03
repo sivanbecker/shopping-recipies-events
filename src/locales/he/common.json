@@ -1,0 +1,52 @@
+{
+  "app": {
+    "name": "קניות · מתכונים · אירועים"
+  },
+  "nav": {
+    "lists": "קניות",
+    "products": "מוצרים",
+    "recipes": "מתכונים",
+    "events": "אירועים",
+    "profile": "פרופיל"
+  },
+  "actions": {
+    "add": "הוספה",
+    "edit": "עריכה",
+    "delete": "מחיקה",
+    "save": "שמירה",
+    "cancel": "ביטול",
+    "confirm": "אישור",
+    "close": "סגירה",
+    "back": "חזרה",
+    "done": "סיום",
+    "create": "יצירה",
+    "search": "חיפוש"
+  },
+  "status": {
+    "loading": "טוען...",
+    "error": "שגיאה",
+    "empty": "אין תוצאות",
+    "saving": "שומר...",
+    "saved": "נשמר"
+  },
+  "auth": {
+    "login": "כניסה",
+    "register": "הרשמה",
+    "logout": "יציאה",
+    "email": "אימייל",
+    "password": "סיסמה",
+    "confirmPassword": "אישור סיסמה",
+    "name": "שם",
+    "forgotPassword": "שכחתי סיסמה",
+    "noAccount": "אין לך חשבון?",
+    "hasAccount": "כבר יש לך חשבון?",
+    "loginError": "פרטי הכניסה שגויים",
+    "registerError": "ההרשמה נכשלה"
+  },
+  "validation": {
+    "required": "שדה חובה",
+    "invalidEmail": "כתובת אימייל לא תקינה",
+    "passwordTooShort": "הסיסמה חייבת להכיל לפחות 8 תווים",
+    "passwordsMismatch": "הסיסמאות אינן תואמות"
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "lists": {
+    "title": "רשימות קניות",
+    "active": "פעילות",
+    "archived": "ארכיון",
+    "new": "רשימה חדשה",
+    "namePlaceholder": "שם הרשימה (ברירת מחדל: תאריך היום)",
+    "itemCount": "{{count}} פריטים",
+    "itemCount_one": "פריט אחד",
+    "markDone": "סמן כבוצע",
+    "reactivate": "הפעל מחדש",
+    "clone": "שכפל",
+    "empty": "אין רשימות פעילות",
+    "emptyHint": "לחץ על + כדי ליצור רשימה חדשה",
+    "missingList": "חוסרים"
+  },
+  "items": {
+    "add": "הוסף מוצר",
+    "searchPlaceholder": "חפש מוצר...",
+    "createNew": "צור מוצר חדש: \"{{name}}\"",
+    "inCart": "בעגלה",
+    "quantity": "כמות",
+    "unit": "יחידה",
+    "note": "הערה"
+  },
+  "shopping": {
+    "startShopping": "התחל קנייה",
+    "doneShopping": "סיימתי לקנות",
+    "progress": "{{done}} מתוך {{total}} פריטים"
+  },
+  "missing": {
+    "addMissing": "משהו חסר?",
+    "title": "חוסרים",
+    "convertToList": "המר לרשימת קניות",
+    "convertSelected": "המר נבחרים לרשימה"
+  },
+  "units": {
+    "units": "יחידות",
+    "grams": "גרם",
+    "kg": "ק\"ג",
+    "ml": "מ\"ל",
+    "liter": "ליטר",
+    "tsp": "כפית",
+    "tbsp": "כף",
+    "cup": "כוס",
+    "halfTsp": "חצי כפית",
+    "twoTbsp": "שתי כפות",
+    "thirdCup": "שליש כוס",
+    "halfCup": "חצי כוס",
+    "container": "גביע/אריז"
+  }
+}

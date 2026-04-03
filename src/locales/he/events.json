@@ -1,0 +1,44 @@
+{
+  "title": "אירועים",
+  "new": "אירוע חדש",
+  "countdown": {
+    "today": "היום!",
+    "tomorrow": "מחר",
+    "daysLeft": "עוד {{count}} ימים",
+    "daysAgo": "לפני {{count}} ימים"
+  },
+  "sections": {
+    "overview": "סקירה",
+    "guests": "אורחים",
+    "checklist": "צ'קליסט",
+    "recipes": "מתכונים",
+    "shopping": "קניות"
+  },
+  "guests": {
+    "add": "הוסף אורח",
+    "name": "שם",
+    "phone": "טלפון",
+    "needsTransport": "צריך הסעה?",
+    "transportBy": "מי מסיע?",
+    "brings": "מביא מה?",
+    "confirmed": "אישר הגעה",
+    "summary": "{{total}} מוזמנים, {{transport}} צריכים הסעה"
+  },
+  "checklist": {
+    "add": "הוסף פריט",
+    "types": {
+      "chair": "כיסאות",
+      "table": "שולחנות",
+      "other": "אחר"
+    },
+    "assignTo": "אחראי",
+    "arranged": "מסודר"
+  },
+  "shopping": {
+    "generateList": "צור רשימת קניות לאירוע",
+    "linkList": "קשר רשימה קיימת",
+    "listName": "קניות — {{eventName}}"
+  },
+  "empty": "אין אירועים מתוכננים",
+  "emptyHint": "לחץ על + כדי לתכנן אירוע"
+}

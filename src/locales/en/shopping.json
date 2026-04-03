@@ -1,0 +1,52 @@
+{
+  "lists": {
+    "title": "Shopping Lists",
+    "active": "Active",
+    "archived": "Archive",
+    "new": "New List",
+    "namePlaceholder": "List name (defaults to today's date)",
+    "itemCount": "{{count}} items",
+    "itemCount_one": "1 item",
+    "markDone": "Mark as Done",
+    "reactivate": "Reactivate",
+    "clone": "Clone",
+    "empty": "No active lists",
+    "emptyHint": "Tap + to create your first list",
+    "missingList": "Missing Items"
+  },
+  "items": {
+    "add": "Add item",
+    "searchPlaceholder": "Search products...",
+    "createNew": "Create new product: \"{{name}}\"",
+    "inCart": "In Cart",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "note": "Note"
+  },
+  "shopping": {
+    "startShopping": "Start Shopping",
+    "doneShopping": "Done Shopping",
+    "progress": "{{done}} of {{total}} items picked"
+  },
+  "missing": {
+    "addMissing": "Something missing?",
+    "title": "Missing Items",
+    "convertToList": "Convert to Shopping List",
+    "convertSelected": "Convert selected to list"
+  },
+  "units": {
+    "units": "units",
+    "grams": "g",
+    "kg": "kg",
+    "ml": "ml",
+    "liter": "liter",
+    "tsp": "tsp",
+    "tbsp": "tbsp",
+    "cup": "cup",
+    "halfTsp": "½ tsp",
+    "twoTbsp": "2 tbsp",
+    "thirdCup": "⅓ cup",
+    "halfCup": "½ cup",
+    "container": "container"
+  }
+}

@@ -1,0 +1,309 @@
+/**
+ * Supabase auto-generated types placeholder.
+ *
+ * After creating your Supabase project and running migrations, replace this file
+ * with the output of:
+ *   npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/types/database.ts
+ *
+ * For now we define a minimal type so the app compiles.
+ */
+export type Database = {
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string
+          user_id: string
+          display_name: string | null
+          preferred_language: 'he' | 'en'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          display_name?: string | null
+          preferred_language?: 'he' | 'en'
+          created_at?: string
+        }
+        Update: {
+          display_name?: string | null
+          preferred_language?: 'he' | 'en'
+        }
+      }
+      categories: {
+        Row: {
+          id: string
+          name_he: string
+          name_en: string
+          icon: string | null
+          color: string | null
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          name_he: string
+          name_en: string
+          icon?: string | null
+          color?: string | null
+          sort_order?: number
+        }
+        Update: {
+          name_he?: string
+          name_en?: string
+          icon?: string | null
+          color?: string | null
+          sort_order?: number
+        }
+      }
+      unit_types: {
+        Row: {
+          id: string
+          code: string
+          label_he: string
+          label_en: string
+          type: 'weight' | 'volume' | 'count' | 'cooking'
+        }
+        Insert: {
+          id?: string
+          code: string
+          label_he: string
+          label_en: string
+          type: 'weight' | 'volume' | 'count' | 'cooking'
+        }
+        Update: {
+          label_he?: string
+          label_en?: string
+        }
+      }
+      products: {
+        Row: {
+          id: string
+          name_he: string
+          name_en: string | null
+          category_id: string | null
+          default_unit_id: string | null
+          created_by: string
+          is_shared: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name_he: string
+          name_en?: string | null
+          category_id?: string | null
+          default_unit_id?: string | null
+          created_by: string
+          is_shared?: boolean
+          created_at?: string
+        }
+        Update: {
+          name_he?: string
+          name_en?: string | null
+          category_id?: string | null
+          default_unit_id?: string | null
+          is_shared?: boolean
+        }
+      }
+      shopping_lists: {
+        Row: {
+          id: string
+          name: string | null
+          owner_id: string
+          is_active: boolean
+          is_archived: boolean
+          is_missing_list: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name?: string | null
+          owner_id: string
+          is_active?: boolean
+          is_archived?: boolean
+          is_missing_list?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          name?: string | null
+          is_active?: boolean
+          is_archived?: boolean
+        }
+      }
+      shopping_items: {
+        Row: {
+          id: string
+          list_id: string
+          product_id: string
+          quantity: number
+          unit_id: string | null
+          is_checked: boolean
+          added_by: string
+          recipe_id: string | null
+          note: string | null
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          list_id: string
+          product_id: string
+          quantity?: number
+          unit_id?: string | null
+          is_checked?: boolean
+          added_by: string
+          recipe_id?: string | null
+          note?: string | null
+          sort_order?: number
+          created_at?: string
+        }
+        Update: {
+          quantity?: number
+          unit_id?: string | null
+          is_checked?: boolean
+          note?: string | null
+          sort_order?: number
+        }
+      }
+      recipes: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          servings: number
+          prep_time_minutes: number | null
+          tools: string[]
+          owner_id: string
+          is_shared: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          servings?: number
+          prep_time_minutes?: number | null
+          tools?: string[]
+          owner_id: string
+          is_shared?: boolean
+          created_at?: string
+        }
+        Update: {
+          title?: string
+          description?: string | null
+          servings?: number
+          prep_time_minutes?: number | null
+          tools?: string[]
+          is_shared?: boolean
+        }
+      }
+      recipe_ingredients: {
+        Row: {
+          id: string
+          recipe_id: string
+          product_id: string
+          quantity: number
+          unit_id: string | null
+          note: string | null
+          substitute_group_id: number | null
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          recipe_id: string
+          product_id: string
+          quantity?: number
+          unit_id?: string | null
+          note?: string | null
+          substitute_group_id?: number | null
+          sort_order?: number
+        }
+        Update: {
+          quantity?: number
+          unit_id?: string | null
+          note?: string | null
+          substitute_group_id?: number | null
+          sort_order?: number
+        }
+      }
+      recipe_steps: {
+        Row: {
+          id: string
+          recipe_id: string
+          step_number: number
+          description: string
+        }
+        Insert: {
+          id?: string
+          recipe_id: string
+          step_number: number
+          description: string
+        }
+        Update: {
+          step_number?: number
+          description?: string
+        }
+      }
+      events: {
+        Row: {
+          id: string
+          title: string
+          date: string
+          location: string | null
+          owner_id: string
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          date: string
+          location?: string | null
+          owner_id: string
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          title?: string
+          date?: string
+          location?: string | null
+          notes?: string | null
+        }
+      }
+      event_guests: {
+        Row: {
+          id: string
+          event_id: string
+          name: string
+          phone: string | null
+          needs_transport: boolean
+          transport_by_guest_id: string | null
+          confirmed: boolean
+          brings: string | null
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          name: string
+          phone?: string | null
+          needs_transport?: boolean
+          transport_by_guest_id?: string | null
+          confirmed?: boolean
+          brings?: string | null
+        }
+        Update: {
+          name?: string
+          phone?: string | null
+          needs_transport?: boolean
+          transport_by_guest_id?: string | null
+          confirmed?: boolean
+          brings?: string | null
+        }
+      }
+    }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+  }
+}

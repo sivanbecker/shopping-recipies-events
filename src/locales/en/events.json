@@ -1,0 +1,44 @@
+{
+  "title": "Events",
+  "new": "New Event",
+  "countdown": {
+    "today": "Today!",
+    "tomorrow": "Tomorrow",
+    "daysLeft": "{{count}} days to go",
+    "daysAgo": "{{count}} days ago"
+  },
+  "sections": {
+    "overview": "Overview",
+    "guests": "Guests",
+    "checklist": "Checklist",
+    "recipes": "Recipes",
+    "shopping": "Shopping"
+  },
+  "guests": {
+    "add": "Add guest",
+    "name": "Name",
+    "phone": "Phone",
+    "needsTransport": "Needs transport?",
+    "transportBy": "Who is driving?",
+    "brings": "What are they bringing?",
+    "confirmed": "Confirmed",
+    "summary": "{{total}} guests, {{transport}} need transport"
+  },
+  "checklist": {
+    "add": "Add item",
+    "types": {
+      "chair": "Chairs",
+      "table": "Tables",
+      "other": "Other"
+    },
+    "assignTo": "Assigned to",
+    "arranged": "Arranged"
+  },
+  "shopping": {
+    "generateList": "Generate Shopping List",
+    "linkList": "Link existing list",
+    "listName": "Shopping — {{eventName}}"
+  },
+  "empty": "No upcoming events",
+  "emptyHint": "Tap + to plan your first event"
+}

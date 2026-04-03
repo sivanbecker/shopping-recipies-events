@@ -1,0 +1,39 @@
+{
+  "title": "מתכונים",
+  "new": "מתכון חדש",
+  "servings": "מנות",
+  "prepTime": "זמן הכנה",
+  "minutes": "דקות",
+  "tools": {
+    "title": "כלים נדרשים",
+    "oven": "תנור",
+    "stovetop": "כיריים",
+    "pot": "סיר",
+    "pan": "מחבת",
+    "bakingTray": "תבנית",
+    "blender": "בלנדר"
+  },
+  "ingredients": {
+    "title": "מצרכים",
+    "add": "הוסף מצרך",
+    "note": "הערה (למשל: קצוץ, כתוש)",
+    "substitute": "תחליף",
+    "addToList": "הוסף לרשימת קניות",
+    "addAllToList": "הוסף את כל המצרכים לרשימה"
+  },
+  "steps": {
+    "title": "אופן הכנה",
+    "add": "הוסף שלב",
+    "step": "שלב {{number}}"
+  },
+  "addToShoppingList": {
+    "title": "הוסף לרשימת קניות",
+    "selectList": "בחר רשימה",
+    "createNew": "צור רשימה חדשה",
+    "alreadyInList": "{{name}} כבר ברשימה ({{qty}} {{unit}}). להוסיף עוד?",
+    "added": "נוסף לרשימה!",
+    "forRecipe": "עבור מתכון: {{name}}"
+  },
+  "empty": "אין מתכונים עדיין",
+  "emptyHint": "לחץ על + כדי להוסיף מתכון ראשון"
+}

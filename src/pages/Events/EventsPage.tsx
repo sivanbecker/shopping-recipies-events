@@ -1,0 +1,19 @@
+import { Calendar } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+
+// TODO Stage 6: Full implementation
+export default function EventsPage() {
+  const { t } = useTranslation('events')
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100">
+        <Calendar className="h-8 w-8 text-purple-600" />
+      </div>
+      <h2 className="text-xl font-bold text-gray-800">{t('title')}</h2>
+      <p className="mt-2 text-sm text-gray-500">{t('emptyHint')}</p>
+      <p className="mt-6 rounded-lg bg-amber-50 px-4 py-2 text-xs text-amber-700">
+        Stage 6 — Coming soon
+      </p>
+    </div>
+  )
+}

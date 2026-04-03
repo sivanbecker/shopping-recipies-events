@@ -1,0 +1,52 @@
+{
+  "app": {
+    "name": "Shopping · Recipes · Events"
+  },
+  "nav": {
+    "lists": "Lists",
+    "products": "Products",
+    "recipes": "Recipes",
+    "events": "Events",
+    "profile": "Profile"
+  },
+  "actions": {
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "back": "Back",
+    "done": "Done",
+    "create": "Create",
+    "search": "Search"
+  },
+  "status": {
+    "loading": "Loading...",
+    "error": "Error",
+    "empty": "No results",
+    "saving": "Saving...",
+    "saved": "Saved"
+  },
+  "auth": {
+    "login": "Log In",
+    "register": "Sign Up",
+    "logout": "Log Out",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "name": "Name",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginError": "Invalid email or password",
+    "registerError": "Registration failed"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "passwordsMismatch": "Passwords do not match"
+  }
+}
