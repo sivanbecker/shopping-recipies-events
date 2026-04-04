@@ -4,17 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import {
-  Plus,
-  Search,
-  Pencil,
-  Trash2,
-  Loader2,
-  Package,
-  Globe,
-  Lock,
-  X,
-} from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Loader2, Package, Globe, Lock, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
@@ -26,9 +16,7 @@ export function filterProducts(products: Product[], query: string): Product[] {
   if (!query.trim()) return products
   const q = query.toLowerCase()
   return products.filter(
-    p =>
-      p.name_he.toLowerCase().includes(q) ||
-      (p.name_en?.toLowerCase().includes(q) ?? false),
+    p => p.name_he.toLowerCase().includes(q) || (p.name_en?.toLowerCase().includes(q) ?? false)
   )
 }
 
@@ -253,7 +241,7 @@ function ProductDialog({
                       </option>
                     ))}
                   </optgroup>
-                ) : null,
+                ) : null
               )}
             </select>
           </div>
@@ -441,7 +429,7 @@ export default function ProductsPage() {
   // ── Filter + group ─────────────────────────────────────────────────────────
 
   const filtered = filterProducts(products, search).filter(p =>
-    selectedCategory ? p.category_id === selectedCategory : true,
+    selectedCategory ? p.category_id === selectedCategory : true
   )
 
   const grouped = categories
@@ -491,10 +479,7 @@ export default function ProductsPage() {
         </div>
 
         {/* Category filter chips */}
-        <div
-          className="mt-3 flex gap-2 overflow-x-auto pb-0.5"
-          style={{ scrollbarWidth: 'none' }}
-        >
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
           <button
             onClick={() => setSelectedCategory(null)}
             className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-all ${
@@ -514,9 +499,7 @@ export default function ProductsPage() {
                   ? 'text-white'
                   : 'bg-white text-gray-600 hover:bg-gray-100'
               }`}
-              style={
-                selectedCategory === c.id && c.color ? { backgroundColor: c.color } : {}
-              }
+              style={selectedCategory === c.id && c.color ? { backgroundColor: c.color } : {}}
             >
               {c.icon && <span>{c.icon}</span>}
               {lang === 'he' ? c.name_he : c.name_en}
