@@ -12,8 +12,8 @@ export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey)
 if (!isSupabaseConfigured) {
   console.warn(
     '[Supabase] Environment variables not set.\n' +
-    'Copy .env.example → .env.local and add your project URL + anon key.\n' +
-    'The app UI is still visible but login will not work until configured.'
+      'Copy .env.example → .env.local and add your project URL + anon key.\n' +
+      'The app UI is still visible but login will not work until configured.'
   )
 }
 

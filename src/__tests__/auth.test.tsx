@@ -86,8 +86,6 @@ describe('useAuth', () => {
 
   it('throws when used outside AuthProvider', () => {
     // Suppress the expected React error boundary console output
-    expect(() => renderHook(() => useAuth())).toThrow(
-      'useAuth must be used inside <AuthProvider>'
-    )
+    expect(() => renderHook(() => useAuth())).toThrow('useAuth must be used inside <AuthProvider>')
   })
 })

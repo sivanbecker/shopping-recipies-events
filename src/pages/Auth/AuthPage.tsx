@@ -83,8 +83,8 @@ export default function AuthPage() {
               <p className="font-semibold">Setup required</p>
               <p className="mt-0.5">
                 Copy <code className="rounded bg-amber-100 px-1">.env.example</code> →{' '}
-                <code className="rounded bg-amber-100 px-1">.env.local</code> and add your
-                Supabase URL + key to enable login.
+                <code className="rounded bg-amber-100 px-1">.env.local</code> and add your Supabase
+                URL + key to enable login.
               </p>
             </div>
           </div>
@@ -251,9 +251,7 @@ export default function AuthPage() {
                     className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
                   />
                   {registerForm.formState.errors.confirmPassword && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {t('validation.passwordsMismatch')}
-                    </p>
+                    <p className="mt-1 text-xs text-red-500">{t('validation.passwordsMismatch')}</p>
                   )}
                 </div>
 
