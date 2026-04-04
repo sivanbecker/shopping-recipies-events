@@ -34,5 +34,11 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 
 ---
 
+## Stage 2.5 — Bulk Import from CSV / JSON — Planned
+Frontend-only import button on `/products` page. Accepts `.csv` / `.json`, validates rows client-side (Zod), resolves category/unit names to UUIDs, batch-inserts via Supabase. Shows import summary dialog; skipped rows downloadable as CSV.
+See task 2.5 in [PROJECT_PLAN.md](PROJECT_PLAN.md) for full spec.
+
+---
+
 ## Stages 3–8 — Not started
 See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full plan.

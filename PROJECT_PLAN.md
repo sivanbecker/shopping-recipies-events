@@ -258,6 +258,22 @@ event_shopping_lists (id, event_id FK, list_id FK)
 - [ ] Products grid shows category color and icon
 - [ ] Category names adapt to current language (Hebrew or English)
 
+#### 2.5 — Bulk Import from CSV / JSON (Frontend)
+- [ ] Add an "Import" button to the `/products` page toolbar
+- [ ] File picker accepts `.csv` and `.json` files
+- [ ] CSV format:
+  ```
+  name_he,name_en,category,default_unit
+  חלב,Milk,Dairy,liter
+  לחם,Bread,Bakery,unit
+  ```
+- [ ] JSON format: array of objects with the same fields (`name_he`, `name_en`, `category`, `default_unit`)
+- [ ] Parse and validate rows client-side (Zod schema): require `name_he`, skip malformed rows with a warning
+- [ ] Resolve `category` name → `category_id` and `default_unit` code → `default_unit_id` by matching against data already fetched from Supabase
+- [ ] Batch `INSERT` via `supabase.from('products').insert([...])` — single call, all valid rows
+- [ ] Show import summary dialog after completion: "X imported, Y skipped" with reasons for skipped rows
+- [ ] Skipped rows can be downloaded as a CSV for correction and re-import
+
 #### Stage 2 Manual Testing Checklist
 - [ ] Add a product → it appears in the list immediately
 - [ ] Search bar filters results correctly in real time
@@ -266,10 +282,16 @@ event_shopping_lists (id, event_id FK, list_id FK)
 - [ ] Delete product → confirmation dialog appears, then product is removed
 - [ ] Hebrew product names display correctly (RTL context)
 - [ ] English names display correctly (LTR context)
+- [ ] Import a valid CSV → all rows appear in the product list
+- [ ] Import a CSV with some invalid rows → summary shows correct counts; skipped-rows CSV is downloadable
+- [ ] Import a JSON file → products appear correctly
+- [ ] Unknown category or unit in CSV → row is skipped with a clear reason
 
 #### Automated Tests
 - [ ] Unit: `ProductCard` renders with correct name and category
 - [ ] Unit: search filter function filters array correctly
+- [ ] Unit: CSV/JSON parser rejects rows missing `name_he` and returns structured error list
+- [ ] Unit: category/unit name → UUID resolution handles unknown values gracefully
 - [ ] E2E: Add product → verify it appears → delete it → verify it is gone
 
 ---
