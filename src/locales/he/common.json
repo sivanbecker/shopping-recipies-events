@@ -59,5 +59,36 @@
     "invalidEmail": "כתובת אימייל לא תקינה",
     "passwordTooShort": "הסיסמה חייבת להכיל לפחות 8 תווים",
     "passwordsMismatch": "הסיסמאות אינן תואמות"
+  },
+  "products": {
+    "title": "מוצרים",
+    "search": "חיפוש מוצרים...",
+    "allCategories": "הכל",
+    "addProduct": "הוסף מוצר",
+    "editProduct": "ערוך מוצר",
+    "deleteProduct": "מחק מוצר",
+    "nameHe": "שם בעברית",
+    "nameEn": "שם באנגלית (אופציונלי)",
+    "category": "קטגוריה",
+    "noCategory": "ללא קטגוריה",
+    "defaultUnit": "יחידת ברירת מחדל",
+    "noUnit": "ללא יחידה",
+    "shared": "משותף",
+    "personal": "אישי",
+    "noProducts": "לא נמצאו מוצרים",
+    "noProductsHint": "הוסף את המוצר הראשון שלך כדי להתחיל",
+    "confirmDelete": "האם אתה בטוח שברצונך למחוק את המוצר הזה? לא ניתן לבטל פעולה זו.",
+    "addSuccess": "המוצר נוסף",
+    "editSuccess": "המוצר עודכן",
+    "deleteSuccess": "המוצר נמחק",
+    "namePlaceholder": "לדוגמה: עגבנייה",
+    "nameEnPlaceholder": "לדוגמה: Tomato",
+    "uncategorized": "ללא קטגוריה",
+    "unitGroups": {
+      "count": "כמות",
+      "weight": "משקל",
+      "volume": "נפח",
+      "cooking": "מדידות בישול"
+    }
   }
 }
