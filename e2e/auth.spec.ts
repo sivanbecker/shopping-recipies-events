@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Auth page — smoke tests', () => {
   test('loads the login page at /auth', async ({ page }) => {
     await page.goto('/auth')
-    await expect(page.getByRole('button', { name: /Log In|כניסה/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Log In|כניסה/i }).first()).toBeVisible()
   })
 
   test('switches to register tab', async ({ page }) => {
@@ -29,7 +29,7 @@ test.describe('Auth page — smoke tests', () => {
     await page.goto('/auth')
     await page.getByRole('button', { name: /Forgot password|שכחתי סיסמה/i }).click()
     await page.getByRole('button', { name: /Back to Log In|חזרה לכניסה/i }).click()
-    await expect(page.getByRole('button', { name: /Log In|כניסה/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Log In|כניסה/i }).first()).toBeVisible()
   })
 })
 
