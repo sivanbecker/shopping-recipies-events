@@ -2,6 +2,9 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/types'
+import type { Database } from '@/types/database'
+
+type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
 
 interface AuthContextValue {
   user: User | null
@@ -9,6 +12,7 @@ interface AuthContextValue {
   profile: Profile | null
   loading: boolean
   signOut: () => Promise<void>
+  updateProfile: (updates: ProfileUpdate) => Promise<{ error: Error | null }>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -20,7 +24,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get the initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
@@ -31,7 +34,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })
 
-    // Listen for auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -57,7 +59,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
       setProfile(data)
     } catch {
-      // Profile may not exist yet — that's fine for new registrations
       setProfile(null)
     } finally {
       setLoading(false)
@@ -68,8 +69,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut()
   }
 
+  async function updateProfile(updates: ProfileUpdate): Promise<{ error: Error | null }> {
+    if (!user) return { error: new Error('Not authenticated') }
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('user_id', user.id)
+    if (!error) {
+      setProfile(prev => (prev ? { ...prev, ...updates } : prev))
+    }
+    return { error: error ? new Error(error.message) : null }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, signOut, updateProfile }}>
       {children}
     </AuthContext.Provider>
   )

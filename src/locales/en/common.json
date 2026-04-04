@@ -38,10 +38,21 @@
     "confirmPassword": "Confirm Password",
     "name": "Name",
     "forgotPassword": "Forgot password?",
+    "resetPasswordHint": "Enter your email address and we'll send you a link to reset your password.",
+    "sendResetLink": "Send Reset Link",
+    "resetPasswordSent": "Sent! Check your inbox.",
+    "backToLogin": "Back to Log In",
+    "registerSuccess": "Account created! Check your email to confirm.",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
     "loginError": "Invalid email or password",
     "registerError": "Registration failed"
+  },
+  "profile": {
+    "language": "Language",
+    "editName": "Edit name",
+    "namePlaceholder": "Your name",
+    "nameSaved": "Name saved"
   },
   "validation": {
     "required": "This field is required",

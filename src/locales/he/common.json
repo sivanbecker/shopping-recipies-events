@@ -38,10 +38,21 @@
     "confirmPassword": "אישור סיסמה",
     "name": "שם",
     "forgotPassword": "שכחתי סיסמה",
+    "resetPasswordHint": "הכנס את כתובת האימייל שלך ונשלח לך קישור לאיפוס הסיסמה.",
+    "sendResetLink": "שלח קישור לאיפוס",
+    "resetPasswordSent": "נשלח! בדוק את תיבת הדואר שלך.",
+    "backToLogin": "חזרה לכניסה",
+    "registerSuccess": "החשבון נוצר! בדוק את האימייל לאישור.",
     "noAccount": "אין לך חשבון?",
     "hasAccount": "כבר יש לך חשבון?",
     "loginError": "פרטי הכניסה שגויים",
     "registerError": "ההרשמה נכשלה"
+  },
+  "profile": {
+    "language": "שפה",
+    "editName": "עריכת שם",
+    "namePlaceholder": "השם שלך",
+    "nameSaved": "השם נשמר בהצלחה"
   },
   "validation": {
     "required": "שדה חובה",

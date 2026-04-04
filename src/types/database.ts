@@ -29,6 +29,7 @@ export type Database = {
           display_name?: string | null
           preferred_language?: 'he' | 'en'
         }
+        Relationships: []
       }
       categories: {
         Row: {
@@ -54,6 +55,7 @@ export type Database = {
           color?: string | null
           sort_order?: number
         }
+        Relationships: []
       }
       unit_types: {
         Row: {
@@ -74,6 +76,7 @@ export type Database = {
           label_he?: string
           label_en?: string
         }
+        Relationships: []
       }
       products: {
         Row: {
@@ -103,6 +106,7 @@ export type Database = {
           default_unit_id?: string | null
           is_shared?: boolean
         }
+        Relationships: []
       }
       shopping_lists: {
         Row: {
@@ -130,6 +134,7 @@ export type Database = {
           is_active?: boolean
           is_archived?: boolean
         }
+        Relationships: []
       }
       shopping_items: {
         Row: {
@@ -165,6 +170,7 @@ export type Database = {
           note?: string | null
           sort_order?: number
         }
+        Relationships: []
       }
       recipes: {
         Row: {
@@ -197,6 +203,7 @@ export type Database = {
           tools?: string[]
           is_shared?: boolean
         }
+        Relationships: []
       }
       recipe_ingredients: {
         Row: {
@@ -226,6 +233,7 @@ export type Database = {
           substitute_group_id?: number | null
           sort_order?: number
         }
+        Relationships: []
       }
       recipe_steps: {
         Row: {
@@ -244,6 +252,7 @@ export type Database = {
           step_number?: number
           description?: string
         }
+        Relationships: []
       }
       events: {
         Row: {
@@ -270,6 +279,7 @@ export type Database = {
           location?: string | null
           notes?: string | null
         }
+        Relationships: []
       }
       event_guests: {
         Row: {
@@ -300,6 +310,7 @@ export type Database = {
           confirmed?: boolean
           brings?: string | null
         }
+        Relationships: []
       }
     }
     Views: Record<string, never>

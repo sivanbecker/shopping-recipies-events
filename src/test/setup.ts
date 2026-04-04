@@ -3,6 +3,7 @@ import { vi } from 'vitest'
 
 // Mock Supabase — we don't want real DB calls in unit tests
 vi.mock('@/lib/supabase', () => ({
+  isSupabaseConfigured: true,
   supabase: {
     auth: {
       getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
