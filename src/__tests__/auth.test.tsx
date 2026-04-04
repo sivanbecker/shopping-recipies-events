@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, waitFor } from '@testing-library/react'
 import { loginSchema, registerSchema } from '@/lib/schemas'
-import { AuthProvider, useAuth } from '@/hooks/useAuth'
+import { AuthProvider } from '@/hooks/AuthProvider'
+import { useAuth } from '@/hooks/useAuth'
 
 // ─── Zod schema tests ──────────────────────────────────────────────────────
 

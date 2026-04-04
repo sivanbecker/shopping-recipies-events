@@ -7,7 +7,7 @@ import { Toaster } from 'sonner'
 
 import App from './App'
 import { queryClient } from './lib/queryClient'
-import { AuthProvider } from './hooks/useAuth'
+import { AuthProvider } from './hooks/AuthProvider'
 import './i18n'
 import './index.css'
 

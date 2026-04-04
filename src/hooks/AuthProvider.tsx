@@ -1,21 +1,11 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/types'
 import type { Database } from '@/types/database'
+import { AuthContext } from './AuthContext'
 
 type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
-
-interface AuthContextValue {
-  user: User | null
-  session: Session | null
-  profile: Profile | null
-  loading: boolean
-  signOut: () => Promise<void>
-  updateProfile: (updates: ProfileUpdate) => Promise<{ error: Error | null }>
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -52,11 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function fetchProfile(userId: string) {
     try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single()
+      const { data } = await supabase.from('profiles').select('*').eq('user_id', userId).single()
       setProfile(data)
     } catch {
       setProfile(null)
@@ -71,10 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function updateProfile(updates: ProfileUpdate): Promise<{ error: Error | null }> {
     if (!user) return { error: new Error('Not authenticated') }
-    const { error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('user_id', user.id)
+    const { error } = await supabase.from('profiles').update(updates).eq('user_id', user.id)
     if (!error) {
       setProfile(prev => (prev ? { ...prev, ...updates } : prev))
     }
@@ -86,10 +69,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth must be used inside <AuthProvider>')
-  return ctx
 }
