@@ -281,11 +281,10 @@ interface ImportSummary {
 
 interface ImportSummaryDialogProps {
   summary: ImportSummary
-  lang: 'he' | 'en'
   onClose: () => void
 }
 
-function ImportSummaryDialog({ summary, lang, onClose }: ImportSummaryDialogProps) {
+function ImportSummaryDialog({ summary, onClose }: ImportSummaryDialogProps) {
   const { t } = useTranslation()
 
   function downloadSkipped() {
@@ -338,8 +337,8 @@ function ImportSummaryDialog({ summary, lang, onClose }: ImportSummaryDialogProp
         {summary.skipped.length > 0 && (
           <div className="mt-3 max-h-32 overflow-y-auto rounded-xl border border-gray-100 bg-gray-50 p-3">
             {summary.skipped.map(s => (
-              <p key={s.rowIndex} className="text-xs text-gray-500" dir={lang === 'he' ? 'rtl' : 'ltr'}>
-                {t('products.import.reasons.missingNameHe')} — {t('status.loading').replace('...', '')} #{s.rowIndex}
+              <p key={s.rowIndex} className="text-xs text-gray-500">
+                #{s.rowIndex} — {t(`products.import.reasons.${s.reason}`, s.raw.name_he ?? '')}
               </p>
             ))}
           </div>
@@ -569,7 +568,7 @@ export default function ProductsPage() {
     const text = await file.text()
     let result
     try {
-      result = parseImportFile(text, ext as 'csv' | 'json', categories, unitTypes)
+      result = parseImportFile(text, ext as 'csv' | 'json', categories, unitTypes, products)
     } catch {
       toast.error(t('products.import.errorParsing'))
       return
@@ -787,7 +786,6 @@ export default function ProductsPage() {
       {importSummary && (
         <ImportSummaryDialog
           summary={importSummary}
-          lang={lang}
           onClose={() => setImportSummary(null)}
         />
       )}

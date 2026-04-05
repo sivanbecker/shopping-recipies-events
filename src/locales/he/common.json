@@ -99,7 +99,9 @@
       "errorParsing": "שגיאה בניתוח הקובץ",
       "unsupportedFormat": "פורמט קובץ לא נתמך (.csv או .json בלבד)",
       "reasons": {
-        "missingNameHe": "חסר שם בעברית"
+        "missingNameHe": "חסר שם בעברית",
+        "duplicateNameHe": "שם עברי כבר קיים",
+        "duplicateNameEn": "שם אנגלי כבר קיים"
       }
     }
   }

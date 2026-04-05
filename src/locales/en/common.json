@@ -99,7 +99,9 @@
       "errorParsing": "Error parsing file",
       "unsupportedFormat": "Unsupported format (.csv or .json only)",
       "reasons": {
-        "missingNameHe": "Missing Hebrew name"
+        "missingNameHe": "Missing Hebrew name",
+        "duplicateNameHe": "Hebrew name already exists",
+        "duplicateNameEn": "English name already exists"
       }
     }
   }

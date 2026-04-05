@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { Category, UnitType } from '@/types'
+import type { Category, UnitType, Product } from '@/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -108,7 +108,8 @@ export function parseImportFile(
   text: string,
   fileType: 'csv' | 'json',
   categories: Category[],
-  unitTypes: UnitType[]
+  unitTypes: UnitType[],
+  existingProducts: Product[] = []
 ): ParseResult {
   let rawRows: Record<string, string>[]
 
@@ -126,6 +127,12 @@ export function parseImportFile(
     })
   }
 
+  // Seed seen-sets with existing products so imports don't duplicate them
+  const seenHe = new Set(existingProducts.map(p => p.name_he.trim().toLowerCase()))
+  const seenEn = new Set(
+    existingProducts.flatMap(p => (p.name_en ? [p.name_en.trim().toLowerCase()] : []))
+  )
+
   const valid: ValidRow[] = []
   const skipped: SkippedRow[] = []
 
@@ -137,6 +144,21 @@ export function parseImportFile(
     }
 
     const { name_he, name_en, category, default_unit } = result.data
+    const heKey = name_he.trim().toLowerCase()
+    const enKey = name_en?.trim().toLowerCase()
+
+    if (seenHe.has(heKey)) {
+      skipped.push({ rowIndex: idx + 1, raw, reason: 'duplicateNameHe' })
+      return
+    }
+    if (enKey && seenEn.has(enKey)) {
+      skipped.push({ rowIndex: idx + 1, raw, reason: 'duplicateNameEn' })
+      return
+    }
+
+    // Mark as seen so later rows in the same file are also deduplicated
+    seenHe.add(heKey)
+    if (enKey) seenEn.add(enKey)
 
     valid.push({
       name_he,
