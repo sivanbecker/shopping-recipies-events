@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { filterProducts } from '@/pages/Products/ProductsPage'
+import { filterProducts } from '@/lib/filterProducts'
 import { parseImportFile, resolveCategory, resolveUnit } from '@/lib/importProducts'
 import type { Product } from '@/types'
 
