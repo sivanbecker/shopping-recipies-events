@@ -10,6 +10,14 @@ export interface ValidRow {
   default_unit_id: string | null
 }
 
+export interface UpdateRow {
+  id: string
+  name_he: string
+  name_en: string | null
+  category_id: string | null
+  default_unit_id: string | null
+}
+
 export interface SkippedRow {
   rowIndex: number
   raw: Record<string, string>
@@ -17,7 +25,8 @@ export interface SkippedRow {
 }
 
 export interface ParseResult {
-  valid: ValidRow[]
+  toInsert: ValidRow[]
+  toUpdate: UpdateRow[]
   skipped: SkippedRow[]
 }
 
@@ -109,7 +118,8 @@ export function parseImportFile(
   fileType: 'csv' | 'json',
   categories: Category[],
   unitTypes: UnitType[],
-  existingProducts: Product[] = []
+  existingProducts: Product[] = [],
+  currentUserId: string = ''
 ): ParseResult {
   let rawRows: Record<string, string>[]
 
@@ -127,13 +137,20 @@ export function parseImportFile(
     })
   }
 
-  // Seed seen-sets with existing products so imports don't duplicate them
-  const seenHe = new Set(existingProducts.map(p => p.name_he.trim().toLowerCase()))
-  const seenEn = new Set(
-    existingProducts.flatMap(p => (p.name_en ? [p.name_en.trim().toLowerCase()] : []))
-  )
+  // Index existing products by normalised name for O(1) lookup
+  const byHe = new Map<string, Product>()
+  const byEn = new Map<string, Product>()
+  for (const p of existingProducts) {
+    byHe.set(p.name_he.trim().toLowerCase(), p)
+    if (p.name_en) byEn.set(p.name_en.trim().toLowerCase(), p)
+  }
 
-  const valid: ValidRow[] = []
+  // Track names already processed in this file to catch within-file duplicates
+  const seenHeInFile = new Set<string>()
+  const seenEnInFile = new Set<string>()
+
+  const toInsert: ValidRow[] = []
+  const toUpdate: UpdateRow[] = []
   const skipped: SkippedRow[] = []
 
   rawRows.forEach((raw, idx) => {
@@ -146,29 +163,49 @@ export function parseImportFile(
     const { name_he, name_en, category, default_unit } = result.data
     const heKey = name_he.trim().toLowerCase()
     const enKey = name_en?.trim().toLowerCase()
+    const category_id = resolveCategory(category, categories)
+    const default_unit_id = resolveUnit(default_unit, unitTypes)
+    const name_en_clean = name_en?.trim() || null
 
-    if (seenHe.has(heKey)) {
+    // Within-file duplicate check (before DB lookup)
+    if (seenHeInFile.has(heKey)) {
       skipped.push({ rowIndex: idx + 1, raw, reason: 'duplicateNameHe' })
       return
     }
-    if (enKey && seenEn.has(enKey)) {
+    if (enKey && seenEnInFile.has(enKey)) {
       skipped.push({ rowIndex: idx + 1, raw, reason: 'duplicateNameEn' })
       return
     }
 
-    // Mark as seen so later rows in the same file are also deduplicated
-    seenHe.add(heKey)
-    if (enKey) seenEn.add(enKey)
+    // DB duplicate check — try to find existing product by He or En name
+    const existing = byHe.get(heKey) ?? (enKey ? byEn.get(enKey) : undefined)
 
-    valid.push({
-      name_he,
-      name_en: name_en?.trim() || null,
-      category_id: resolveCategory(category, categories),
-      default_unit_id: resolveUnit(default_unit, unitTypes),
-    })
+    if (existing) {
+      // Only the owner's own products can be updated via import
+      if (existing.created_by !== currentUserId) {
+        skipped.push({ rowIndex: idx + 1, raw, reason: 'duplicateNameHe' })
+        return
+      }
+
+      const unchanged =
+        existing.category_id === category_id &&
+        existing.default_unit_id === default_unit_id &&
+        (existing.name_en ?? null) === name_en_clean
+
+      if (unchanged) {
+        skipped.push({ rowIndex: idx + 1, raw, reason: 'unchanged' })
+      } else {
+        toUpdate.push({ id: existing.id, name_he, name_en: name_en_clean, category_id, default_unit_id })
+      }
+    } else {
+      toInsert.push({ name_he, name_en: name_en_clean, category_id, default_unit_id })
+    }
+
+    seenHeInFile.add(heKey)
+    if (enKey) seenEnInFile.add(enKey)
   })
 
-  return { valid, skipped }
+  return { toInsert, toUpdate, skipped }
 }
 
 // ─── Download skipped rows as CSV ─────────────────────────────────────────────

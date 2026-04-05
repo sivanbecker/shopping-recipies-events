@@ -93,7 +93,8 @@
     "import": {
       "button": "Import",
       "title": "Import Summary",
-      "imported": "Imported: {{count}}",
+      "inserted": "Added: {{count}}",
+      "updated": "Updated: {{count}}",
       "skipped": "Skipped: {{count}}",
       "downloadSkipped": "Download skipped rows",
       "errorParsing": "Error parsing file",
@@ -101,7 +102,8 @@
       "reasons": {
         "missingNameHe": "Missing Hebrew name",
         "duplicateNameHe": "Hebrew name already exists",
-        "duplicateNameEn": "English name already exists"
+        "duplicateNameEn": "English name already exists",
+        "unchanged": "No changes"
       }
     }
   }

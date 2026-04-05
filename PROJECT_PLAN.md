@@ -258,21 +258,52 @@ event_shopping_lists (id, event_id FK, list_id FK)
 - [ ] Products grid shows category color and icon
 - [ ] Category names adapt to current language (Hebrew or English)
 
-#### 2.5 — Bulk Import from CSV / JSON (Frontend)
-- [ ] Add an "Import" button to the `/products` page toolbar
-- [ ] File picker accepts `.csv` and `.json` files
-- [ ] CSV format:
-  ```
-  name_he,name_en,category,default_unit
-  חלב,Milk,Dairy,liter
-  לחם,Bread,Bakery,unit
-  ```
-- [ ] JSON format: array of objects with the same fields (`name_he`, `name_en`, `category`, `default_unit`)
-- [ ] Parse and validate rows client-side (Zod schema): require `name_he`, skip malformed rows with a warning
-- [ ] Resolve `category` name → `category_id` and `default_unit` code → `default_unit_id` by matching against data already fetched from Supabase
-- [ ] Batch `INSERT` via `supabase.from('products').insert([...])` — single call, all valid rows
-- [ ] Show import summary dialog after completion: "X imported, Y skipped" with reasons for skipped rows
-- [ ] Skipped rows can be downloaded as a CSV for correction and re-import
+#### 2.5 — Bulk Import from CSV / JSON (Frontend) — COMPLETE
+
+**File format**
+```
+name_he,name_en,category,default_unit
+חלב,Milk,Dairy,liter
+לחם,Bread,Bakery,unit
+```
+- Both `.csv` and `.json` (array of objects with same field names) are accepted.
+- `name_he` is required; all other fields are optional.
+- `category` matches by Hebrew name, English name (case-insensitive).
+- `default_unit` matches by code, English label, or Hebrew label (case-insensitive).
+- Unresolved category or unit → field stored as `null` (row is still imported).
+
+**Row classification**
+Each row is classified as one of:
+| Outcome | Reason key | Description |
+|---|---|---|
+| ✓ inserted | — | New product, all fields valid |
+| ✓ updated | — | Duplicate name but other props differ — updates existing product |
+| ✗ skipped | `missingNameHe` | `name_he` is empty or missing |
+| ✗ skipped | `unchanged` | Duplicate name and no props changed |
+
+**Upsert logic (duplicate name handling)**
+When a row's `name_he` (or `name_en`) matches an existing product:
+1. Compare the incoming `category_id` and `default_unit_id` against the existing product.
+2. If anything differs → `UPDATE` the existing product with the new values (upsert).
+3. If nothing differs → skip with reason `unchanged`.
+Only the owner's own products are updated; shared products are never mutated by import.
+
+**Result summary dialog**
+Shows counts: "X inserted, Y updated, Z skipped" with a per-row reason list for skipped rows.
+Skipped rows are downloadable as a CSV for correction and re-import.
+
+**Key files**
+- `src/lib/importProducts.ts` — `parseImportFile`, `resolveCategory`, `resolveUnit`, `skippedRowsToCsv`
+- `src/pages/Products/ProductsPage.tsx` — Import button, `handleFileChange`, `ImportSummaryDialog`
+- `src/locales/*/common.json` — `products.import.*` keys
+
+#### 2.6 — Bulk Import: Upsert on Duplicate — COMPLETE
+- [x] On duplicate `name_he` or `name_en`: compare incoming props against existing product
+- [x] If props differ → `UPDATE` existing product (`category_id`, `default_unit_id`, `name_en`)
+- [x] If props identical → skip with reason `unchanged`
+- [x] Only the owner's own products can be updated via import
+- [x] Summary dialog shows separate inserted / updated / skipped counts
+- [x] Unit tests cover: upsert triggers update, identical row is skipped, owner-only guard
 
 #### Stage 2 Manual Testing Checklist
 - [ ] Add a product → it appears in the list immediately
@@ -285,13 +316,20 @@ event_shopping_lists (id, event_id FK, list_id FK)
 - [ ] Import a valid CSV → all rows appear in the product list
 - [ ] Import a CSV with some invalid rows → summary shows correct counts; skipped-rows CSV is downloadable
 - [ ] Import a JSON file → products appear correctly
-- [ ] Unknown category or unit in CSV → row is skipped with a clear reason
+- [ ] Unknown category or unit in CSV → row is imported with null category/unit (not skipped)
+- [ ] Import a row matching an existing name with different category → existing product is updated
+- [ ] Import a row identical to an existing product → skipped with "unchanged" reason
 
 #### Automated Tests
-- [ ] Unit: `ProductCard` renders with correct name and category
-- [ ] Unit: search filter function filters array correctly
-- [ ] Unit: CSV/JSON parser rejects rows missing `name_he` and returns structured error list
-- [ ] Unit: category/unit name → UUID resolution handles unknown values gracefully
+- [x] Unit: search filter function filters correctly (empty, partial He/En, case-insensitive, null name)
+- [x] Unit: `ProductCard` name display logic (he/en, null fallback, owner detection)
+- [x] Unit: `resolveCategory` — Hebrew name, English name (case-insensitive), unknown, undefined
+- [x] Unit: `resolveUnit` — code, English label, Hebrew label, unknown, undefined
+- [x] Unit: `parseImportFile` CSV — valid row, missing `name_he`, unknown category/unit, mixed rows
+- [x] Unit: `parseImportFile` CSV — duplicate `name_he` in DB skipped, duplicate `name_en` in DB skipped
+- [x] Unit: `parseImportFile` — deduplication within the file itself
+- [x] Unit: `parseImportFile` JSON — valid array, non-array throws, missing `name_he`, duplicate
+- [x] Unit: upsert — duplicate with changed props triggers update, identical row skipped as `unchanged`
 - [ ] E2E: Add product → verify it appears → delete it → verify it is gone
 
 ---

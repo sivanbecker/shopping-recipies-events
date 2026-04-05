@@ -172,16 +172,17 @@ describe('resolveUnit', () => {
 
 // ─── parseImportFile ──────────────────────────────────────────────────────────
 
+const OWNER_ID = 'u1'
 const existingProducts = [
-  { id: 'p-1', name_he: 'חלב', name_en: 'Milk', category_id: 'cat-1', default_unit_id: 'unit-1', created_by: 'u1', is_shared: false, created_at: '' },
+  { id: 'p-1', name_he: 'חלב', name_en: 'Milk', category_id: 'cat-1', default_unit_id: 'unit-1', created_by: OWNER_ID, is_shared: false, created_at: '' },
 ]
 
 describe('parseImportFile — CSV', () => {
   it('parses a valid CSV and resolves IDs', () => {
     const csv = `name_he,name_en,category,default_unit\nגבינה,Cheese,Dairy,unit`
     const result = parseImportFile(csv, 'csv', mockCategories, mockUnits)
-    expect(result.valid).toHaveLength(1)
-    expect(result.valid[0]).toMatchObject({
+    expect(result.toInsert).toHaveLength(1)
+    expect(result.toInsert[0]).toMatchObject({
       name_he: 'גבינה',
       name_en: 'Cheese',
       category_id: 'cat-1',
@@ -193,7 +194,7 @@ describe('parseImportFile — CSV', () => {
   it('skips rows missing name_he', () => {
     const csv = `name_he,name_en,category,default_unit\n,Bread,Bakery,unit`
     const result = parseImportFile(csv, 'csv', mockCategories, mockUnits)
-    expect(result.valid).toHaveLength(0)
+    expect(result.toInsert).toHaveLength(0)
     expect(result.skipped).toHaveLength(1)
     expect(result.skipped[0].reason).toBe('missingNameHe')
   })
@@ -201,13 +202,13 @@ describe('parseImportFile — CSV', () => {
   it('leaves category_id null for unknown category', () => {
     const csv = `name_he,name_en,category,default_unit\nביצה,Egg,Unknown,unit`
     const result = parseImportFile(csv, 'csv', mockCategories, mockUnits)
-    expect(result.valid[0].category_id).toBeNull()
+    expect(result.toInsert[0].category_id).toBeNull()
   })
 
   it('leaves default_unit_id null for unknown unit', () => {
     const csv = `name_he,name_en,category,default_unit\nביצה,Egg,Dairy,tablespoon`
     const result = parseImportFile(csv, 'csv', mockCategories, mockUnits)
-    expect(result.valid[0].default_unit_id).toBeNull()
+    expect(result.toInsert[0].default_unit_id).toBeNull()
   })
 
   it('handles mixed valid and invalid rows', () => {
@@ -218,22 +219,8 @@ describe('parseImportFile — CSV', () => {
       'לחם,Bread,Bakery,unit',
     ].join('\n')
     const result = parseImportFile(csv, 'csv', mockCategories, mockUnits)
-    expect(result.valid).toHaveLength(2)
+    expect(result.toInsert).toHaveLength(2)
     expect(result.skipped).toHaveLength(1)
-  })
-
-  it('skips rows whose Hebrew name already exists in DB', () => {
-    const csv = `name_he,name_en,category,default_unit\nחלב,Milk2,Dairy,liter`
-    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits, existingProducts)
-    expect(result.valid).toHaveLength(0)
-    expect(result.skipped[0].reason).toBe('duplicateNameHe')
-  })
-
-  it('skips rows whose English name already exists in DB', () => {
-    const csv = `name_he,name_en,category,default_unit\nחלב חדש,Milk,Dairy,liter`
-    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits, existingProducts)
-    expect(result.valid).toHaveLength(0)
-    expect(result.skipped[0].reason).toBe('duplicateNameEn')
   })
 
   it('deduplicates within the file itself', () => {
@@ -243,7 +230,37 @@ describe('parseImportFile — CSV', () => {
       'גבינה,Cheese2,Dairy,unit',
     ].join('\n')
     const result = parseImportFile(csv, 'csv', mockCategories, mockUnits)
-    expect(result.valid).toHaveLength(1)
+    expect(result.toInsert).toHaveLength(1)
+    expect(result.skipped[0].reason).toBe('duplicateNameHe')
+  })
+
+  it('upserts (updates) when owner imports same name with different props', () => {
+    const csv = `name_he,name_en,category,default_unit\nחלב,Milk,Bakery,unit`
+    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits, existingProducts, OWNER_ID)
+    expect(result.toInsert).toHaveLength(0)
+    expect(result.toUpdate).toHaveLength(1)
+    expect(result.toUpdate[0]).toMatchObject({ id: 'p-1', category_id: 'cat-2', default_unit_id: 'unit-2' })
+    expect(result.skipped).toHaveLength(0)
+  })
+
+  it('skips as unchanged when owner imports identical row', () => {
+    const csv = `name_he,name_en,category,default_unit\nחלב,Milk,חלב,liter`
+    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits, existingProducts, OWNER_ID)
+    expect(result.toInsert).toHaveLength(0)
+    expect(result.toUpdate).toHaveLength(0)
+    expect(result.skipped[0].reason).toBe('unchanged')
+  })
+
+  it('skips as duplicateNameHe when non-owner imports same name', () => {
+    const csv = `name_he,name_en,category,default_unit\nחלב,Milk,Bakery,unit`
+    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits, existingProducts, 'other-user')
+    expect(result.toUpdate).toHaveLength(0)
+    expect(result.skipped[0].reason).toBe('duplicateNameHe')
+  })
+
+  it('skips rows whose English name matches a product owned by another user', () => {
+    const csv = `name_he,name_en,category,default_unit\nחלב חדש,Milk,Dairy,liter`
+    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits, existingProducts, 'other-user')
     expect(result.skipped[0].reason).toBe('duplicateNameHe')
   })
 })
@@ -252,8 +269,8 @@ describe('parseImportFile — JSON', () => {
   it('parses a valid JSON array', () => {
     const json = JSON.stringify([{ name_he: 'גבינה', name_en: 'Cheese', category: 'Dairy', default_unit: 'liter' }])
     const result = parseImportFile(json, 'json', mockCategories, mockUnits)
-    expect(result.valid).toHaveLength(1)
-    expect(result.valid[0].category_id).toBe('cat-1')
+    expect(result.toInsert).toHaveLength(1)
+    expect(result.toInsert[0].category_id).toBe('cat-1')
   })
 
   it('throws for non-array JSON', () => {
@@ -263,14 +280,14 @@ describe('parseImportFile — JSON', () => {
   it('skips JSON rows missing name_he', () => {
     const json = JSON.stringify([{ name_en: 'Milk', category: 'Dairy' }])
     const result = parseImportFile(json, 'json', mockCategories, mockUnits)
-    expect(result.valid).toHaveLength(0)
+    expect(result.toInsert).toHaveLength(0)
     expect(result.skipped).toHaveLength(1)
   })
 
-  it('skips JSON rows with duplicate Hebrew name', () => {
-    const json = JSON.stringify([{ name_he: 'חלב', name_en: 'NewMilk', category: 'Dairy' }])
-    const result = parseImportFile(json, 'json', mockCategories, mockUnits, existingProducts)
-    expect(result.valid).toHaveLength(0)
-    expect(result.skipped[0].reason).toBe('duplicateNameHe')
+  it('upserts JSON row with changed props when owner', () => {
+    const json = JSON.stringify([{ name_he: 'חלב', name_en: 'Milk', category: 'Bakery' }])
+    const result = parseImportFile(json, 'json', mockCategories, mockUnits, existingProducts, OWNER_ID)
+    expect(result.toUpdate).toHaveLength(1)
+    expect(result.toUpdate[0].category_id).toBe('cat-2')
   })
 })

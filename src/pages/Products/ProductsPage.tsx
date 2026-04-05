@@ -275,7 +275,8 @@ function ProductDialog({
 // ─── ImportSummaryDialog ──────────────────────────────────────────────────────
 
 interface ImportSummary {
-  importedCount: number
+  insertedCount: number
+  updatedCount: number
   skipped: SkippedRow[]
 }
 
@@ -320,9 +321,18 @@ function ImportSummaryDialog({ summary, onClose }: ImportSummaryDialogProps) {
           <div className="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3">
             <span className="text-lg">✓</span>
             <span className="text-sm font-medium text-green-700">
-              {t('products.import.imported', { count: summary.importedCount })}
+              {t('products.import.inserted', { count: summary.insertedCount })}
             </span>
           </div>
+
+          {summary.updatedCount > 0 && (
+            <div className="flex items-center gap-2 rounded-xl bg-blue-50 px-4 py-3">
+              <span className="text-lg">↻</span>
+              <span className="text-sm font-medium text-blue-700">
+                {t('products.import.updated', { count: summary.updatedCount })}
+              </span>
+            </div>
+          )}
 
           {summary.skipped.length > 0 && (
             <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3">
@@ -542,11 +552,20 @@ export default function ProductsPage() {
   // ── Import mutation ────────────────────────────────────────────────────────
 
   const importMutation = useMutation({
-    mutationFn: async (rows: { name_he: string; name_en: string | null; category_id: string | null; default_unit_id: string | null }[]) => {
-      const { error } = await supabase.from('products').insert(
-        rows.map(r => ({ ...r, created_by: user!.id, is_shared: false }))
-      )
-      if (error) throw error
+    mutationFn: async (result: Awaited<ReturnType<typeof parseImportFile>>) => {
+      if (result.toInsert.length > 0) {
+        const { error } = await supabase.from('products').insert(
+          result.toInsert.map(r => ({ ...r, created_by: user!.id, is_shared: false }))
+        )
+        if (error) throw error
+      }
+      for (const r of result.toUpdate) {
+        const { error } = await supabase
+          .from('products')
+          .update({ name_en: r.name_en, category_id: r.category_id, default_unit_id: r.default_unit_id })
+          .eq('id', r.id)
+        if (error) throw error
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['products'] })
@@ -568,17 +587,21 @@ export default function ProductsPage() {
     const text = await file.text()
     let result
     try {
-      result = parseImportFile(text, ext as 'csv' | 'json', categories, unitTypes, products)
+      result = parseImportFile(text, ext as 'csv' | 'json', categories, unitTypes, products, user!.id)
     } catch {
       toast.error(t('products.import.errorParsing'))
       return
     }
 
-    if (result.valid.length > 0) {
-      await importMutation.mutateAsync(result.valid)
+    if (result.toInsert.length > 0 || result.toUpdate.length > 0) {
+      await importMutation.mutateAsync(result)
     }
 
-    setImportSummary({ importedCount: result.valid.length, skipped: result.skipped })
+    setImportSummary({
+      insertedCount: result.toInsert.length,
+      updatedCount: result.toUpdate.length,
+      skipped: result.skipped,
+    })
   }
 
   // ── Handlers ───────────────────────────────────────────────────────────────
