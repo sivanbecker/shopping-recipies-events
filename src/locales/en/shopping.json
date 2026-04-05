@@ -12,7 +12,13 @@
     "clone": "Clone",
     "empty": "No active lists",
     "emptyHint": "Tap + to create your first list",
-    "missingList": "Missing Items"
+    "emptyArchive": "No archived lists",
+    "missingList": "Missing Items",
+    "showArchived": "Show archived",
+    "hideArchived": "Hide archived",
+    "create": "Create",
+    "cancel": "Cancel",
+    "deleteConfirm": "Delete list \"{{name}}\"?"
   },
   "items": {
     "add": "Add item",

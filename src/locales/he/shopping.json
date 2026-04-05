@@ -12,7 +12,13 @@
     "clone": "שכפל",
     "empty": "אין רשימות פעילות",
     "emptyHint": "לחץ על + כדי ליצור רשימה חדשה",
-    "missingList": "חוסרים"
+    "emptyArchive": "אין רשימות בארכיון",
+    "missingList": "חוסרים",
+    "showArchived": "הצג ארכיון",
+    "hideArchived": "הסתר ארכיון",
+    "create": "צור",
+    "cancel": "ביטול",
+    "deleteConfirm": "למחוק את הרשימה \"{{name}}\"?"
   },
   "items": {
     "add": "הוסף מוצר",
