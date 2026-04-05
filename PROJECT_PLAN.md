@@ -305,6 +305,16 @@ Skipped rows are downloadable as a CSV for correction and re-import.
 - [x] Summary dialog shows separate inserted / updated / skipped counts
 - [x] Unit tests cover: upsert triggers update, identical row is skipped, owner-only guard
 
+#### 2.7 — Add Product to Shopping List (from Products Page)
+- [ ] Each product card on `/products` has an "Add to list" icon button (`ListPlus`)
+- [ ] Tapping it opens a bottom sheet with:
+  - List of the user's active (non-archived) shopping lists
+  - Quantity stepper (count units) or free input (weight/volume) pre-set to 1
+  - Unit chips filtered to the product's unit category
+  - "New List" option that creates a new active list on the fly
+- [ ] Selecting a list upserts: bumps quantity if the product is already in that list (unchecked), otherwise inserts it
+- [ ] Toast confirms "Added to [list name]" with a tappable link to navigate to that list
+
 #### Stage 2 Manual Testing Checklist
 - [ ] Add a product → it appears in the list immediately
 - [ ] Search bar filters results correctly in real time
