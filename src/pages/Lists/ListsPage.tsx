@@ -45,9 +45,7 @@ function ListCard({ list, lang }: ListCardProps) {
     >
       <div className="flex min-w-0 flex-col gap-0.5">
         <span className="truncate font-semibold text-gray-800">{name}</span>
-        <span className="text-xs text-gray-400">
-          {t('lists.itemCount', { count })}
-        </span>
+        <span className="text-xs text-gray-400">{t('lists.itemCount', { count })}</span>
       </div>
 
       {list.is_missing_list && (
@@ -97,7 +95,7 @@ function NewListDialog({ onClose }: NewListDialogProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
+      onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div className="w-full max-w-md rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl">
         <h2 className="mb-4 text-lg font-bold text-gray-800">{t('lists.new')}</h2>
@@ -105,10 +103,10 @@ function NewListDialog({ onClose }: NewListDialogProps) {
         <input
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={e => setName(e.target.value)}
           placeholder={t('lists.namePlaceholder')}
           className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
-          onKeyDown={(e) => {
+          onKeyDown={e => {
             if (e.key === 'Enter') createMutation.mutate(name)
             if (e.key === 'Escape') onClose()
           }}
@@ -197,7 +195,7 @@ export default function ListsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {activeLists.map((list) => (
+          {activeLists.map(list => (
             <ListCard key={list.id} list={list} lang={lang} />
           ))}
         </div>
@@ -205,7 +203,7 @@ export default function ListsPage() {
 
       {/* Archived section toggle */}
       <button
-        onClick={() => setShowArchived((v) => !v)}
+        onClick={() => setShowArchived(v => !v)}
         className="flex w-full items-center justify-between rounded-xl px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-100"
       >
         <span className="flex items-center gap-1.5">
@@ -229,7 +227,7 @@ export default function ListsPage() {
           ) : archivedLists.length === 0 ? (
             <p className="py-4 text-center text-sm text-gray-400">{t('lists.emptyArchive')}</p>
           ) : (
-            archivedLists.map((list) => <ListCard key={list.id} list={list} lang={lang} />)
+            archivedLists.map(list => <ListCard key={list.id} list={list} lang={lang} />)
           )}
         </div>
       )}
