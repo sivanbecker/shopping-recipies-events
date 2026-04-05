@@ -12,18 +12,18 @@ import type { ShoppingList } from '@/types'
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type ListWithCount = ShoppingList & {
-  shopping_items: [{ count: number }]
+  shopping_items: { id: string }[]
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function itemCount(list: ListWithCount): number {
-  return list.shopping_items?.[0]?.count ?? 0
+  return list.shopping_items?.length ?? 0
 }
 
 function listDisplayName(list: ShoppingList, locale: string): string {
   if (list.name) return list.name
-  return format(new Date(list.created_at), locale === 'he' ? 'dd/MM/yyyy' : 'MMM d, yyyy')
+  return format(new Date(list.created_at), locale.startsWith('he') ? 'dd/MM/yyyy' : 'MMM d, yyyy')
 }
 
 // ─── ListCard ─────────────────────────────────────────────────────────────────
@@ -148,7 +148,7 @@ export default function ListsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('shopping_lists')
-        .select('*, shopping_items(count)')
+        .select('*, shopping_items(id)')
         .eq('owner_id', user!.id)
         .eq('is_archived', false)
         .order('created_at', { ascending: false })
@@ -163,7 +163,7 @@ export default function ListsPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('shopping_lists')
-        .select('*, shopping_items(count)')
+        .select('*, shopping_items(id)')
         .eq('owner_id', user!.id)
         .eq('is_archived', true)
         .order('updated_at', { ascending: false })
