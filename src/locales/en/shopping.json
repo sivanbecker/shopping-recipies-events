@@ -18,7 +18,8 @@
     "hideArchived": "Hide archived",
     "create": "Create",
     "cancel": "Cancel",
-    "deleteConfirm": "Delete list \"{{name}}\"?"
+    "deleteConfirm": "Delete list \"{{name}}\"?",
+    "notFound": "List not found"
   },
   "items": {
     "add": "Add item",
@@ -27,7 +28,9 @@
     "inCart": "In Cart",
     "quantity": "Quantity",
     "unit": "Unit",
-    "note": "Note"
+    "note": "Note",
+    "empty": "No items yet",
+    "emptyHint": "Tap + to add your first item"
   },
   "shopping": {
     "startShopping": "Start Shopping",

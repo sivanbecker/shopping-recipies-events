@@ -18,7 +18,8 @@
     "hideArchived": "הסתר ארכיון",
     "create": "צור",
     "cancel": "ביטול",
-    "deleteConfirm": "למחוק את הרשימה \"{{name}}\"?"
+    "deleteConfirm": "למחוק את הרשימה \"{{name}}\"?",
+    "notFound": "רשימה לא נמצאה"
   },
   "items": {
     "add": "הוסף מוצר",
@@ -27,7 +28,9 @@
     "inCart": "בעגלה",
     "quantity": "כמות",
     "unit": "יחידה",
-    "note": "הערה"
+    "note": "הערה",
+    "empty": "אין פריטים עדיין",
+    "emptyHint": "לחץ על + להוסיף פריט ראשון"
   },
   "shopping": {
     "startShopping": "התחל קנייה",
