@@ -30,7 +30,10 @@
     "unit": "Unit",
     "note": "Note",
     "empty": "No items yet",
-    "emptyHint": "Tap + to add your first item"
+    "emptyHint": "Tap + to add your first item",
+    "confirm": "Add to List",
+    "noUnit": "No unit",
+    "inList": "In list: {{qty}}"
   },
   "shopping": {
     "startShopping": "Start Shopping",
