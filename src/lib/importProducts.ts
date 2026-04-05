@@ -45,9 +45,8 @@ export function resolveCategory(name: string | undefined, categories: Category[]
   if (!name?.trim()) return null
   const lower = name.trim().toLowerCase()
   return (
-    categories.find(
-      c => c.name_he === name.trim() || c.name_en?.toLowerCase() === lower
-    )?.id ?? null
+    categories.find(c => c.name_he === name.trim() || c.name_en?.toLowerCase() === lower)?.id ??
+    null
   )
 }
 
@@ -195,7 +194,13 @@ export function parseImportFile(
       if (unchanged) {
         skipped.push({ rowIndex: idx + 1, raw, reason: 'unchanged' })
       } else {
-        toUpdate.push({ id: existing.id, name_he, name_en: name_en_clean, category_id, default_unit_id })
+        toUpdate.push({
+          id: existing.id,
+          name_he,
+          name_en: name_en_clean,
+          category_id,
+          default_unit_id,
+        })
       }
     } else {
       toInsert.push({ name_he, name_en: name_en_clean, category_id, default_unit_id })

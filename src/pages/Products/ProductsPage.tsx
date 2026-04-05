@@ -4,7 +4,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus, Search, Pencil, Trash2, Loader2, Package, Globe, Lock, X, Upload, Download } from 'lucide-react'
+import {
+  Plus,
+  Search,
+  Pencil,
+  Trash2,
+  Loader2,
+  Package,
+  Globe,
+  Lock,
+  X,
+  Upload,
+  Download,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
@@ -554,15 +566,19 @@ export default function ProductsPage() {
   const importMutation = useMutation({
     mutationFn: async (result: Awaited<ReturnType<typeof parseImportFile>>) => {
       if (result.toInsert.length > 0) {
-        const { error } = await supabase.from('products').insert(
-          result.toInsert.map(r => ({ ...r, created_by: user!.id, is_shared: false }))
-        )
+        const { error } = await supabase
+          .from('products')
+          .insert(result.toInsert.map(r => ({ ...r, created_by: user!.id, is_shared: false })))
         if (error) throw error
       }
       for (const r of result.toUpdate) {
         const { error } = await supabase
           .from('products')
-          .update({ name_en: r.name_en, category_id: r.category_id, default_unit_id: r.default_unit_id })
+          .update({
+            name_en: r.name_en,
+            category_id: r.category_id,
+            default_unit_id: r.default_unit_id,
+          })
           .eq('id', r.id)
         if (error) throw error
       }
@@ -587,7 +603,14 @@ export default function ProductsPage() {
     const text = await file.text()
     let result
     try {
-      result = parseImportFile(text, ext as 'csv' | 'json', categories, unitTypes, products, user!.id)
+      result = parseImportFile(
+        text,
+        ext as 'csv' | 'json',
+        categories,
+        unitTypes,
+        products,
+        user!.id
+      )
     } catch {
       toast.error(t('products.import.errorParsing'))
       return
@@ -807,10 +830,7 @@ export default function ProductsPage() {
 
       {/* Import summary */}
       {importSummary && (
-        <ImportSummaryDialog
-          summary={importSummary}
-          onClose={() => setImportSummary(null)}
-        />
+        <ImportSummaryDialog summary={importSummary} onClose={() => setImportSummary(null)} />
       )}
     </div>
   )

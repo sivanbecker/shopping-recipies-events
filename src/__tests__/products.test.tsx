@@ -174,7 +174,16 @@ describe('resolveUnit', () => {
 
 const OWNER_ID = 'u1'
 const existingProducts = [
-  { id: 'p-1', name_he: 'חלב', name_en: 'Milk', category_id: 'cat-1', default_unit_id: 'unit-1', created_by: OWNER_ID, is_shared: false, created_at: '' },
+  {
+    id: 'p-1',
+    name_he: 'חלב',
+    name_en: 'Milk',
+    category_id: 'cat-1',
+    default_unit_id: 'unit-1',
+    created_by: OWNER_ID,
+    is_shared: false,
+    created_at: '',
+  },
 ]
 
 describe('parseImportFile — CSV', () => {
@@ -236,16 +245,34 @@ describe('parseImportFile — CSV', () => {
 
   it('upserts (updates) when owner imports same name with different props', () => {
     const csv = `name_he,name_en,category,default_unit\nחלב,Milk,Bakery,unit`
-    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits, existingProducts, OWNER_ID)
+    const result = parseImportFile(
+      csv,
+      'csv',
+      mockCategories,
+      mockUnits,
+      existingProducts,
+      OWNER_ID
+    )
     expect(result.toInsert).toHaveLength(0)
     expect(result.toUpdate).toHaveLength(1)
-    expect(result.toUpdate[0]).toMatchObject({ id: 'p-1', category_id: 'cat-2', default_unit_id: 'unit-2' })
+    expect(result.toUpdate[0]).toMatchObject({
+      id: 'p-1',
+      category_id: 'cat-2',
+      default_unit_id: 'unit-2',
+    })
     expect(result.skipped).toHaveLength(0)
   })
 
   it('skips as unchanged when owner imports identical row', () => {
     const csv = `name_he,name_en,category,default_unit\nחלב,Milk,חלב,liter`
-    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits, existingProducts, OWNER_ID)
+    const result = parseImportFile(
+      csv,
+      'csv',
+      mockCategories,
+      mockUnits,
+      existingProducts,
+      OWNER_ID
+    )
     expect(result.toInsert).toHaveLength(0)
     expect(result.toUpdate).toHaveLength(0)
     expect(result.skipped[0].reason).toBe('unchanged')
@@ -253,21 +280,37 @@ describe('parseImportFile — CSV', () => {
 
   it('skips as duplicateNameHe when non-owner imports same name', () => {
     const csv = `name_he,name_en,category,default_unit\nחלב,Milk,Bakery,unit`
-    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits, existingProducts, 'other-user')
+    const result = parseImportFile(
+      csv,
+      'csv',
+      mockCategories,
+      mockUnits,
+      existingProducts,
+      'other-user'
+    )
     expect(result.toUpdate).toHaveLength(0)
     expect(result.skipped[0].reason).toBe('duplicateNameHe')
   })
 
   it('skips rows whose English name matches a product owned by another user', () => {
     const csv = `name_he,name_en,category,default_unit\nחלב חדש,Milk,Dairy,liter`
-    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits, existingProducts, 'other-user')
+    const result = parseImportFile(
+      csv,
+      'csv',
+      mockCategories,
+      mockUnits,
+      existingProducts,
+      'other-user'
+    )
     expect(result.skipped[0].reason).toBe('duplicateNameHe')
   })
 })
 
 describe('parseImportFile — JSON', () => {
   it('parses a valid JSON array', () => {
-    const json = JSON.stringify([{ name_he: 'גבינה', name_en: 'Cheese', category: 'Dairy', default_unit: 'liter' }])
+    const json = JSON.stringify([
+      { name_he: 'גבינה', name_en: 'Cheese', category: 'Dairy', default_unit: 'liter' },
+    ])
     const result = parseImportFile(json, 'json', mockCategories, mockUnits)
     expect(result.toInsert).toHaveLength(1)
     expect(result.toInsert[0].category_id).toBe('cat-1')
@@ -286,7 +329,14 @@ describe('parseImportFile — JSON', () => {
 
   it('upserts JSON row with changed props when owner', () => {
     const json = JSON.stringify([{ name_he: 'חלב', name_en: 'Milk', category: 'Bakery' }])
-    const result = parseImportFile(json, 'json', mockCategories, mockUnits, existingProducts, OWNER_ID)
+    const result = parseImportFile(
+      json,
+      'json',
+      mockCategories,
+      mockUnits,
+      existingProducts,
+      OWNER_ID
+    )
     expect(result.toUpdate).toHaveLength(1)
     expect(result.toUpdate[0].category_id).toBe('cat-2')
   })
