@@ -34,9 +34,20 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 
 ---
 
-## Stage 2.5 — Bulk Import from CSV / JSON — Planned
-Frontend-only import button on `/products` page. Accepts `.csv` / `.json`, validates rows client-side (Zod), resolves category/unit names to UUIDs, batch-inserts via Supabase. Shows import summary dialog; skipped rows downloadable as CSV.
-See task 2.5 in [PROJECT_PLAN.md](PROJECT_PLAN.md) for full spec.
+## Stage 2.5 — Bulk Import from CSV / JSON — COMPLETE (committed to `main`)
+
+- **Import button** — toolbar on `/products` page; accepts `.csv` and `.json` files via hidden file input.
+- **`src/lib/importProducts.ts`** — `parseImportFile` validates rows with Zod, resolves category/unit names to IDs by Hebrew name, English name, or unit code. Returns `{ toInsert, toUpdate, skipped }`.
+- **Duplicate handling (upsert)** — on matching `name_he` or `name_en`:
+  - Owner + props changed → `UPDATE` existing product (`category_id`, `default_unit_id`, `name_en`).
+  - Owner + no change → skipped as `unchanged`.
+  - Not owner → skipped as `duplicateNameHe`.
+  - Same name appears twice in the file → second row skipped.
+- **`ImportSummaryDialog`** — shows Added / Updated / Skipped counts with per-row reasons. Skipped rows downloadable as CSV for correction.
+- **i18n** — `products.import.*` keys (inserted, updated, skipped, reasons) in both `he` and `en`.
+- **Unit tests** — 36 product tests covering parser, resolvers, upsert logic, owner guard, within-file dedup. All 55 suite tests pass.
+- **DB migration** — `supabase/migrations/003_extra_categories.sql` adds "Health & Pharmacy" (💊 #ec4899) and "Perishables / מתכלים" (🕐 #f43f5e).
+- **Sample CSV templates** — `sample_products_import.csv` (English categories/units) and `sample_products_import_he.csv` (Hebrew categories/units).
 
 ---
 
