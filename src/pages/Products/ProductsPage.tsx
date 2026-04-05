@@ -1,14 +1,16 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Plus, Search, Pencil, Trash2, Loader2, Package, Globe, Lock, X } from 'lucide-react'
+import { Plus, Search, Pencil, Trash2, Loader2, Package, Globe, Lock, X, Upload, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { parseImportFile, skippedRowsToCsv } from '@/lib/importProducts'
 import type { Product, Category, UnitType } from '@/types'
+import type { SkippedRow } from '@/lib/importProducts'
 
 // ─── Exported utility (also used in tests) ────────────────────────────────────
 
@@ -270,6 +272,101 @@ function ProductDialog({
   )
 }
 
+// ─── ImportSummaryDialog ──────────────────────────────────────────────────────
+
+interface ImportSummary {
+  importedCount: number
+  skipped: SkippedRow[]
+}
+
+interface ImportSummaryDialogProps {
+  summary: ImportSummary
+  lang: 'he' | 'en'
+  onClose: () => void
+}
+
+function ImportSummaryDialog({ summary, lang, onClose }: ImportSummaryDialogProps) {
+  const { t } = useTranslation()
+
+  function downloadSkipped() {
+    const csv = skippedRowsToCsv(summary.skipped)
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'skipped_rows.csv'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+      onClick={e => {
+        if (e.target === e.currentTarget) onClose()
+      }}
+    >
+      <div className="w-full max-w-sm rounded-2xl bg-white p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-base font-semibold text-gray-900">{t('products.import.title')}</h3>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-3">
+            <span className="text-lg">✓</span>
+            <span className="text-sm font-medium text-green-700">
+              {t('products.import.imported', { count: summary.importedCount })}
+            </span>
+          </div>
+
+          {summary.skipped.length > 0 && (
+            <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-3">
+              <span className="text-lg">⚠</span>
+              <span className="text-sm font-medium text-amber-700">
+                {t('products.import.skipped', { count: summary.skipped.length })}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {summary.skipped.length > 0 && (
+          <div className="mt-3 max-h-32 overflow-y-auto rounded-xl border border-gray-100 bg-gray-50 p-3">
+            {summary.skipped.map(s => (
+              <p key={s.rowIndex} className="text-xs text-gray-500" dir={lang === 'he' ? 'rtl' : 'ltr'}>
+                {t('products.import.reasons.missingNameHe')} — {t('status.loading').replace('...', '')} #{s.rowIndex}
+              </p>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-5 flex gap-3">
+          {summary.skipped.length > 0 && (
+            <button
+              onClick={downloadSkipped}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+            >
+              <Download className="h-4 w-4" />
+              {t('products.import.downloadSkipped')}
+            </button>
+          )}
+          <button
+            onClick={onClose}
+            className="flex-1 rounded-xl bg-brand-500 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600"
+          >
+            {t('actions.done')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── ConfirmDeleteDialog ──────────────────────────────────────────────────────
 
 interface ConfirmDeleteDialogProps {
@@ -337,6 +434,8 @@ export default function ProductsPage() {
   const [dialogMode, setDialogMode] = useState<'add' | 'edit' | null>(null)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
+  const [importSummary, setImportSummary] = useState<ImportSummary | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // ── Queries ────────────────────────────────────────────────────────────────
 
@@ -441,6 +540,48 @@ export default function ProductsPage() {
 
   const uncategorized = filtered.filter(p => !p.category_id)
 
+  // ── Import mutation ────────────────────────────────────────────────────────
+
+  const importMutation = useMutation({
+    mutationFn: async (rows: { name_he: string; name_en: string | null; category_id: string | null; default_unit_id: string | null }[]) => {
+      const { error } = await supabase.from('products').insert(
+        rows.map(r => ({ ...r, created_by: user!.id, is_shared: false }))
+      )
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['products'] })
+    },
+    onError: () => toast.error(t('status.error')),
+  })
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+
+    const ext = file.name.split('.').pop()?.toLowerCase()
+    if (ext !== 'csv' && ext !== 'json') {
+      toast.error(t('products.import.unsupportedFormat'))
+      return
+    }
+
+    const text = await file.text()
+    let result
+    try {
+      result = parseImportFile(text, ext as 'csv' | 'json', categories, unitTypes)
+    } catch {
+      toast.error(t('products.import.errorParsing'))
+      return
+    }
+
+    if (result.valid.length > 0) {
+      await importMutation.mutateAsync(result.valid)
+    }
+
+    setImportSummary({ importedCount: result.valid.length, skipped: result.skipped })
+  }
+
   // ── Handlers ───────────────────────────────────────────────────────────────
 
   function openAdd() {
@@ -467,14 +608,36 @@ export default function ProductsPage() {
     <div className="flex flex-col pb-24">
       {/* Sticky search + filters */}
       <div className="sticky top-0 z-10 bg-gray-50 px-4 pb-3 pt-4 shadow-sm">
-        <div className="relative">
-          <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="search"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder={t('products.search')}
+              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 ps-9 pe-4 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            />
+          </div>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={importMutation.isPending}
+            aria-label={t('products.import.button')}
+            className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
+          >
+            {importMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+            <span className="hidden sm:inline">{t('products.import.button')}</span>
+          </button>
           <input
-            type="search"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder={t('products.search')}
-            className="w-full rounded-xl border border-gray-200 bg-white py-2.5 ps-9 pe-4 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.json"
+            className="hidden"
+            onChange={handleFileChange}
           />
         </div>
 
@@ -617,6 +780,15 @@ export default function ProductsPage() {
           isDeleting={deleteMutation.isPending}
           onCancel={() => setDeleteTarget(null)}
           onConfirm={() => deleteMutation.mutate(deleteTarget.id)}
+        />
+      )}
+
+      {/* Import summary */}
+      {importSummary && (
+        <ImportSummaryDialog
+          summary={importSummary}
+          lang={lang}
+          onClose={() => setImportSummary(null)}
         />
       )}
     </div>

@@ -89,6 +89,18 @@
       "weight": "Weight",
       "volume": "Volume",
       "cooking": "Cooking"
+    },
+    "import": {
+      "button": "Import",
+      "title": "Import Summary",
+      "imported": "Imported: {{count}}",
+      "skipped": "Skipped: {{count}}",
+      "downloadSkipped": "Download skipped rows",
+      "errorParsing": "Error parsing file",
+      "unsupportedFormat": "Unsupported format (.csv or .json only)",
+      "reasons": {
+        "missingNameHe": "Missing Hebrew name"
+      }
     }
   }
 }

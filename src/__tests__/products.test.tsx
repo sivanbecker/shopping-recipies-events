@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
 import { filterProducts } from '@/pages/Products/ProductsPage'
-import type { Product, Category } from '@/types'
+import { parseImportFile, resolveCategory, resolveUnit } from '@/lib/importProducts'
+import type { Product } from '@/types'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -106,5 +106,134 @@ describe('ProductCard (name display logic)', () => {
 
     expect(myProduct.created_by === myId).toBe(true)
     expect(otherProduct.created_by === myId).toBe(false)
+  })
+})
+
+// ─── resolveCategory ──────────────────────────────────────────────────────────
+
+const mockCategories = [
+  { id: 'cat-1', name_he: 'חלב', name_en: 'Dairy', color: '#fff', icon: null, sort_order: 1 },
+  { id: 'cat-2', name_he: 'מאפייה', name_en: 'Bakery', color: '#eee', icon: null, sort_order: 2 },
+]
+
+describe('resolveCategory', () => {
+  it('resolves by Hebrew name', () => {
+    expect(resolveCategory('חלב', mockCategories)).toBe('cat-1')
+  })
+
+  it('resolves by English name (case-insensitive)', () => {
+    expect(resolveCategory('bakery', mockCategories)).toBe('cat-2')
+  })
+
+  it('returns null for unknown category', () => {
+    expect(resolveCategory('Unknown', mockCategories)).toBeNull()
+  })
+
+  it('returns null for empty string', () => {
+    expect(resolveCategory('', mockCategories)).toBeNull()
+  })
+
+  it('returns null for undefined', () => {
+    expect(resolveCategory(undefined, mockCategories)).toBeNull()
+  })
+})
+
+// ─── resolveUnit ──────────────────────────────────────────────────────────────
+
+const mockUnits = [
+  { id: 'unit-1', code: 'liter', label_he: 'ליטר', label_en: 'Liter', type: 'volume' as const },
+  { id: 'unit-2', code: 'unit', label_he: 'יחידה', label_en: 'Unit', type: 'count' as const },
+  { id: 'unit-3', code: 'kg', label_he: 'ק"ג', label_en: 'Kilogram', type: 'weight' as const },
+]
+
+describe('resolveUnit', () => {
+  it('resolves by code (exact, case-insensitive)', () => {
+    expect(resolveUnit('liter', mockUnits)).toBe('unit-1')
+    expect(resolveUnit('LITER', mockUnits)).toBe('unit-1')
+  })
+
+  it('resolves by English label (case-insensitive)', () => {
+    expect(resolveUnit('kilogram', mockUnits)).toBe('unit-3')
+  })
+
+  it('resolves by Hebrew label', () => {
+    expect(resolveUnit('יחידה', mockUnits)).toBe('unit-2')
+  })
+
+  it('returns null for unknown unit', () => {
+    expect(resolveUnit('tablespoon', mockUnits)).toBeNull()
+  })
+
+  it('returns null for undefined', () => {
+    expect(resolveUnit(undefined, mockUnits)).toBeNull()
+  })
+})
+
+// ─── parseImportFile ──────────────────────────────────────────────────────────
+
+describe('parseImportFile — CSV', () => {
+  it('parses a valid CSV and resolves IDs', () => {
+    const csv = `name_he,name_en,category,default_unit\nחלב,Milk,Dairy,liter`
+    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits)
+    expect(result.valid).toHaveLength(1)
+    expect(result.valid[0]).toMatchObject({
+      name_he: 'חלב',
+      name_en: 'Milk',
+      category_id: 'cat-1',
+      default_unit_id: 'unit-1',
+    })
+    expect(result.skipped).toHaveLength(0)
+  })
+
+  it('skips rows missing name_he', () => {
+    const csv = `name_he,name_en,category,default_unit\n,Bread,Bakery,unit`
+    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits)
+    expect(result.valid).toHaveLength(0)
+    expect(result.skipped).toHaveLength(1)
+    expect(result.skipped[0].reason).toBe('missingNameHe')
+  })
+
+  it('leaves category_id null for unknown category', () => {
+    const csv = `name_he,name_en,category,default_unit\nביצה,Egg,Unknown,unit`
+    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits)
+    expect(result.valid[0].category_id).toBeNull()
+  })
+
+  it('leaves default_unit_id null for unknown unit', () => {
+    const csv = `name_he,name_en,category,default_unit\nביצה,Egg,Dairy,tablespoon`
+    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits)
+    expect(result.valid[0].default_unit_id).toBeNull()
+  })
+
+  it('handles mixed valid and invalid rows', () => {
+    const csv = [
+      'name_he,name_en,category,default_unit',
+      'חלב,Milk,Dairy,liter',
+      ',Bad Row,Bakery,unit',
+      'לחם,Bread,Bakery,unit',
+    ].join('\n')
+    const result = parseImportFile(csv, 'csv', mockCategories, mockUnits)
+    expect(result.valid).toHaveLength(2)
+    expect(result.skipped).toHaveLength(1)
+  })
+})
+
+describe('parseImportFile — JSON', () => {
+  it('parses a valid JSON array', () => {
+    const json = JSON.stringify([{ name_he: 'חלב', name_en: 'Milk', category: 'Dairy', default_unit: 'liter' }])
+    const result = parseImportFile(json, 'json', mockCategories, mockUnits)
+    expect(result.valid).toHaveLength(1)
+    expect(result.valid[0].category_id).toBe('cat-1')
+  })
+
+  it('throws for non-array JSON', () => {
+    expect(() => parseImportFile('{"name_he":"חלב"}', 'json', mockCategories, mockUnits)).toThrow()
+  })
+
+  it('skips JSON rows missing name_he', () => {
+    const json = JSON.stringify([{ name_en: 'Milk', category: 'Dairy' }])
+    const result = parseImportFile(json, 'json', mockCategories, mockUnits)
+    expect(result.valid).toHaveLength(0)
+    expect(result.skipped).toHaveLength(1)
   })
 })

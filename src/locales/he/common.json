@@ -89,6 +89,18 @@
       "weight": "משקל",
       "volume": "נפח",
       "cooking": "מדידות בישול"
+    },
+    "import": {
+      "button": "ייבוא",
+      "title": "סיכום ייבוא",
+      "imported": "יובאו: {{count}}",
+      "skipped": "דולגו: {{count}}",
+      "downloadSkipped": "הורד שורות שדולגו",
+      "errorParsing": "שגיאה בניתוח הקובץ",
+      "unsupportedFormat": "פורמט קובץ לא נתמך (.csv או .json בלבד)",
+      "reasons": {
+        "missingNameHe": "חסר שם בעברית"
+      }
     }
   }
 }
