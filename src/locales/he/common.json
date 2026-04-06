@@ -90,6 +90,17 @@
       "volume": "נפח",
       "cooking": "מדידות בישול"
     },
+    "addToList": {
+      "title": "הוסף לרשימה",
+      "quantity": "כמות",
+      "unit": "יחידה",
+      "noUnit": "ללא יחידה",
+      "selectList": "בחר רשימה",
+      "noActiveLists": "אין רשימות פעילות",
+      "newList": "רשימה חדשה",
+      "addedTo": "נוסף ל{{name}}",
+      "view": "צפייה"
+    },
     "import": {
       "button": "ייבוא",
       "title": "סיכום ייבוא",
