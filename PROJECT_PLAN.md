@@ -645,6 +645,20 @@ Skipped rows are downloadable as a CSV for correction and re-import.
 - [ ] Swipe left on a list item to reveal delete (mobile)
 - [ ] Subtle press animations on interactive elements
 
+#### 7.6 — App Background Theme
+- [ ] Add a **background theme picker** in the Profile page (under Appearance settings)
+- [ ] Three options:
+  - **White** — plain white background (current default)
+  - **Aero Gradient** — soft blue/sky radial gradient, airy and light
+  - **Abstract Blobs** — pastel bokeh shapes (green, yellow, pink, orange) using layered CSS blurs or an SVG
+- [ ] Background is applied to the `<body>` / root layout element, covering all pages
+- [ ] Responsive: gradient/blob compositions are tuned for portrait (mobile) and landscape/wide (desktop) aspect ratios via CSS `@media` queries or viewport-relative sizing
+- [ ] Selected theme persists via:
+  - `localStorage` for unauthenticated / offline use
+  - `profiles.app_theme` column (new DB migration, nullable text) when logged in — synced on load
+- [ ] i18n keys added to `common.json` for the picker labels in Hebrew and English
+- [ ] No runtime images are loaded — backgrounds are implemented purely in CSS (gradients, `backdrop-filter`, `blur`) to keep load fast and avoid extra assets
+
 #### 7.5 — Push Notifications (Post-MVP optional)
 - [ ] Browser push notifications for shared list updates
 - [ ] Event reminder: "Your event is in 3 days!"
@@ -657,6 +671,12 @@ Skipped rows are downloadable as a CSV for correction and re-import.
 - [ ] Layout is correct at 375px (iPhone SE), 768px (iPad), 1440px (desktop)
 - [ ] RTL layout is correct across all views in Hebrew mode
 - [ ] LTR layout is correct across all views in English mode
+- [ ] Background theme picker shows all 3 options with a live preview swatch
+- [ ] Selecting Aero Gradient applies a soft blue gradient across all pages on both mobile and desktop
+- [ ] Selecting Abstract Blobs applies the pastel blob background across all pages on both mobile and desktop
+- [ ] Switching back to White restores the plain white background
+- [ ] Selected theme persists after page refresh (localStorage)
+- [ ] Selected theme syncs to the profile and loads correctly after logout → login on a different device
 
 ---
 
