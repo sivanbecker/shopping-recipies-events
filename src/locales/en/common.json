@@ -90,6 +90,17 @@
       "volume": "Volume",
       "cooking": "Cooking"
     },
+    "addToList": {
+      "title": "Add to List",
+      "quantity": "Quantity",
+      "unit": "Unit",
+      "noUnit": "No unit",
+      "selectList": "Select a list",
+      "noActiveLists": "No active lists",
+      "newList": "New List",
+      "addedTo": "Added to {{name}}",
+      "view": "View"
+    },
     "import": {
       "button": "Import",
       "title": "Import Summary",

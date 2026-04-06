@@ -1,11 +1,13 @@
 import { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import {
   Plus,
+  Minus,
   Search,
   Pencil,
   Trash2,
@@ -16,13 +18,16 @@ import {
   X,
   Upload,
   Download,
+  ListPlus,
+  ShoppingCart,
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { format } from 'date-fns'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { parseImportFile, skippedRowsToCsv } from '@/lib/importProducts'
 import { filterProducts } from '@/lib/filterProducts'
-import type { Product, Category, UnitType } from '@/types'
+import type { Product, Category, UnitType, ShoppingList } from '@/types'
 import type { SkippedRow } from '@/lib/importProducts'
 
 // ─── Zod schema ───────────────────────────────────────────────────────────────
@@ -44,9 +49,18 @@ interface ProductCardProps {
   isOwner: boolean
   onEdit: () => void
   onDelete: () => void
+  onAddToList: () => void
 }
 
-function ProductCard({ product, category, lang, isOwner, onEdit, onDelete }: ProductCardProps) {
+function ProductCard({
+  product,
+  category,
+  lang,
+  isOwner,
+  onEdit,
+  onDelete,
+  onAddToList,
+}: ProductCardProps) {
   const { t } = useTranslation()
   const name = lang === 'he' ? product.name_he : (product.name_en ?? product.name_he)
 
@@ -63,24 +77,33 @@ function ProductCard({ product, category, lang, isOwner, onEdit, onDelete }: Pro
       <div className="flex items-start justify-between gap-1 ps-2">
         <p className="flex-1 text-sm font-semibold leading-tight text-gray-800">{name}</p>
 
-        {isOwner && (
-          <div className="flex shrink-0 gap-0.5">
-            <button
-              onClick={onEdit}
-              aria-label={t('products.editProduct')}
-              className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={onDelete}
-              aria-label={t('products.deleteProduct')}
-              className="rounded-lg p-1 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        )}
+        <div className="flex shrink-0 gap-0.5">
+          <button
+            onClick={onAddToList}
+            aria-label={t('products.addToList.title')}
+            className="rounded-lg p-1 text-gray-400 transition hover:bg-brand-50 hover:text-brand-500"
+          >
+            <ListPlus className="h-3.5 w-3.5" />
+          </button>
+          {isOwner && (
+            <>
+              <button
+                onClick={onEdit}
+                aria-label={t('products.editProduct')}
+                className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={onDelete}
+                aria-label={t('products.deleteProduct')}
+                className="rounded-lg p-1 text-gray-400 transition hover:bg-red-50 hover:text-red-500"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Badges row */}
@@ -433,6 +456,266 @@ function ConfirmDeleteDialog({
   )
 }
 
+// ─── AddToListSheet ───────────────────────────────────────────────────────────
+
+interface AddToListSheetProps {
+  product: Product
+  unitTypes: UnitType[]
+  lang: 'he' | 'en'
+  onClose: () => void
+}
+
+function AddToListSheet({ product, unitTypes, lang, onClose }: AddToListSheetProps) {
+  const { t } = useTranslation()
+  const { user } = useAuth()
+  const qc = useQueryClient()
+  const navigate = useNavigate()
+
+  const defaultUnit = unitTypes.find(u => u.id === product.default_unit_id)
+  const unitCategory = defaultUnit?.type ?? 'count'
+  const isCount = unitCategory === 'count'
+  const relevantUnits = unitTypes.filter(u => u.type === unitCategory)
+
+  const [quantity, setQuantity] = useState(1)
+  const [unitId, setUnitId] = useState<string | null>(product.default_unit_id ?? null)
+
+  const { data: activeLists = [], isLoading: listsLoading } = useQuery<ShoppingList[]>({
+    queryKey: ['shopping_lists', 'active', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('shopping_lists')
+        .select('*')
+        .eq('owner_id', user!.id)
+        .eq('is_archived', false)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return data as ShoppingList[]
+    },
+    enabled: !!user,
+  })
+
+  const addToListMutation = useMutation({
+    mutationFn: async ({ listId, listName }: { listId: string; listName: string }) => {
+      const { data: existing } = await supabase
+        .from('shopping_items')
+        .select('id, quantity')
+        .eq('list_id', listId)
+        .eq('product_id', product.id)
+        .eq('is_checked', false)
+        .maybeSingle()
+
+      if (existing) {
+        const { error } = await supabase
+          .from('shopping_items')
+          .update({ quantity: Number(existing.quantity) + quantity, unit_id: unitId })
+          .eq('id', existing.id)
+        if (error) throw error
+      } else {
+        const { error } = await supabase.from('shopping_items').insert({
+          list_id: listId,
+          product_id: product.id,
+          quantity,
+          unit_id: unitId,
+          added_by: user!.id,
+        })
+        if (error) throw error
+      }
+      return listName
+    },
+    onSuccess: (listName, { listId }) => {
+      qc.invalidateQueries({ queryKey: ['shopping_items', listId] })
+      qc.invalidateQueries({ queryKey: ['shopping_lists'] })
+      toast.success(t('products.addToList.addedTo', { name: listName }), {
+        action: {
+          label: t('products.addToList.view'),
+          onClick: () => navigate(`/lists/${listId}`),
+        },
+      })
+      onClose()
+    },
+    onError: () => toast.error(t('status.error')),
+  })
+
+  const createAndAddMutation = useMutation({
+    mutationFn: async () => {
+      const { data: list, error: listError } = await supabase
+        .from('shopping_lists')
+        .insert({ owner_id: user!.id })
+        .select()
+        .single()
+      if (listError) throw listError
+
+      const { error: itemError } = await supabase.from('shopping_items').insert({
+        list_id: list.id,
+        product_id: product.id,
+        quantity,
+        unit_id: unitId,
+        added_by: user!.id,
+      })
+      if (itemError) throw itemError
+      return list as ShoppingList
+    },
+    onSuccess: list => {
+      qc.invalidateQueries({ queryKey: ['shopping_lists'] })
+      const listName =
+        list.name ?? format(new Date(list.created_at), lang === 'he' ? 'dd/MM/yyyy' : 'MMM d, yyyy')
+      toast.success(t('products.addToList.addedTo', { name: listName }), {
+        action: {
+          label: t('products.addToList.view'),
+          onClick: () => navigate(`/lists/${list.id}`),
+        },
+      })
+      onClose()
+    },
+    onError: () => toast.error(t('status.error')),
+  })
+
+  const isPending = addToListMutation.isPending || createAndAddMutation.isPending
+  const productName = lang === 'he' ? product.name_he : (product.name_en ?? product.name_he)
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+      onClick={e => e.target === e.currentTarget && onClose()}
+    >
+      <div className="w-full max-w-md rounded-t-2xl bg-white shadow-xl">
+        <div className="flex justify-center pb-1 pt-3">
+          <div className="h-1 w-10 rounded-full bg-gray-200" />
+        </div>
+
+        <div className="px-4 pb-8">
+          {/* Header */}
+          <div className="mb-4 flex items-center justify-between">
+            <span className="text-base font-semibold text-gray-800">{productName}</span>
+            <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Quantity */}
+          <div className="mb-4">
+            <label className="mb-1.5 block text-xs font-medium text-gray-500">
+              {t('products.addToList.quantity')}
+            </label>
+            {isCount ? (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-10 text-center text-lg font-semibold text-gray-800">
+                  {quantity}
+                </span>
+                <button
+                  onClick={() => setQuantity(q => q + 1)}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <input
+                type="number"
+                min="0.1"
+                step="any"
+                value={quantity}
+                onChange={e => setQuantity(Math.max(0.1, parseFloat(e.target.value) || 0.1))}
+                className="w-32 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              />
+            )}
+          </div>
+
+          {/* Unit chips */}
+          {relevantUnits.length > 0 && (
+            <div className="mb-5">
+              <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                {t('products.addToList.unit')}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setUnitId(null)}
+                  className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
+                    unitId === null
+                      ? 'border-brand-500 bg-brand-500 text-white'
+                      : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {t('products.addToList.noUnit')}
+                </button>
+                {relevantUnits.map(u => (
+                  <button
+                    key={u.id}
+                    onClick={() => setUnitId(u.id)}
+                    className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
+                      unitId === u.id
+                        ? 'border-brand-500 bg-brand-500 text-white'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    {lang === 'he' ? u.label_he : u.label_en}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Lists */}
+          <p className="mb-2 text-xs font-medium text-gray-500">
+            {t('products.addToList.selectList')}
+          </p>
+
+          {listsLoading ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-brand-400" />
+            </div>
+          ) : (
+            <div className="max-h-48 space-y-1 overflow-y-auto">
+              {activeLists.map(list => {
+                const listName =
+                  list.name ??
+                  format(new Date(list.created_at), lang === 'he' ? 'dd/MM/yyyy' : 'MMM d, yyyy')
+                return (
+                  <button
+                    key={list.id}
+                    onClick={() => addToListMutation.mutate({ listId: list.id, listName })}
+                    disabled={isPending}
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-medium text-gray-800 transition hover:bg-brand-50 disabled:opacity-60"
+                  >
+                    <ShoppingCart className="h-4 w-4 shrink-0 text-brand-400" />
+                    <span className="flex-1 truncate">{listName}</span>
+                  </button>
+                )
+              })}
+
+              {activeLists.length === 0 && (
+                <p className="py-3 text-center text-sm text-gray-400">
+                  {t('products.addToList.noActiveLists')}
+                </p>
+              )}
+
+              {/* New list option */}
+              <button
+                onClick={() => createAndAddMutation.mutate()}
+                disabled={isPending}
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-medium text-brand-600 transition hover:bg-brand-50 disabled:opacity-60"
+              >
+                {createAndAddMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4 shrink-0" />
+                )}
+                {t('products.addToList.newList')}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── ProductsPage ─────────────────────────────────────────────────────────────
 
 export default function ProductsPage() {
@@ -446,6 +729,7 @@ export default function ProductsPage() {
   const [dialogMode, setDialogMode] = useState<'add' | 'edit' | null>(null)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null)
+  const [addToListTarget, setAddToListTarget] = useState<Product | null>(null)
   const [importSummary, setImportSummary] = useState<ImportSummary | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -747,6 +1031,7 @@ export default function ProductsPage() {
                       isOwner={product.created_by === user?.id}
                       onEdit={() => openEdit(product)}
                       onDelete={() => setDeleteTarget(product)}
+                      onAddToList={() => setAddToListTarget(product)}
                     />
                   ))}
                 </div>
@@ -773,6 +1058,7 @@ export default function ProductsPage() {
                       isOwner={product.created_by === user?.id}
                       onEdit={() => openEdit(product)}
                       onDelete={() => setDeleteTarget(product)}
+                      onAddToList={() => setAddToListTarget(product)}
                     />
                   ))}
                 </div>
@@ -822,6 +1108,16 @@ export default function ProductsPage() {
       {/* Import summary */}
       {importSummary && (
         <ImportSummaryDialog summary={importSummary} onClose={() => setImportSummary(null)} />
+      )}
+
+      {/* Add to list sheet */}
+      {addToListTarget && (
+        <AddToListSheet
+          product={addToListTarget}
+          unitTypes={unitTypes}
+          lang={lang}
+          onClose={() => setAddToListTarget(null)}
+        />
       )}
     </div>
   )
