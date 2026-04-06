@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -13,6 +13,7 @@ import {
   Search,
   Archive,
   RotateCcw,
+  Copy,
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -443,6 +444,7 @@ export default function ListDetailPage() {
   const { t, i18n } = useTranslation('shopping')
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const lang = i18n.language
   const [showAddSheet, setShowAddSheet] = useState(false)
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set())
@@ -533,6 +535,42 @@ export default function ListDetailPage() {
     onError: () => toast.error('Failed to update list'),
   })
 
+  const cloneMutation = useMutation({
+    mutationFn: async () => {
+      const { data: newList, error: listError } = await supabase
+        .from('shopping_lists')
+        .insert({ name: list!.name, owner_id: user!.id, is_active: true, is_archived: false })
+        .select()
+        .single()
+      if (listError) throw listError
+
+      if (items.length > 0) {
+        const { error: itemsError } = await supabase.from('shopping_items').insert(
+          items.map(item => ({
+            list_id: newList.id,
+            product_id: item.product_id,
+            quantity: item.quantity,
+            unit_id: item.unit_id,
+            note: item.note,
+            sort_order: item.sort_order,
+            added_by: user!.id,
+            is_checked: false,
+          }))
+        )
+        if (itemsError) throw itemsError
+      }
+
+      return newList
+    },
+    onSuccess: newList => {
+      queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
+      toast.success(t('lists.cloneSuccess'), {
+        action: { label: t('lists.open'), onClick: () => navigate(`/lists/${newList.id}`) },
+      })
+    },
+    onError: () => toast.error('Failed to clone list'),
+  })
+
   // ── Derived state ─────────────────────────────────────────────────────────
 
   const checkedCount = items.filter(i => i.is_checked).length
@@ -584,26 +622,42 @@ export default function ListDetailPage() {
           <h1 className="truncate text-xl font-bold text-gray-800">{displayName}</h1>
         </div>
 
-        {/* Archive / Reactivate */}
+        {/* Clone + Archive / Reactivate */}
         {list.owner_id === user?.id && (
-          <button
-            onClick={() => archiveMutation.mutate(!list.is_archived)}
-            disabled={archiveMutation.isPending}
-            className={`flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition ${
-              list.is_archived
-                ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            {archiveMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : list.is_archived ? (
-              <RotateCcw className="h-4 w-4" />
-            ) : (
-              <Archive className="h-4 w-4" />
-            )}
-            {list.is_archived ? t('lists.reactivate') : t('lists.markDone')}
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              onClick={() => cloneMutation.mutate()}
+              disabled={cloneMutation.isPending}
+              aria-label={t('lists.clone')}
+              className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-200 disabled:opacity-50"
+            >
+              {cloneMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+              {t('lists.clone')}
+            </button>
+
+            <button
+              onClick={() => archiveMutation.mutate(!list.is_archived)}
+              disabled={archiveMutation.isPending}
+              className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                list.is_archived
+                  ? 'bg-green-50 text-green-700 hover:bg-green-100'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {archiveMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : list.is_archived ? (
+                <RotateCcw className="h-4 w-4" />
+              ) : (
+                <Archive className="h-4 w-4" />
+              )}
+              {list.is_archived ? t('lists.reactivate') : t('lists.markDone')}
+            </button>
+          </div>
         )}
       </div>
 
