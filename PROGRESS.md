@@ -89,9 +89,12 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 - Unit chips grouped by the product's default unit category; "No unit" chip always available.
 - Quantity + unit displayed inline on each item row.
 
-### 3.5 — Archive & Reactivate — COMPLETE; Clone — NEXT
+### 3.5 — Archive, Clone & Reactivate — COMPLETE
 - `archiveMutation` in `ListDetailPage` toggles `is_archived` / `is_active`; button label and icon swap between Archive ↔ Reactivate.
-- **Clone not yet implemented** — next task (3.5b).
+- **Clone button** — `Copy` icon, owner-only, sits next to the Archive/Reactivate button in the list detail header.
+- `cloneMutation` creates a new active list (same name) then bulk-inserts all items with `is_checked: false` and quantities unchanged.
+- Toast "List cloned" with an "Open" action that navigates directly to the new list via `useNavigate`.
+- i18n: `lists.cloneSuccess`, `lists.open` added in both `he` and `en`.
 
 ### 3.6 — Missing Items Quick-Add Flow — NOT STARTED
 ### 3.7 — Shopping Mode (In-Store UX) — NOT STARTED
