@@ -51,5 +51,55 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 
 ---
 
-## Stages 3–8 — Not started
+## Stage 2.7 — Add Product to Shopping List (from Products Page) — COMPLETE (committed to `main`)
+
+- **"Add to list" button** — `ListPlus` icon on every `ProductCard`; opens a bottom sheet.
+- **Bottom sheet** — lists the user's active (non-archived) shopping lists; quantity stepper (count) or free input (weight/volume); unit chips filtered to the product's unit category; "New List" option creates a list on the fly.
+- **Upsert logic** — if the product is already in the selected list (unchecked), bumps quantity; otherwise inserts a new item.
+- **Toast** — "Added to [list name]" with a tappable link navigating to that list.
+- **i18n** — added `products.addToList.*` keys in both `he` and `en`.
+
+---
+
+## Stage 3 — Shopping Lists (Core) — IN PROGRESS
+
+### 3.1 — DB Migration — COMPLETE
+- `shopping_lists`, `list_members`, `shopping_items` tables created in `001_initial_schema.sql`.
+- RLS policies in place; indexes on `shopping_items(list_id)` and `shopping_lists(owner_id, is_archived)`.
+
+### 3.2 — Lists Overview Page (`/lists`) — COMPLETE
+- Active lists section — cards showing name (or creation date), item count, active badge, missing-list badge.
+- Archived section — collapsible toggle, lazy-loaded.
+- "New List" FAB opens `NewListDialog`; name defaults to today's date if left blank.
+- TanStack Query: separate queries for active and archived lists (archived only fetched when expanded).
+
+### 3.3 — List Detail Page (`/lists/:id`) — COMPLETE
+- Header: list name (display-only), back nav, Archive/Reactivate button (owner only).
+- Progress bar: "X of Y items picked" with animated fill.
+- `AddItemSheet` — two-step bottom sheet: search products → configure quantity + unit → upsert.
+  - Upsert: bumps existing unchecked item's quantity; inserts new item otherwise.
+  - Inline "Create new product" option when search term has no exact match.
+- Item rows: check/uncheck toggle (optimistic spinner), quantity + unit label, delete button.
+- Checked items shown with strikethrough + dimmed; FAB hidden on archived lists.
+- Empty state with icon illustration.
+
+### 3.4 — Quantity & Units UX — COMPLETE
+- Count-type units: +/− stepper capped at minimum 1.
+- Weight/volume: free numeric input (min 0.1, step any).
+- Unit chips grouped by the product's default unit category; "No unit" chip always available.
+- Quantity + unit displayed inline on each item row.
+
+### 3.5 — Archive, Clone & Reactivate — COMPLETE
+- `archiveMutation` in `ListDetailPage` toggles `is_archived` / `is_active`; button label and icon swap between Archive ↔ Reactivate.
+- **Clone button** — `Copy` icon, owner-only, sits next to the Archive/Reactivate button in the list detail header.
+- `cloneMutation` creates a new active list (same name) then bulk-inserts all items with `is_checked: false` and quantities unchanged.
+- Toast "List cloned" with an "Open" action that navigates directly to the new list via `useNavigate`.
+- i18n: `lists.cloneSuccess`, `lists.open` added in both `he` and `en`.
+
+### 3.6 — Missing Items Quick-Add Flow — NOT STARTED
+### 3.7 — Shopping Mode (In-Store UX) — NOT STARTED
+
+---
+
+## Stages 4–8 — Not started
 See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full plan.

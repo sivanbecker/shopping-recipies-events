@@ -10,6 +10,8 @@
     "markDone": "Mark as Done",
     "reactivate": "Reactivate",
     "clone": "Clone",
+    "cloneSuccess": "List cloned",
+    "open": "Open",
     "empty": "No active lists",
     "emptyHint": "Tap + to create your first list",
     "emptyArchive": "No archived lists",
