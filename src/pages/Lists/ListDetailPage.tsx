@@ -15,6 +15,7 @@ import {
   RotateCcw,
   Copy,
   X,
+  ListPlus,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -535,6 +536,47 @@ export default function ListDetailPage() {
     onError: () => toast.error('Failed to update list'),
   })
 
+  const convertToListMutation = useMutation({
+    mutationFn: async () => {
+      const { data: newList, error: listError } = await supabase
+        .from('shopping_lists')
+        .insert({ name: list!.name, owner_id: user!.id, is_active: true, is_archived: false })
+        .select()
+        .single()
+      if (listError) throw listError
+
+      if (items.length > 0) {
+        const { error: itemsError } = await supabase.from('shopping_items').insert(
+          items.map(item => ({
+            list_id: newList.id,
+            product_id: item.product_id,
+            quantity: item.quantity,
+            unit_id: item.unit_id,
+            note: item.note,
+            sort_order: item.sort_order,
+            added_by: user!.id,
+            is_checked: false,
+          }))
+        )
+        if (itemsError) throw itemsError
+      }
+
+      // Delete the missing list now that items have been copied
+      const { error: deleteError } = await supabase.from('shopping_lists').delete().eq('id', id!)
+      if (deleteError) throw deleteError
+
+      return newList
+    },
+    onSuccess: newList => {
+      queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
+      navigate(`/lists/${newList.id}`)
+      toast.success(t('missing.convertToList'), {
+        action: { label: t('lists.open'), onClick: () => navigate(`/lists/${newList.id}`) },
+      })
+    },
+    onError: () => toast.error('Failed to convert list'),
+  })
+
   const cloneMutation = useMutation({
     mutationFn: async () => {
       const { data: newList, error: listError } = await supabase
@@ -622,9 +664,25 @@ export default function ListDetailPage() {
           <h1 className="truncate text-xl font-bold text-gray-800">{displayName}</h1>
         </div>
 
-        {/* Clone + Archive / Reactivate */}
+        {/* Header actions */}
         {list.owner_id === user?.id && (
           <div className="flex shrink-0 items-center gap-2">
+            {/* Convert to Shopping List — only on missing-items lists */}
+            {list.is_missing_list && (
+              <button
+                onClick={() => convertToListMutation.mutate()}
+                disabled={convertToListMutation.isPending || items.length === 0}
+                className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
+              >
+                {convertToListMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ListPlus className="h-4 w-4" />
+                )}
+                {t('missing.convertToList')}
+              </button>
+            )}
+
             <button
               onClick={() => cloneMutation.mutate()}
               disabled={cloneMutation.isPending}
