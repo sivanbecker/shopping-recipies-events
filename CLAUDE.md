@@ -1,5 +1,10 @@
 # Claude Code Instructions
 
+## Model Usage
+
+- **Branching Workflow** and **Quality Gates** steps must use the **Haiku model** (`claude-haiku-4-5-20251001`).
+- If any step reveals failing tests, lint errors, or formatting issues that require code changes, **switch to the default model** (Sonnet) to diagnose and fix, then resume with Haiku.
+
 ## Branching Workflow
 
 **Never work directly on `main`.** For every task or feature:
