@@ -16,6 +16,7 @@ import {
   Copy,
   X,
   ListPlus,
+  ChevronDown,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -68,9 +69,10 @@ interface ItemRowProps {
   onToggle: () => void
   onRemove: () => void
   isToggling: boolean
+  shoppingMode?: boolean
 }
 
-function ItemRow({ item, lang, onToggle, onRemove, isToggling }: ItemRowProps) {
+function ItemRow({ item, lang, onToggle, onRemove, isToggling, shoppingMode }: ItemRowProps) {
   const name = lang === 'he' ? item.product.name_he : (item.product.name_en ?? item.product.name_he)
 
   const unitLabel = (() => {
@@ -81,29 +83,31 @@ function ItemRow({ item, lang, onToggle, onRemove, isToggling }: ItemRowProps) {
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-2xl border bg-white p-3.5 shadow-sm transition ${
-        item.is_checked ? 'border-green-100 opacity-60' : 'border-gray-100'
-      }`}
+      className={`flex items-center gap-3 rounded-2xl border bg-white shadow-sm transition ${
+        shoppingMode ? 'p-4' : 'p-3.5'
+      } ${item.is_checked ? 'border-green-100 opacity-60' : 'border-gray-100'}`}
     >
       <button
         onClick={onToggle}
         disabled={isToggling}
-        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition ${
+        className={`shrink-0 flex items-center justify-center rounded-full border-2 transition ${
+          shoppingMode ? 'h-8 w-8' : 'h-6 w-6'
+        } ${
           item.is_checked
             ? 'border-green-500 bg-green-500 text-white'
             : 'border-gray-300 hover:border-brand-400'
         }`}
       >
         {isToggling ? (
-          <Loader2 className="h-3 w-3 animate-spin" />
+          <Loader2 className={`animate-spin ${shoppingMode ? 'h-4 w-4' : 'h-3 w-3'}`} />
         ) : item.is_checked ? (
-          <Check className="h-3.5 w-3.5" />
+          <Check className={shoppingMode ? 'h-5 w-5' : 'h-3.5 w-3.5'} />
         ) : null}
       </button>
 
       <div className="min-w-0 flex-1">
         <span
-          className={`block truncate text-sm font-medium ${
+          className={`block truncate font-medium ${shoppingMode ? 'text-base' : 'text-sm'} ${
             item.is_checked ? 'text-gray-400 line-through' : 'text-gray-800'
           }`}
         >
@@ -118,12 +122,14 @@ function ItemRow({ item, lang, onToggle, onRemove, isToggling }: ItemRowProps) {
         {item.note && <span className="block text-xs italic text-gray-400">{item.note}</span>}
       </div>
 
-      <button
-        onClick={onRemove}
-        className="rounded-lg p-1.5 text-gray-300 transition hover:bg-red-50 hover:text-red-400"
-      >
-        <Trash2 className="h-4 w-4" />
-      </button>
+      {!shoppingMode && (
+        <button
+          onClick={onRemove}
+          className="rounded-lg p-1.5 text-gray-300 transition hover:bg-red-50 hover:text-red-400"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      )}
     </div>
   )
 }
@@ -449,6 +455,9 @@ export default function ListDetailPage() {
   const lang = i18n.language
   const [showAddSheet, setShowAddSheet] = useState(false)
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set())
+  const [shoppingMode, setShoppingMode] = useState(false)
+  const [showDoneDialog, setShowDoneDialog] = useState(false)
+  const [showInCart, setShowInCart] = useState(false)
 
   // ── Queries ──────────────────────────────────────────────────────────────
 
@@ -615,7 +624,9 @@ export default function ListDetailPage() {
 
   // ── Derived state ─────────────────────────────────────────────────────────
 
-  const checkedCount = items.filter(i => i.is_checked).length
+  const uncheckedItems = items.filter(i => !i.is_checked)
+  const checkedItems = items.filter(i => i.is_checked)
+  const checkedCount = checkedItems.length
   const totalCount = items.length
 
   // ── Loading / not found ───────────────────────────────────────────────────
@@ -650,7 +661,7 @@ export default function ListDetailPage() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-4 pb-24">
+    <div className={`space-y-4 ${shoppingMode ? 'pb-36' : 'pb-24'}`}>
       {/* Back nav + header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-col gap-0.5">
@@ -665,62 +676,84 @@ export default function ListDetailPage() {
         </div>
 
         {/* Header actions */}
-        {list.owner_id === user?.id && (
-          <div className="flex shrink-0 items-center gap-2">
-            {/* Convert to Shopping List — only on missing-items lists */}
-            {list.is_missing_list && (
+        {shoppingMode ? (
+          /* Exit shopping mode button */
+          <button
+            onClick={() => setShoppingMode(false)}
+            className="flex shrink-0 items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-200"
+          >
+            <X className="h-4 w-4" />
+            {t('shopping.exitMode')}
+          </button>
+        ) : (
+          list.owner_id === user?.id && (
+            <div className="flex shrink-0 items-center gap-2">
+              {/* Convert to Shopping List — only on missing-items lists */}
+              {list.is_missing_list && (
+                <button
+                  onClick={() => convertToListMutation.mutate()}
+                  disabled={convertToListMutation.isPending || items.length === 0}
+                  className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
+                >
+                  {convertToListMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ListPlus className="h-4 w-4" />
+                  )}
+                  {t('missing.convertToList')}
+                </button>
+              )}
+
               <button
-                onClick={() => convertToListMutation.mutate()}
-                disabled={convertToListMutation.isPending || items.length === 0}
-                className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
+                onClick={() => cloneMutation.mutate()}
+                disabled={cloneMutation.isPending}
+                aria-label={t('lists.clone')}
+                className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-200 disabled:opacity-50"
               >
-                {convertToListMutation.isPending ? (
+                {cloneMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <ListPlus className="h-4 w-4" />
+                  <Copy className="h-4 w-4" />
                 )}
-                {t('missing.convertToList')}
+                {t('lists.clone')}
               </button>
-            )}
 
-            <button
-              onClick={() => cloneMutation.mutate()}
-              disabled={cloneMutation.isPending}
-              aria-label={t('lists.clone')}
-              className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-200 disabled:opacity-50"
-            >
-              {cloneMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-              {t('lists.clone')}
-            </button>
-
-            <button
-              onClick={() => archiveMutation.mutate(!list.is_archived)}
-              disabled={archiveMutation.isPending}
-              className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition ${
-                list.is_archived
-                  ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {archiveMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : list.is_archived ? (
-                <RotateCcw className="h-4 w-4" />
-              ) : (
-                <Archive className="h-4 w-4" />
-              )}
-              {list.is_archived ? t('lists.reactivate') : t('lists.markDone')}
-            </button>
-          </div>
+              <button
+                onClick={() => archiveMutation.mutate(!list.is_archived)}
+                disabled={archiveMutation.isPending}
+                className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition ${
+                  list.is_archived
+                    ? 'bg-green-50 text-green-700 hover:bg-green-100'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {archiveMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : list.is_archived ? (
+                  <RotateCcw className="h-4 w-4" />
+                ) : (
+                  <Archive className="h-4 w-4" />
+                )}
+                {list.is_archived ? t('lists.reactivate') : t('lists.markDone')}
+              </button>
+            </div>
+          )
         )}
       </div>
 
       {/* Progress bar */}
       {totalCount > 0 && <ProgressBar done={checkedCount} total={totalCount} />}
+
+      {/* Start Shopping button — active non-archived non-missing lists with items */}
+      {!shoppingMode && !list.is_archived && !list.is_missing_list && totalCount > 0 && (
+        <button
+          onClick={() => setShoppingMode(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 py-3 text-sm font-semibold text-white transition hover:bg-brand-600"
+        >
+          <ShoppingCart className="h-5 w-5" />
+          {t('shopping.startShopping')}
+        </button>
+      )}
 
       {/* Items */}
       {itemsLoading ? (
@@ -735,7 +768,57 @@ export default function ListDetailPage() {
           <p className="font-semibold text-gray-700">{t('items.empty')}</p>
           <p className="mt-1 text-sm text-gray-400">{t('items.emptyHint')}</p>
         </div>
+      ) : shoppingMode ? (
+        /* ── Shopping mode layout ── */
+        <div className="space-y-3">
+          {/* Unchecked items */}
+          {uncheckedItems.map(item => (
+            <ItemRow
+              key={item.id}
+              item={item}
+              lang={lang}
+              shoppingMode
+              isToggling={togglingIds.has(item.id)}
+              onToggle={() => toggleMutation.mutate({ itemId: item.id, checked: !item.is_checked })}
+              onRemove={() => removeMutation.mutate(item.id)}
+            />
+          ))}
+
+          {/* In Cart collapsible section */}
+          {checkedItems.length > 0 && (
+            <div className="pt-1">
+              <button
+                onClick={() => setShowInCart(s => !s)}
+                className="flex items-center gap-1.5 py-2 text-sm text-gray-500 hover:text-gray-700"
+              >
+                <ChevronDown
+                  className={`h-4 w-4 transition-transform duration-200 ${showInCart ? 'rotate-180' : ''}`}
+                />
+                {t('shopping.inCartSection', { count: checkedItems.length })}
+              </button>
+
+              {showInCart && (
+                <div className="mt-1 space-y-2">
+                  {checkedItems.map(item => (
+                    <ItemRow
+                      key={item.id}
+                      item={item}
+                      lang={lang}
+                      shoppingMode
+                      isToggling={togglingIds.has(item.id)}
+                      onToggle={() =>
+                        toggleMutation.mutate({ itemId: item.id, checked: !item.is_checked })
+                      }
+                      onRemove={() => removeMutation.mutate(item.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       ) : (
+        /* ── Normal layout ── */
         <div className="space-y-2">
           {items.map(item => (
             <ItemRow
@@ -750,15 +833,65 @@ export default function ListDetailPage() {
         </div>
       )}
 
-      {/* FAB — only for active lists */}
+      {/* FAB — only for active lists; raised higher in shopping mode */}
       {!list.is_archived && (
         <button
           onClick={() => setShowAddSheet(true)}
           aria-label={t('items.add')}
-          className="fixed bottom-20 end-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500 text-white shadow-lg transition hover:bg-brand-600 active:scale-95"
+          className={`fixed end-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-500 text-white shadow-lg transition hover:bg-brand-600 active:scale-95 ${
+            shoppingMode ? 'bottom-32' : 'bottom-20'
+          }`}
         >
           <Plus className="h-7 w-7" />
         </button>
+      )}
+
+      {/* Done Shopping fixed bar */}
+      {shoppingMode && (
+        <div className="fixed inset-x-0 bottom-16 z-30 border-t border-gray-100 bg-white px-4 py-3">
+          <button
+            onClick={() => setShowDoneDialog(true)}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-500 py-3.5 text-base font-semibold text-white transition hover:bg-green-600"
+          >
+            <Check className="h-5 w-5" />
+            {t('shopping.doneShopping')}
+          </button>
+        </div>
+      )}
+
+      {/* Done Shopping confirmation dialog */}
+      {showDoneDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="mb-2 text-lg font-bold text-gray-800">
+              {t('shopping.donePromptTitle')}
+            </h2>
+            <p className="mb-6 text-sm text-gray-500">{t('shopping.donePromptBody')}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDoneDialog(false)}
+                className="flex-1 rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
+              >
+                {t('shopping.keepShopping')}
+              </button>
+              <button
+                onClick={() => {
+                  archiveMutation.mutate(true)
+                  setShoppingMode(false)
+                  setShowDoneDialog(false)
+                }}
+                disabled={archiveMutation.isPending}
+                className="flex flex-1 items-center justify-center rounded-xl bg-green-500 py-3 text-sm font-semibold text-white transition hover:bg-green-600 disabled:opacity-60"
+              >
+                {archiveMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  t('shopping.archiveAndDone')
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {showAddSheet && (

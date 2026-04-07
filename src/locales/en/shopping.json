@@ -40,7 +40,13 @@
   "shopping": {
     "startShopping": "Start Shopping",
     "doneShopping": "Done Shopping",
-    "progress": "{{done}} of {{total}} items picked"
+    "progress": "{{done}} of {{total}} items picked",
+    "exitMode": "Exit",
+    "inCartSection": "In Cart ({{count}})",
+    "donePromptTitle": "Done shopping?",
+    "donePromptBody": "Would you like to archive this list?",
+    "archiveAndDone": "Archive & Done",
+    "keepShopping": "Keep Shopping"
   },
   "missing": {
     "addMissing": "Something missing?",

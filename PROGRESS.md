@@ -101,7 +101,15 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 - **Pinned at top** — missing list sorts above all other active lists (`order by is_missing_list desc`).
 - **"Convert to Shopping List" button** — appears in the ListDetailPage header when viewing a missing list; copies all items to a new regular list then **deletes** the missing list; navigates directly to the new list.
 - **`filterProducts` generic** — made `<T extends Product>` so enriched types (`ProductWithUnit`) are preserved through filtering.
-### 3.7 — Shopping Mode (In-Store UX) — NOT STARTED
+### 3.7 — Shopping Mode (In-Store UX) — COMPLETE
+- **"Start Shopping" button** — appears below the progress bar on active, non-archived, non-missing lists with items; enters shopping mode.
+- **Larger touch targets** — check circle grows from `h-6 w-6` → `h-8 w-8`; row padding `p-3.5` → `p-4`; item name `text-sm` → `text-base`.
+- **"In Cart" collapsible section** — checked items collapse under a `ChevronDown` toggle ("In Cart (N)") rather than rendering inline with unchecked items.
+- **Delete button hidden** in shopping mode to prevent accidental removals.
+- **"Done Shopping" fixed bar** — sits above the bottom nav; tapping opens a confirmation dialog to archive the list or keep shopping.
+- **Exit button** — replaces Clone/Archive buttons in the header so users can leave shopping mode without archiving.
+- **FAB raised** in shopping mode so it clears the Done Shopping bar.
+- **i18n** — added `exitMode`, `inCartSection`, `donePromptTitle`, `donePromptBody`, `archiveAndDone`, `keepShopping` keys (both `he` + `en`).
 
 ---
 
