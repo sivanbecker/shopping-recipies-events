@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { User, LogOut, Pencil, Check, X, Loader2 } from 'lucide-react'
+import { LogOut, Pencil, Check, X, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
+import { UserAvatar } from '@/components/UserAvatar'
 
 export default function ProfilePage() {
   const { t, i18n } = useTranslation()
@@ -58,9 +59,7 @@ export default function ProfilePage() {
       {/* Profile card */}
       <div className="rounded-2xl bg-white p-5 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-100">
-            <User className="h-7 w-7 text-brand-600" />
-          </div>
+          <UserAvatar userId={user?.id ?? ''} displayName={profile?.display_name} size={56} />
           <div className="min-w-0 flex-1">
             {editingName ? (
               <div className="flex items-center gap-2">

@@ -7,7 +7,15 @@ import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
-import type { ShoppingList } from '@/types'
+import { AvatarStack } from '@/components/AvatarStack'
+import type { ShoppingList, ListMemberWithProfile } from '@/types'
+
+// Fetch members for a single list (used by ListCard)
+async function fetchListMembers(listId: string): Promise<ListMemberWithProfile[]> {
+  const { data, error } = await supabase.rpc('get_list_members', { p_list_id: listId })
+  if (error) throw error
+  return (data ?? []) as ListMemberWithProfile[]
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -38,6 +46,12 @@ function ListCard({ list, lang }: ListCardProps) {
   const count = itemCount(list)
   const name = listDisplayName(list, lang)
 
+  // Fetch members for this list (lazy, only when card is visible)
+  const { data: members = [] } = useQuery<ListMemberWithProfile[]>({
+    queryKey: ['list_members', list.id],
+    queryFn: () => fetchListMembers(list.id),
+  })
+
   return (
     <Link
       to={`/lists/${list.id}`}
@@ -46,6 +60,9 @@ function ListCard({ list, lang }: ListCardProps) {
       <div className="flex min-w-0 flex-col gap-0.5">
         <span className="truncate font-semibold text-gray-800">{name}</span>
         <span className="text-xs text-gray-400">{t('lists.itemCount', { count })}</span>
+        <div className="mt-1">
+          <AvatarStack members={members} size={20} max={4} />
+        </div>
       </div>
 
       {list.is_missing_list && (
