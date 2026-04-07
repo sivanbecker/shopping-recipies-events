@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
-import { Plus, ShoppingCart, ChevronDown, ChevronUp, Loader2 } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Plus, ShoppingCart, ChevronDown, ChevronUp, Loader2, AlertCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabase'
@@ -139,6 +139,8 @@ function NewListDialog({ onClose }: NewListDialogProps) {
 export default function ListsPage() {
   const { t, i18n } = useTranslation('shopping')
   const { user } = useAuth()
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [showDialog, setShowDialog] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
   const lang = i18n.language
@@ -151,11 +153,40 @@ export default function ListsPage() {
         .select('*, shopping_items(id)')
         .eq('owner_id', user!.id)
         .eq('is_archived', false)
+        .order('is_missing_list', { ascending: false }) // pin missing list first
         .order('created_at', { ascending: false })
       if (error) throw error
       return (data ?? []) as ListWithCount[]
     },
     enabled: !!user,
+  })
+
+  const findOrCreateMissingMutation = useMutation({
+    mutationFn: async () => {
+      // Try to find existing active missing list
+      const { data: existing } = await supabase
+        .from('shopping_lists')
+        .select('id')
+        .eq('owner_id', user!.id)
+        .eq('is_missing_list', true)
+        .eq('is_archived', false)
+        .maybeSingle()
+
+      if (existing) return existing as { id: string }
+
+      const { data: newList, error } = await supabase
+        .from('shopping_lists')
+        .insert({ name: null, owner_id: user!.id, is_missing_list: true })
+        .select('id')
+        .single()
+      if (error) throw error
+      return newList as { id: string }
+    },
+    onSuccess: list => {
+      queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
+      navigate(`/lists/${list.id}`)
+    },
+    onError: () => toast.error('Failed to open missing items list'),
   })
 
   const { data: archivedLists = [], isLoading: isLoadingArchived } = useQuery<ListWithCount[]>({
@@ -231,6 +262,21 @@ export default function ListsPage() {
           )}
         </div>
       )}
+
+      {/* "Something missing?" FAB */}
+      <button
+        onClick={() => findOrCreateMissingMutation.mutate()}
+        disabled={findOrCreateMissingMutation.isPending}
+        aria-label={t('missing.addMissing')}
+        className="fixed bottom-36 end-4 flex items-center gap-2 rounded-full bg-amber-400 px-4 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-amber-500 active:scale-95 disabled:opacity-60"
+      >
+        {findOrCreateMissingMutation.isPending ? (
+          <Loader2 className="h-5 w-5 animate-spin" />
+        ) : (
+          <AlertCircle className="h-5 w-5" />
+        )}
+        {t('missing.addMissing')}
+      </button>
 
       {/* FAB */}
       <button

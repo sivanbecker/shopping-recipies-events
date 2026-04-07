@@ -1,6 +1,6 @@
 import type { Product } from '@/types'
 
-export function filterProducts(products: Product[], query: string): Product[] {
+export function filterProducts<T extends Product>(products: T[], query: string): T[] {
   if (!query.trim()) return products
   const q = query.toLowerCase()
   return products.filter(

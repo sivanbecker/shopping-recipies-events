@@ -96,7 +96,11 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 - Toast "List cloned" with an "Open" action that navigates directly to the new list via `useNavigate`.
 - i18n: `lists.cloneSuccess`, `lists.open` added in both `he` and `en`.
 
-### 3.6 — Missing Items Quick-Add Flow — NOT STARTED
+### 3.6 — Missing Items Quick-Add Flow — COMPLETE
+- **"Something missing?" FAB** — amber button on the Lists page; finds or auto-creates an active `is_missing_list` list and navigates to it. Subsequent taps always go to the same list.
+- **Pinned at top** — missing list sorts above all other active lists (`order by is_missing_list desc`).
+- **"Convert to Shopping List" button** — appears in the ListDetailPage header when viewing a missing list; copies all items to a new regular list then **deletes** the missing list; navigates directly to the new list.
+- **`filterProducts` generic** — made `<T extends Product>` so enriched types (`ProductWithUnit`) are preserved through filtering.
 ### 3.7 — Shopping Mode (In-Store UX) — NOT STARTED
 
 ---
