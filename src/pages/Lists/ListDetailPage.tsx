@@ -17,12 +17,14 @@ import {
   X,
   ListPlus,
   ChevronDown,
+  UserPlus,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { filterProducts } from '@/lib/filterProducts'
+import { ShareListDialog } from './ShareListDialog'
 import type { ShoppingList, ShoppingItemWithProduct, Product, UnitType } from '@/types'
 
 type ProductWithUnit = Product & { default_unit: UnitType | null }
@@ -458,6 +460,7 @@ export default function ListDetailPage() {
   const [shoppingMode, setShoppingMode] = useState(false)
   const [showDoneDialog, setShowDoneDialog] = useState(false)
   const [showInCart, setShowInCart] = useState(false)
+  const [showShareDialog, setShowShareDialog] = useState(false)
 
   // ── Queries ──────────────────────────────────────────────────────────────
 
@@ -705,6 +708,14 @@ export default function ListDetailPage() {
               )}
 
               <button
+                onClick={() => setShowShareDialog(true)}
+                aria-label={t('sharing.shareButton')}
+                className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-200"
+              >
+                <UserPlus className="h-4 w-4" />
+              </button>
+
+              <button
                 onClick={() => cloneMutation.mutate()}
                 disabled={cloneMutation.isPending}
                 aria-label={t('lists.clone')}
@@ -901,6 +912,10 @@ export default function ListDetailPage() {
           items={items}
           onClose={() => setShowAddSheet(false)}
         />
+      )}
+
+      {showShareDialog && (
+        <ShareListDialog listId={id!} onClose={() => setShowShareDialog(false)} />
       )}
     </div>
   )

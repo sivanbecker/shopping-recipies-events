@@ -312,9 +312,42 @@ export type Database = {
         }
         Relationships: []
       }
+      list_members: {
+        Row: {
+          id: string
+          list_id: string
+          user_id: string
+          role: 'owner' | 'editor' | 'viewer'
+        }
+        Insert: {
+          id?: string
+          list_id: string
+          user_id: string
+          role?: 'owner' | 'editor' | 'viewer'
+        }
+        Update: {
+          role?: 'owner' | 'editor' | 'viewer'
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      find_user_by_email: {
+        Args: { p_email: string }
+        Returns: { user_id: string; display_name: string | null }[]
+      }
+      get_list_members: {
+        Args: { p_list_id: string }
+        Returns: {
+          id: string
+          list_id: string
+          user_id: string
+          role: 'owner' | 'editor' | 'viewer'
+          display_name: string | null
+        }[]
+      }
+    }
     Enums: Record<string, never>
   }
 }
