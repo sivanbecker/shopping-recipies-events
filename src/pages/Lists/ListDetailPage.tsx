@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -21,11 +21,13 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { filterProducts } from '@/lib/filterProducts'
 import { ShareListDialog } from './ShareListDialog'
 import type { ShoppingList, ShoppingItemWithProduct, Product, UnitType } from '@/types'
+import type { Database } from '@/types/database'
 
 type ProductWithUnit = Product & { default_unit: UnitType | null }
 
@@ -495,6 +497,73 @@ export default function ListDetailPage() {
     },
     enabled: !!id,
   })
+
+  // ── Realtime subscriptions ────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!id) return
+
+    const channel = supabase
+      .channel(`list-detail-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'shopping_items',
+          filter: `list_id=eq.${id}`,
+        },
+        (
+          payload: RealtimePostgresChangesPayload<
+            Database['public']['Tables']['shopping_items']['Row']
+          >
+        ) => {
+          if (payload.eventType === 'DELETE') {
+            // Remove item from cache
+            queryClient.setQueryData<ShoppingItemWithProduct[]>(
+              ['shopping_items', id],
+              old => old?.filter(item => item.id !== payload.old?.id) ?? []
+            )
+          } else if (payload.eventType === 'UPDATE') {
+            // For is_checked updates, patch in place; for others, invalidate
+            const updated = payload.new
+            if (updated && 'is_checked' in updated) {
+              queryClient.setQueryData<ShoppingItemWithProduct[]>(
+                ['shopping_items', id],
+                old =>
+                  old?.map(item =>
+                    item.id === updated.id ? { ...item, is_checked: updated.is_checked } : item
+                  ) ?? []
+              )
+            } else {
+              // Other field changes need join re-hydration
+              queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+            }
+          } else {
+            // INSERT
+            queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'shopping_lists',
+          filter: `id=eq.${id}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['shopping_list', id] })
+          queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [id, queryClient])
 
   // ── Mutations ────────────────────────────────────────────────────────────
 
