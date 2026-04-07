@@ -129,7 +129,7 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 - **Types** — added `list_members` table types + RPC function types; exported `ListMember`, `ListMemberWithProfile`
 - **i18n** — 16 new keys under `sharing.*` in both `he` and `en` locales
 
-### 4.2 — Supabase Realtime Subscriptions — COMPLETE
+### 4.2 — Supabase Realtime Subscriptions — IN PROGRESS (open bug)
 - **Channel subscription** — single channel per list view (`list-detail-${id}`)
   - Subscribe to `shopping_items` changes (all events: INSERT, UPDATE, DELETE) filtered by `list_id`
   - Subscribe to `shopping_lists` UPDATE events (name, archived status) filtered by list `id`
@@ -142,19 +142,24 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 - **Conflict resolution** — implicit last-write-wins via Postgres server state (no client-side reconciliation needed)
 - **Test infrastructure** — fixed Supabase mock to support `removeChannel()` method
 - **Tests** — 8 new tests verifying channel setup, subscription lifecycle, cache operations
-- **Product visibility fix** — non-owners can now see shared lists correctly. When an item's product is private to the owner (`is_shared=false`), the item shows "—" instead of crashing. This surfaces the product-sharing design issue (see 4.x Planning below).
+- **Fixes shipped alongside**:
+  - Shared lists now appear on the overview page for invited members (removed erroneous `owner_id` filter from `ListsPage` query — RLS handles access control)
+  - `ItemRow` now guards against `product: null` for items whose products are private to the owner — shows "—" instead of crashing
 
-### 4.x — Product Sharing Design (Planning)
+#### 🐛 Open Bug: Realtime INSERT events not received by second user
+- **Symptom:** Account B opens the same shared list. Channel subscribes (`SUBSCRIBED` status confirmed). Account A adds an item. Account B does NOT receive the INSERT event and must refresh manually.
+- **What was checked:** Supabase Realtime enabled on `shopping_items` table ✅; channel status `SUBSCRIBED` ✅; double-`.subscribe()` call fixed ✅; events still not arriving.
+- **Likely cause:** Supabase Postgres Changes subscriptions with `filter:` require the authenticated user to have SELECT access to the matching rows. Account B's RLS on `shopping_items` uses helper functions (`is_list_owner`, `is_list_member`) — if Realtime's internal user context doesn't resolve those `security definer` functions correctly, the row-level filter blocks the event.
+- **Next debugging step:** Try subscribing without the filter (event: `*`, no filter) to see if unfiltered events arrive. If yes, the filter expression is the issue and the fix is to either use a broader channel without a filter and filter client-side, or to restructure the RLS helper for Realtime compatibility.
+- **Debug logging in place:** `console.log('[Realtime] ...')` in `ListDetailPage.tsx` — remove once fixed.
 
-**Issue:** When Account A shares a list with Account B, items added with private products (created by A with `is_shared=false`) appear as "—" to B because RLS blocks access.
-
-**Approaches to consider:**
-1. **Auto-share products on list share** — when a list is shared, auto-set all its product items to `is_shared=true` for visibility
-2. **User share-all setting** — let users toggle "share all my products" globally
-3. **Per-product share on item add** — when adding items to a shared list, prompt user to choose: "Share this product with list members?" or "Keep private?"
-4. **RLS role-based visibility** — if item.added_by is a list member, their products become visible to other members for that list's context (more complex, context-specific access)
-
-**Current behavior:** Items with inaccessible products show "—" gracefully without crashing. Not ideal UX but functional.
+### 4.x — Product Sharing Design — DECIDED, NOT IMPLEMENTED
+- **Issue:** Items with private products (`is_shared=false`) appear as "—" to list members (RLS blocks the product join)
+- **Decision:** Approach (3) — **Global user auto-share-all setting**
+  - Add `auto_share_products` boolean to `profiles` table
+  - Toggle in ProfilePage: "Share all new products I create"
+  - When enabled, new products are inserted with `is_shared=true`
+- **Current state:** Graceful "—" fallback in place, feature not yet implemented
 
 ---
 
