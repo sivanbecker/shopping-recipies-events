@@ -40,7 +40,13 @@
   "shopping": {
     "startShopping": "התחל קנייה",
     "doneShopping": "סיימתי לקנות",
-    "progress": "{{done}} מתוך {{total}} פריטים"
+    "progress": "{{done}} מתוך {{total}} פריטים",
+    "exitMode": "יציאה",
+    "inCartSection": "בעגלה ({{count}})",
+    "donePromptTitle": "סיימת לקנות?",
+    "donePromptBody": "האם לארכב את הרשימה?",
+    "archiveAndDone": "ארכב וסיים",
+    "keepShopping": "המשך לקנות"
   },
   "missing": {
     "addMissing": "משהו חסר?",
