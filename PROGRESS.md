@@ -129,7 +129,21 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 - **Types** — added `list_members` table types + RPC function types; exported `ListMember`, `ListMemberWithProfile`
 - **i18n** — 16 new keys under `sharing.*` in both `he` and `en` locales
 
+### 4.2 — Supabase Realtime Subscriptions — COMPLETE
+- **Channel subscription** — single channel per list view (`list-detail-${id}`)
+  - Subscribe to `shopping_items` changes (all events: INSERT, UPDATE, DELETE) filtered by `list_id`
+  - Subscribe to `shopping_lists` UPDATE events (name, archived status) filtered by list `id`
+- **Smart cache updates**:
+  - DELETE: remove item from cache directly (no join re-hydration needed)
+  - UPDATE is_checked: patch item in-place for instant no-flicker UI feedback (hot path)
+  - UPDATE other fields & INSERT: invalidate queries (need fresh joins from DB)
+  - List updates: invalidate both detail and overview list queries
+- **Cleanup** — `supabase.removeChannel(channel)` on component unmount
+- **Conflict resolution** — implicit last-write-wins via Postgres server state (no client-side reconciliation needed)
+- **Test infrastructure** — fixed Supabase mock to support `removeChannel()` method
+- **Tests** — 8 new tests verifying channel setup, subscription lifecycle, cache operations
+
 ---
 
-## Stages 4.2–8 — Not started
+## Stages 4.3–8 — Not started
 See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full plan.
