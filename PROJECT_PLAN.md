@@ -434,26 +434,84 @@ Skipped rows are downloadable as a CSV for correction and re-import.
 - [ ] Display current members with role badges
 - [ ] Remove member option (owner only)
 
-#### 4.2 — Supabase Realtime Subscriptions
-- [ ] Subscribe to `shopping_items` changes when a list is opened
-- [ ] Subscribe to `shopping_lists` changes (name, active status)
-- [ ] Optimistic updates: update local state immediately, sync in background
-- [ ] Conflict resolution: last-write-wins for checked status
+#### 4.2 — Supabase Realtime Subscriptions ✅ COMPLETE
+- [x] Subscribe to `shopping_items` changes (INSERT / UPDATE / DELETE) when a list is opened
+- [x] Subscribe to `shopping_lists` UPDATE events (name, archived status)
+- [x] Client-side list ID guard (no server-side filter — avoids walrus context issue)
+- [x] Smart cache updates: DELETE removes from cache; UPDATE is_checked patches in-place; INSERT invalidates
+- [x] Conflict resolution: last-write-wins via Postgres server state
 
-#### 4.3 — Presence Indicators
-- [ ] Use Supabase Presence to show who is currently viewing the same list
-- [ ] Display avatar initials in the list header: "2 people viewing"
+**Implementation note — Realtime Broadcast workaround:**
+Supabase Realtime's walrus extension evaluates RLS row-visibility checks in a Postgres context
+where `auth.uid()` cannot be resolved when RLS policies do cross-table joins (our schema:
+`shopping_items` → `list_members` / `shopping_lists`). Walrus silently drops events for all
+subscribers. Fix: after each mutation, the mutating client sends a `broadcast` event
+(`items-changed` / `list-changed`) on the shared channel; all subscribers receive it and
+invalidate their React Query cache. Broadcast bypasses walrus. The subsequent data refetch is
+still protected by REST-side RLS. `postgres_changes` listeners are kept in place and will work
+correctly if Supabase resolves the walrus context issue in a future release.
+
+Also: `supabase.realtime.setAuth(session.access_token)` called explicitly before subscribing
+because Supabase JS v2 only syncs the JWT to Realtime on `SIGNED_IN` / `TOKEN_REFRESHED`,
+not on `INITIAL_SESSION` (silent page-load restore).
+
+#### 4.3 — Presence Indicators (deferred to 4.5)
+Moved and expanded — see Stage 4.5 below.
 
 #### 4.4 — In-App Notifications
 - [ ] Toast notification when another user adds an item to a shared list you are viewing
 - [ ] Unread badge on a list card when items were added while you were away
 
+#### 4.5 — User Avatars & Shared List Social UX
+> **Goal:** At-a-glance visibility of who owns a list and who it is shared with, without opening the sharing dialog. Deterministic generated avatars (no image upload required).
+
+**Avatar generation**
+- Use `boring-avatars` npm package — generates deterministic, attractive SVG avatars from a seed string (display name or user_id). No uploads, no storage, no privacy concerns.
+- Avatar style: `"marble"` or `"beam"` (soft, colorful, unique per user)
+- Seed: `profile.display_name ?? profile.user_id` — stable across sessions
+
+**DB changes**
+- No new columns required for phase 1. Avatar is purely client-generated from existing profile data.
+- Optional future: add `avatar_style` preference to `profiles` to let users pick their avatar style.
+
+**Where avatars appear**
+
+| Location | What to show |
+|---|---|
+| Profile page header | Large avatar (48px) next to display name |
+| List card (shared lists only) | Small avatar stack: owner avatar + member avatars (max 3 visible, then "+N") |
+| List detail header | Same avatar stack, slightly larger; owner avatar highlighted with a ring |
+
+**List card social row (new)**
+- Shown only on lists that have `list_members` entries (i.e., shared lists)
+- Renders a compact horizontal avatar stack (each avatar 24px, overlapping by 8px)
+- Owner avatar always first, with a subtle colored ring to distinguish from members
+- Tapping the stack still opens the ShareListDialog for full management
+- No extra DB query needed — `list_members` with profile data can be joined in the existing lists query or fetched lazily per card
+
+**List detail header social row**
+- Same avatar stack (32px avatars) in the header row next to the share button
+- Tooltips (or press-and-hold on mobile) show display name per avatar
+- Replaces the need to open the sharing dialog just to see who has access
+
+**Implementation plan**
+1. Install `boring-avatars` package
+2. Create `<UserAvatar size profileId displayName />` component — renders the SVG avatar
+3. Create `<AvatarStack members />` component — renders overlapping avatar list with "+N" overflow
+4. Fetch `list_members` joined with `profiles` in the lists overview query (or a separate query per list, lazy)
+5. Add `AvatarStack` to list cards (shared lists only)
+6. Add `AvatarStack` to list detail header
+7. Add single `UserAvatar` to Profile page header
+
 #### Stage 4 Manual Testing Checklist
-- [ ] Open the same list on two browser tabs → add item in one → appears in the other within 1 second
-- [ ] Check an item in one session → immediately reflects in the other session
-- [ ] Invite a user by email → the list appears in their `/lists` page
-- [ ] Remove a user from the list → they lose access immediately
-- [ ] Presence avatars appear when two users view the same list
+- [x] Open the same list on two browser tabs → add item in one → appears in the other within 1 second
+- [x] Check an item in one session → immediately reflects in the other session
+- [x] Invite a user by email → the list appears in their `/lists` page
+- [x] Remove a user from the list → they lose access immediately
+- [ ] Shared list cards show avatar stack of owner + members without opening the sharing dialog
+- [ ] Owner avatar is visually distinct from member avatars (ring/highlight)
+- [ ] Avatars show in list detail header; tooltips reveal display names
+- [ ] Profile page shows the user's own avatar next to their display name
 
 #### Automated Tests
 - [ ] Unit: RLS policies — User A cannot read User B's private list
