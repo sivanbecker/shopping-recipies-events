@@ -492,7 +492,12 @@ Skipped rows are downloadable as a CSV for correction and re-import.
 
 **Current state:** Items with inaccessible products show "—" gracefully (no crash). Functional but poor UX.
 
-**Recommendation:** Implement approach (1) or (3) for MVP, with approach (2) as future nice-to-have. Revisit after user testing.
+**DECISION:** ✅ **Approach (3) — Global user auto-share-all setting**
+- Add `auto_share_products` boolean to profiles table
+- Toggle in ProfilePage: "Share all new products I create"
+- When enabled, new products auto-set `is_shared=true`
+- Solves sharing for products added after setting is enabled
+- Stage 4.x: Plan and implement this feature
 
 ---
 
