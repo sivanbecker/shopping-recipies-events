@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { X, Loader2, User } from 'lucide-react'
+import { X, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import type { ListMemberWithProfile } from '@/types'
+import { UserAvatar } from '@/components/UserAvatar'
 
 interface Props {
   listId: string
@@ -142,9 +143,7 @@ export function ShareListDialog({ listId, onClose }: Props) {
             <ul className="space-y-2">
               {members.map(member => (
                 <li key={member.id} className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-600">
-                    <User className="h-4 w-4" />
-                  </div>
+                  <UserAvatar userId={member.user_id} displayName={member.display_name} size={32} />
                   <span className="min-w-0 flex-1 truncate text-sm font-medium text-gray-800">
                     {member.display_name ?? member.user_id.slice(0, 8)}
                   </span>

@@ -26,7 +26,14 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { filterProducts } from '@/lib/filterProducts'
 import { ShareListDialog } from './ShareListDialog'
-import type { ShoppingList, ShoppingItemWithProduct, Product, UnitType } from '@/types'
+import { AvatarStack } from '@/components/AvatarStack'
+import type {
+  ShoppingList,
+  ShoppingItemWithProduct,
+  Product,
+  UnitType,
+  ListMemberWithProfile,
+} from '@/types'
 import type { Database } from '@/types/database'
 
 type ProductWithUnit = Product & { default_unit: UnitType | null }
@@ -512,6 +519,16 @@ export default function ListDetailPage() {
     enabled: !!id,
   })
 
+  const { data: members = [] } = useQuery<ListMemberWithProfile[]>({
+    queryKey: ['list_members', id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_list_members', { p_list_id: id! })
+      if (error) throw error
+      return (data ?? []) as ListMemberWithProfile[]
+    },
+    enabled: !!id,
+  })
+
   // ── Realtime subscriptions ────────────────────────────────────────────────
 
   useEffect(() => {
@@ -780,6 +797,7 @@ export default function ListDetailPage() {
             {t('lists.title')}
           </Link>
           <h1 className="truncate text-xl font-bold text-gray-800">{displayName}</h1>
+          {members.length > 1 && <AvatarStack members={members} size={28} />}
         </div>
 
         {/* Header actions */}
