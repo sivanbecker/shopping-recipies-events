@@ -60,11 +60,9 @@ function ListCard({ list, lang }: ListCardProps) {
       <div className="flex min-w-0 flex-col gap-0.5">
         <span className="truncate font-semibold text-gray-800">{name}</span>
         <span className="text-xs text-gray-400">{t('lists.itemCount', { count })}</span>
-        {members.length > 1 && (
-          <div className="mt-1">
-            <AvatarStack members={members} size={20} max={4} />
-          </div>
-        )}
+        <div className="mt-1">
+          <AvatarStack members={members} size={20} max={4} />
+        </div>
       </div>
 
       {list.is_missing_list && (

@@ -797,7 +797,7 @@ export default function ListDetailPage() {
             {t('lists.title')}
           </Link>
           <h1 className="truncate text-xl font-bold text-gray-800">{displayName}</h1>
-          {members.length > 1 && <AvatarStack members={members} size={28} />}
+          <AvatarStack members={members} size={28} />
         </div>
 
         {/* Header actions */}
