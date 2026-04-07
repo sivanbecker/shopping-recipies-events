@@ -151,7 +151,6 @@ export default function ListsPage() {
       const { data, error } = await supabase
         .from('shopping_lists')
         .select('*, shopping_items(id)')
-        .eq('owner_id', user!.id)
         .eq('is_archived', false)
         .order('is_missing_list', { ascending: false }) // pin missing list first
         .order('created_at', { ascending: false })
@@ -195,7 +194,6 @@ export default function ListsPage() {
       const { data, error } = await supabase
         .from('shopping_lists')
         .select('*, shopping_items(id)')
-        .eq('owner_id', user!.id)
         .eq('is_archived', true)
         .order('updated_at', { ascending: false })
       if (error) throw error

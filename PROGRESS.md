@@ -113,5 +113,54 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 
 ---
 
-## Stages 4–8 — Not started
+## Stage 4 — Real-time Sharing — IN PROGRESS
+
+### 4.1 — Invite Users to a List — COMPLETE
+- **DB migration 005** — two `security definer` Postgres functions:
+  - `find_user_by_email(p_email)` — queries `auth.users` by email (inaccessible to anon key otherwise)
+  - `get_list_members(p_list_id)` — fetches list members with joined profile display names
+- **Share button** — owner-only `UserPlus` icon button in list detail header
+- **ShareListDialog component** — center modal with:
+  - Members section: displays member display names + inline role picker (Can Edit / Can View) + remove button
+  - Invite section: email input + role selector + Add button
+  - Empty state: "Not shared with anyone yet"
+  - Error handling: "No account found" / "Already a member" with inline error display
+- **Mutations**: `addMemberMutation`, `removeMemberMutation`, `updateRoleMutation` with optimistic updates via TanStack Query
+- **Types** — added `list_members` table types + RPC function types; exported `ListMember`, `ListMemberWithProfile`
+- **i18n** — 16 new keys under `sharing.*` in both `he` and `en` locales
+
+### 4.2 — Supabase Realtime Subscriptions — COMPLETE
+- **Channel subscription** — single channel per list view (`list-detail-${id}`)
+  - `postgres_changes` listeners for `shopping_items` (all events) and `shopping_lists` (UPDATE) — no server-side filter, client-side list ID guard
+  - `broadcast` listeners for `items-changed` and `list-changed` — the primary cross-user notification path (see below)
+- **Root cause of Realtime not working for collaborators:** Supabase Realtime's walrus extension evaluates RLS row-visibility checks in an internal Postgres context where `auth.uid()` cannot be resolved for any user when policies do cross-table joins (`shopping_items` → `list_members` / `shopping_lists`). This caused walrus to silently drop events for ALL subscribers — owners appeared to work only because their mutations called `queryClient.invalidateQueries` on success.
+- **Fix — Realtime Broadcast:** After every mutation that changes shared data, the mutating client sends a broadcast event on the same channel. All subscribers receive it and invalidate their query cache. Broadcast bypasses walrus entirely; the subsequent data refetch is still protected by REST-side RLS.
+  - `broadcastChange(listId, 'items-changed')` called after add/toggle/remove item mutations
+  - `broadcastChange(listId, 'list-changed')` called after archive/reactivate mutation
+  - Helper uses `supabase.getChannels()` to find the live channel without passing refs
+- **Secondary fix — RLS policy (migration 006):** Rewrote `shopping_items` SELECT policy to use direct subqueries instead of `security definer` helper functions. Avoids the walrus context issue if Supabase ever improves walrus for this schema. Also eliminates any risk of `security definer` bypassing expected RLS context.
+- **Explicit Realtime auth:** `supabase.realtime.setAuth(session.access_token)` called before subscribing, guarded by `!session` in the effect. Supabase JS v2 only syncs the JWT to Realtime on `SIGNED_IN`/`TOKEN_REFRESHED`, not on `INITIAL_SESSION` (page-load restore) — explicit call ensures walrus always has the correct JWT.
+- **Smart cache updates (postgres_changes path):**
+  - DELETE: remove item from cache directly
+  - UPDATE is_checked: patch item in-place for instant no-flicker UI feedback
+  - UPDATE other fields & INSERT: invalidate queries (need fresh joins from DB)
+  - List updates: invalidate both detail and overview list queries
+- **Cleanup** — `supabase.removeChannel(channel)` on component unmount
+- **Test infrastructure** — fixed Supabase mock to support `removeChannel()` method
+- **Tests** — 8 tests verifying channel setup, subscription lifecycle, cache operations
+- **Fixes shipped alongside:**
+  - Shared lists now appear on the overview page for invited members (removed erroneous `owner_id` filter from `ListsPage` query — RLS handles access control)
+  - `ItemRow` now guards against `product: null` for items whose products are private to the owner — shows "—" instead of crashing
+
+### 4.x — Product Sharing Design — DECIDED, NOT IMPLEMENTED
+- **Issue:** Items with private products (`is_shared=false`) appear as "—" to list members (RLS blocks the product join)
+- **Decision:** Approach (3) — **Global user auto-share-all setting**
+  - Add `auto_share_products` boolean to `profiles` table
+  - Toggle in ProfilePage: "Share all new products I create"
+  - When enabled, new products are inserted with `is_shared=true`
+- **Current state:** Graceful "—" fallback in place, feature not yet implemented
+
+---
+
+## Stages 4.3–8 — Not started
 See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full plan.

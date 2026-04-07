@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -21,11 +21,13 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { filterProducts } from '@/lib/filterProducts'
 import { ShareListDialog } from './ShareListDialog'
 import type { ShoppingList, ShoppingItemWithProduct, Product, UnitType } from '@/types'
+import type { Database } from '@/types/database'
 
 type ProductWithUnit = Product & { default_unit: UnitType | null }
 
@@ -34,6 +36,15 @@ type ProductWithUnit = Product & { default_unit: UnitType | null }
 function listDisplayName(list: ShoppingList, locale: string): string {
   if (list.name) return list.name
   return format(new Date(list.created_at), locale === 'he' ? 'dd/MM/yyyy' : 'MMM d, yyyy')
+}
+
+// Broadcast a cache-invalidation hint to all subscribers on this list's channel.
+// walrus (Supabase Realtime RLS evaluation) fails for cross-table policies, so
+// postgres_changes alone doesn't reach collaborators. Broadcast bypasses walrus —
+// the actual data re-fetch is still protected by RLS on the REST side.
+function broadcastChange(listId: string, event: 'items-changed' | 'list-changed') {
+  const ch = supabase.getChannels().find(c => c.topic === `realtime:list-detail-${listId}`)
+  void ch?.send({ type: 'broadcast', event, payload: {} })
 }
 
 // ─── ProgressBar ──────────────────────────────────────────────────────────────
@@ -75,10 +86,14 @@ interface ItemRowProps {
 }
 
 function ItemRow({ item, lang, onToggle, onRemove, isToggling, shoppingMode }: ItemRowProps) {
-  const name = lang === 'he' ? item.product.name_he : (item.product.name_en ?? item.product.name_he)
+  const name = item.product
+    ? lang === 'he'
+      ? item.product.name_he
+      : (item.product.name_en ?? item.product.name_he)
+    : '—'
 
   const unitLabel = (() => {
-    const u = item.unit ?? item.product.default_unit
+    const u = item.unit ?? item.product?.default_unit
     if (!u) return null
     return lang === 'he' ? u.label_he : u.label_en
   })()
@@ -207,6 +222,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shopping_items', listId] })
+      broadcastChange(listId, 'items-changed')
       setConfiguring(null)
       setSearch('')
     },
@@ -451,7 +467,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
 export default function ListDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { t, i18n } = useTranslation('shopping')
-  const { user } = useAuth()
+  const { user, session } = useAuth()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const lang = i18n.language
@@ -496,6 +512,91 @@ export default function ListDetailPage() {
     enabled: !!id,
   })
 
+  // ── Realtime subscriptions ────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!id || !session) return
+
+    // Explicitly sync the session JWT to the Realtime client before subscribing.
+    // Supabase JS v2 only calls setAuth on SIGNED_IN / TOKEN_REFRESHED events,
+    // not on INITIAL_SESSION (the silent page-load restore), so walrus would
+    // evaluate RLS with a null uid() for members if we don't do this ourselves.
+    supabase.realtime.setAuth(session.access_token)
+
+    const channel = supabase
+      .channel(`list-detail-${id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'shopping_items',
+        },
+        (
+          payload: RealtimePostgresChangesPayload<
+            Database['public']['Tables']['shopping_items']['Row']
+          >
+        ) => {
+          const rowListId =
+            payload.eventType === 'DELETE' ? payload.old?.list_id : payload.new?.list_id
+          if (rowListId !== id) return
+
+          if (payload.eventType === 'DELETE') {
+            queryClient.setQueryData<ShoppingItemWithProduct[]>(
+              ['shopping_items', id],
+              old => old?.filter(item => item.id !== payload.old?.id) ?? []
+            )
+          } else if (payload.eventType === 'UPDATE') {
+            // Patch is_checked in place (hot path); invalidate for all other updates
+            const updated = payload.new
+            if (updated && updated.is_checked !== undefined) {
+              queryClient.setQueryData<ShoppingItemWithProduct[]>(
+                ['shopping_items', id],
+                old =>
+                  old?.map(item =>
+                    item.id === updated.id ? { ...item, is_checked: updated.is_checked } : item
+                  ) ?? []
+              )
+            } else {
+              queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+            }
+          } else {
+            // INSERT — need fresh join from DB
+            queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'shopping_lists',
+        },
+        (
+          payload: RealtimePostgresChangesPayload<
+            Database['public']['Tables']['shopping_lists']['Row']
+          >
+        ) => {
+          if (payload.new?.id !== id) return
+          queryClient.invalidateQueries({ queryKey: ['shopping_list', id] })
+          queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
+        }
+      )
+      .on('broadcast', { event: 'items-changed' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+      })
+      .on('broadcast', { event: 'list-changed' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['shopping_list', id] })
+        queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [id, queryClient, session])
+
   // ── Mutations ────────────────────────────────────────────────────────────
 
   const toggleMutation = useMutation({
@@ -516,6 +617,7 @@ export default function ListDetailPage() {
         return next
       })
       queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+      broadcastChange(id!, 'items-changed')
     },
     onError: () => toast.error('Failed to update item'),
   })
@@ -528,6 +630,7 @@ export default function ListDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
       queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
+      broadcastChange(id!, 'items-changed')
     },
     onError: () => toast.error('Failed to remove item'),
   })
@@ -543,6 +646,7 @@ export default function ListDetailPage() {
     onSuccess: (_, archive) => {
       queryClient.invalidateQueries({ queryKey: ['shopping_list', id] })
       queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
+      broadcastChange(id!, 'list-changed')
       toast.success(archive ? t('lists.markDone') : t('lists.reactivate'))
     },
     onError: () => toast.error('Failed to update list'),

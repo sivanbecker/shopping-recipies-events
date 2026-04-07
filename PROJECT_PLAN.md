@@ -434,31 +434,128 @@ Skipped rows are downloadable as a CSV for correction and re-import.
 - [ ] Display current members with role badges
 - [ ] Remove member option (owner only)
 
-#### 4.2 — Supabase Realtime Subscriptions
-- [ ] Subscribe to `shopping_items` changes when a list is opened
-- [ ] Subscribe to `shopping_lists` changes (name, active status)
-- [ ] Optimistic updates: update local state immediately, sync in background
-- [ ] Conflict resolution: last-write-wins for checked status
+#### 4.2 — Supabase Realtime Subscriptions ✅ COMPLETE
+- [x] Subscribe to `shopping_items` changes (INSERT / UPDATE / DELETE) when a list is opened
+- [x] Subscribe to `shopping_lists` UPDATE events (name, archived status)
+- [x] Client-side list ID guard (no server-side filter — avoids walrus context issue)
+- [x] Smart cache updates: DELETE removes from cache; UPDATE is_checked patches in-place; INSERT invalidates
+- [x] Conflict resolution: last-write-wins via Postgres server state
 
-#### 4.3 — Presence Indicators
-- [ ] Use Supabase Presence to show who is currently viewing the same list
-- [ ] Display avatar initials in the list header: "2 people viewing"
+**Implementation note — Realtime Broadcast workaround:**
+Supabase Realtime's walrus extension evaluates RLS row-visibility checks in a Postgres context
+where `auth.uid()` cannot be resolved when RLS policies do cross-table joins (our schema:
+`shopping_items` → `list_members` / `shopping_lists`). Walrus silently drops events for all
+subscribers. Fix: after each mutation, the mutating client sends a `broadcast` event
+(`items-changed` / `list-changed`) on the shared channel; all subscribers receive it and
+invalidate their React Query cache. Broadcast bypasses walrus. The subsequent data refetch is
+still protected by REST-side RLS. `postgres_changes` listeners are kept in place and will work
+correctly if Supabase resolves the walrus context issue in a future release.
+
+Also: `supabase.realtime.setAuth(session.access_token)` called explicitly before subscribing
+because Supabase JS v2 only syncs the JWT to Realtime on `SIGNED_IN` / `TOKEN_REFRESHED`,
+not on `INITIAL_SESSION` (silent page-load restore).
+
+#### 4.3 — Presence Indicators (deferred to 4.5)
+Moved and expanded — see Stage 4.5 below.
 
 #### 4.4 — In-App Notifications
 - [ ] Toast notification when another user adds an item to a shared list you are viewing
 - [ ] Unread badge on a list card when items were added while you were away
 
+#### 4.5 — User Avatars & Shared List Social UX
+> **Goal:** At-a-glance visibility of who owns a list and who it is shared with, without opening the sharing dialog. Deterministic generated avatars (no image upload required).
+
+**Avatar generation**
+- Use `boring-avatars` npm package — generates deterministic, attractive SVG avatars from a seed string (display name or user_id). No uploads, no storage, no privacy concerns.
+- Avatar style: `"marble"` or `"beam"` (soft, colorful, unique per user)
+- Seed: `profile.display_name ?? profile.user_id` — stable across sessions
+
+**DB changes**
+- No new columns required for phase 1. Avatar is purely client-generated from existing profile data.
+- Optional future: add `avatar_style` preference to `profiles` to let users pick their avatar style.
+
+**Where avatars appear**
+
+| Location | What to show |
+|---|---|
+| Profile page header | Large avatar (48px) next to display name |
+| List card (shared lists only) | Small avatar stack: owner avatar + member avatars (max 3 visible, then "+N") |
+| List detail header | Same avatar stack, slightly larger; owner avatar highlighted with a ring |
+
+**List card social row (new)**
+- Shown only on lists that have `list_members` entries (i.e., shared lists)
+- Renders a compact horizontal avatar stack (each avatar 24px, overlapping by 8px)
+- Owner avatar always first, with a subtle colored ring to distinguish from members
+- Tapping the stack still opens the ShareListDialog for full management
+- No extra DB query needed — `list_members` with profile data can be joined in the existing lists query or fetched lazily per card
+
+**List detail header social row**
+- Same avatar stack (32px avatars) in the header row next to the share button
+- Tooltips (or press-and-hold on mobile) show display name per avatar
+- Replaces the need to open the sharing dialog just to see who has access
+
+**Implementation plan**
+1. Install `boring-avatars` package
+2. Create `<UserAvatar size profileId displayName />` component — renders the SVG avatar
+3. Create `<AvatarStack members />` component — renders overlapping avatar list with "+N" overflow
+4. Fetch `list_members` joined with `profiles` in the lists overview query (or a separate query per list, lazy)
+5. Add `AvatarStack` to list cards (shared lists only)
+6. Add `AvatarStack` to list detail header
+7. Add single `UserAvatar` to Profile page header
+
 #### Stage 4 Manual Testing Checklist
-- [ ] Open the same list on two browser tabs → add item in one → appears in the other within 1 second
-- [ ] Check an item in one session → immediately reflects in the other session
-- [ ] Invite a user by email → the list appears in their `/lists` page
-- [ ] Remove a user from the list → they lose access immediately
-- [ ] Presence avatars appear when two users view the same list
+- [x] Open the same list on two browser tabs → add item in one → appears in the other within 1 second
+- [x] Check an item in one session → immediately reflects in the other session
+- [x] Invite a user by email → the list appears in their `/lists` page
+- [x] Remove a user from the list → they lose access immediately
+- [ ] Shared list cards show avatar stack of owner + members without opening the sharing dialog
+- [ ] Owner avatar is visually distinct from member avatars (ring/highlight)
+- [ ] Avatars show in list detail header; tooltips reveal display names
+- [ ] Profile page shows the user's own avatar next to their display name
 
 #### Automated Tests
 - [ ] Unit: RLS policies — User A cannot read User B's private list
 - [ ] Unit: list member role permission checks
 - [ ] E2E: Two-user scenario — share list, both add items, verify sync via Supabase Realtime
+
+### Design Decision: Product Sharing in Shared Lists (4.x)
+
+**Issue Identified:** When User A shares a list with User B, items added with private products (created by A with `is_shared=false`) appear with a "—" placeholder to B because RLS denies access to private products.
+
+**Decision Point:** Choose one of these approaches:
+
+1. **Auto-share products on list share (recommended for MVP)**
+   - When a list is shared with members, all product items currently in the list are temporarily treated as visible to members (via shared list context, not global)
+   - Implementation: Modify products RLS to include `id IN (select product_id from shopping_items where list_id IN (select id from shopping_lists where list_id = ... and user in list_members))`
+   - Pro: Simple, no UI changes needed
+   - Con: Complex RLS logic; doesn't apply to products added *after* sharing
+
+2. **Per-product share on item add**
+   - When adding items to a shared list, prompt: "Share this product with list members?" Y/N
+   - Implementation: New UI flow in `AddItemSheet`, new `products_list_access` junction table
+   - Pro: Granular user control
+   - Con: Additional complexity, friction in UX
+
+3. **Global user share-all setting**
+   - Add profile toggle: "Share all my new products with everyone"
+   - Implementation: Add `auto_share_products` to profiles, check in product insert trigger
+   - Pro: One-time decision, solves sharing going forward
+   - Con: Doesn't help existing private products
+
+4. **Role-based visibility (advanced)**
+   - If `item.added_by` is a list member, their products become visible to other members *in that list's context*
+   - Implementation: RLS policy checks if product creator is a member of the list containing the item
+   - Pro: Context-specific, elegant
+   - Con: Very complex RLS; may have performance implications
+
+**Current state:** Items with inaccessible products show "—" gracefully (no crash). Functional but poor UX.
+
+**DECISION:** ✅ **Approach (3) — Global user auto-share-all setting**
+- Add `auto_share_products` boolean to profiles table
+- Toggle in ProfilePage: "Share all new products I create"
+- When enabled, new products auto-set `is_shared=true`
+- Solves sharing for products added after setting is enabled
+- Stage 4.x: Plan and implement this feature
 
 ---
 
