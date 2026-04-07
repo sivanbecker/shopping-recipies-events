@@ -129,29 +129,28 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 - **Types** — added `list_members` table types + RPC function types; exported `ListMember`, `ListMemberWithProfile`
 - **i18n** — 16 new keys under `sharing.*` in both `he` and `en` locales
 
-### 4.2 — Supabase Realtime Subscriptions — IN PROGRESS (open bug)
+### 4.2 — Supabase Realtime Subscriptions — COMPLETE
 - **Channel subscription** — single channel per list view (`list-detail-${id}`)
-  - Subscribe to `shopping_items` changes (all events: INSERT, UPDATE, DELETE) filtered by `list_id`
-  - Subscribe to `shopping_lists` UPDATE events (name, archived status) filtered by list `id`
-- **Smart cache updates**:
-  - DELETE: remove item from cache directly (no join re-hydration needed)
-  - UPDATE is_checked: patch item in-place for instant no-flicker UI feedback (hot path)
+  - `postgres_changes` listeners for `shopping_items` (all events) and `shopping_lists` (UPDATE) — no server-side filter, client-side list ID guard
+  - `broadcast` listeners for `items-changed` and `list-changed` — the primary cross-user notification path (see below)
+- **Root cause of Realtime not working for collaborators:** Supabase Realtime's walrus extension evaluates RLS row-visibility checks in an internal Postgres context where `auth.uid()` cannot be resolved for any user when policies do cross-table joins (`shopping_items` → `list_members` / `shopping_lists`). This caused walrus to silently drop events for ALL subscribers — owners appeared to work only because their mutations called `queryClient.invalidateQueries` on success.
+- **Fix — Realtime Broadcast:** After every mutation that changes shared data, the mutating client sends a broadcast event on the same channel. All subscribers receive it and invalidate their query cache. Broadcast bypasses walrus entirely; the subsequent data refetch is still protected by REST-side RLS.
+  - `broadcastChange(listId, 'items-changed')` called after add/toggle/remove item mutations
+  - `broadcastChange(listId, 'list-changed')` called after archive/reactivate mutation
+  - Helper uses `supabase.getChannels()` to find the live channel without passing refs
+- **Secondary fix — RLS policy (migration 006):** Rewrote `shopping_items` SELECT policy to use direct subqueries instead of `security definer` helper functions. Avoids the walrus context issue if Supabase ever improves walrus for this schema. Also eliminates any risk of `security definer` bypassing expected RLS context.
+- **Explicit Realtime auth:** `supabase.realtime.setAuth(session.access_token)` called before subscribing, guarded by `!session` in the effect. Supabase JS v2 only syncs the JWT to Realtime on `SIGNED_IN`/`TOKEN_REFRESHED`, not on `INITIAL_SESSION` (page-load restore) — explicit call ensures walrus always has the correct JWT.
+- **Smart cache updates (postgres_changes path):**
+  - DELETE: remove item from cache directly
+  - UPDATE is_checked: patch item in-place for instant no-flicker UI feedback
   - UPDATE other fields & INSERT: invalidate queries (need fresh joins from DB)
   - List updates: invalidate both detail and overview list queries
 - **Cleanup** — `supabase.removeChannel(channel)` on component unmount
-- **Conflict resolution** — implicit last-write-wins via Postgres server state (no client-side reconciliation needed)
 - **Test infrastructure** — fixed Supabase mock to support `removeChannel()` method
-- **Tests** — 8 new tests verifying channel setup, subscription lifecycle, cache operations
-- **Fixes shipped alongside**:
+- **Tests** — 8 tests verifying channel setup, subscription lifecycle, cache operations
+- **Fixes shipped alongside:**
   - Shared lists now appear on the overview page for invited members (removed erroneous `owner_id` filter from `ListsPage` query — RLS handles access control)
   - `ItemRow` now guards against `product: null` for items whose products are private to the owner — shows "—" instead of crashing
-
-#### 🐛 Open Bug: Realtime INSERT events not received by second user
-- **Symptom:** Account B opens the same shared list. Channel subscribes (`SUBSCRIBED` status confirmed). Account A adds an item. Account B does NOT receive the INSERT event and must refresh manually.
-- **What was checked:** Supabase Realtime enabled on `shopping_items` table ✅; channel status `SUBSCRIBED` ✅; double-`.subscribe()` call fixed ✅; events still not arriving.
-- **Likely cause:** Supabase Postgres Changes subscriptions with `filter:` require the authenticated user to have SELECT access to the matching rows. Account B's RLS on `shopping_items` uses helper functions (`is_list_owner`, `is_list_member`) — if Realtime's internal user context doesn't resolve those `security definer` functions correctly, the row-level filter blocks the event.
-- **Next debugging step:** Try subscribing without the filter (event: `*`, no filter) to see if unfiltered events arrive. If yes, the filter expression is the issue and the fix is to either use a broader channel without a filter and filter client-side, or to restructure the RLS helper for Realtime compatibility.
-- **Debug logging in place:** `console.log('[Realtime] ...')` in `ListDetailPage.tsx` — remove once fixed.
 
 ### 4.x — Product Sharing Design — DECIDED, NOT IMPLEMENTED
 - **Issue:** Items with private products (`is_shared=false`) appear as "—" to list members (RLS blocks the product join)

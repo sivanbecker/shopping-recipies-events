@@ -38,6 +38,15 @@ function listDisplayName(list: ShoppingList, locale: string): string {
   return format(new Date(list.created_at), locale === 'he' ? 'dd/MM/yyyy' : 'MMM d, yyyy')
 }
 
+// Broadcast a cache-invalidation hint to all subscribers on this list's channel.
+// walrus (Supabase Realtime RLS evaluation) fails for cross-table policies, so
+// postgres_changes alone doesn't reach collaborators. Broadcast bypasses walrus —
+// the actual data re-fetch is still protected by RLS on the REST side.
+function broadcastChange(listId: string, event: 'items-changed' | 'list-changed') {
+  const ch = supabase.getChannels().find(c => c.topic === `realtime:list-detail-${listId}`)
+  void ch?.send({ type: 'broadcast', event, payload: {} })
+}
+
 // ─── ProgressBar ──────────────────────────────────────────────────────────────
 
 interface ProgressBarProps {
@@ -213,6 +222,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shopping_items', listId] })
+      broadcastChange(listId, 'items-changed')
       setConfiguring(null)
       setSearch('')
     },
@@ -457,7 +467,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
 export default function ListDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { t, i18n } = useTranslation('shopping')
-  const { user } = useAuth()
+  const { user, session } = useAuth()
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const lang = i18n.language
@@ -505,7 +515,13 @@ export default function ListDetailPage() {
   // ── Realtime subscriptions ────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!id) return
+    if (!id || !session) return
+
+    // Explicitly sync the session JWT to the Realtime client before subscribing.
+    // Supabase JS v2 only calls setAuth on SIGNED_IN / TOKEN_REFRESHED events,
+    // not on INITIAL_SESSION (the silent page-load restore), so walrus would
+    // evaluate RLS with a null uid() for members if we don't do this ourselves.
+    supabase.realtime.setAuth(session.access_token)
 
     const channel = supabase
       .channel(`list-detail-${id}`)
@@ -515,23 +531,25 @@ export default function ListDetailPage() {
           event: '*',
           schema: 'public',
           table: 'shopping_items',
-          filter: `list_id=eq.${id}`,
         },
         (
           payload: RealtimePostgresChangesPayload<
             Database['public']['Tables']['shopping_items']['Row']
           >
         ) => {
+          const rowListId =
+            payload.eventType === 'DELETE' ? payload.old?.list_id : payload.new?.list_id
+          if (rowListId !== id) return
+
           if (payload.eventType === 'DELETE') {
-            // Remove item from cache
             queryClient.setQueryData<ShoppingItemWithProduct[]>(
               ['shopping_items', id],
               old => old?.filter(item => item.id !== payload.old?.id) ?? []
             )
           } else if (payload.eventType === 'UPDATE') {
-            // For is_checked updates, patch in place; for others, invalidate
+            // Patch is_checked in place (hot path); invalidate for all other updates
             const updated = payload.new
-            if (updated && 'is_checked' in updated) {
+            if (updated && updated.is_checked !== undefined) {
               queryClient.setQueryData<ShoppingItemWithProduct[]>(
                 ['shopping_items', id],
                 old =>
@@ -540,11 +558,10 @@ export default function ListDetailPage() {
                   ) ?? []
               )
             } else {
-              // Other field changes need join re-hydration
               queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
             }
           } else {
-            // INSERT
+            // INSERT — need fresh join from DB
             queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
           }
         }
@@ -555,19 +572,30 @@ export default function ListDetailPage() {
           event: 'UPDATE',
           schema: 'public',
           table: 'shopping_lists',
-          filter: `id=eq.${id}`,
         },
-        () => {
+        (
+          payload: RealtimePostgresChangesPayload<
+            Database['public']['Tables']['shopping_lists']['Row']
+          >
+        ) => {
+          if (payload.new?.id !== id) return
           queryClient.invalidateQueries({ queryKey: ['shopping_list', id] })
           queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
         }
       )
+      .on('broadcast', { event: 'items-changed' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+      })
+      .on('broadcast', { event: 'list-changed' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['shopping_list', id] })
+        queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
+      })
       .subscribe()
 
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [id, queryClient])
+  }, [id, queryClient, session])
 
   // ── Mutations ────────────────────────────────────────────────────────────
 
@@ -589,6 +617,7 @@ export default function ListDetailPage() {
         return next
       })
       queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+      broadcastChange(id!, 'items-changed')
     },
     onError: () => toast.error('Failed to update item'),
   })
@@ -601,6 +630,7 @@ export default function ListDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
       queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
+      broadcastChange(id!, 'items-changed')
     },
     onError: () => toast.error('Failed to remove item'),
   })
@@ -616,6 +646,7 @@ export default function ListDetailPage() {
     onSuccess: (_, archive) => {
       queryClient.invalidateQueries({ queryKey: ['shopping_list', id] })
       queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
+      broadcastChange(id!, 'list-changed')
       toast.success(archive ? t('lists.markDone') : t('lists.reactivate'))
     },
     onError: () => toast.error('Failed to update list'),
