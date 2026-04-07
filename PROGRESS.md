@@ -142,6 +142,19 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 - **Conflict resolution** — implicit last-write-wins via Postgres server state (no client-side reconciliation needed)
 - **Test infrastructure** — fixed Supabase mock to support `removeChannel()` method
 - **Tests** — 8 new tests verifying channel setup, subscription lifecycle, cache operations
+- **Product visibility fix** — non-owners can now see shared lists correctly. When an item's product is private to the owner (`is_shared=false`), the item shows "—" instead of crashing. This surfaces the product-sharing design issue (see 4.x Planning below).
+
+### 4.x — Product Sharing Design (Planning)
+
+**Issue:** When Account A shares a list with Account B, items added with private products (created by A with `is_shared=false`) appear as "—" to B because RLS blocks access.
+
+**Approaches to consider:**
+1. **Auto-share products on list share** — when a list is shared, auto-set all its product items to `is_shared=true` for visibility
+2. **User share-all setting** — let users toggle "share all my products" globally
+3. **Per-product share on item add** — when adding items to a shared list, prompt user to choose: "Share this product with list members?" or "Keep private?"
+4. **RLS role-based visibility** — if item.added_by is a list member, their products become visible to other members for that list's context (more complex, context-specific access)
+
+**Current behavior:** Items with inaccessible products show "—" gracefully without crashing. Not ideal UX but functional.
 
 ---
 

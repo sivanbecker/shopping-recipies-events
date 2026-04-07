@@ -460,6 +460,40 @@ Skipped rows are downloadable as a CSV for correction and re-import.
 - [ ] Unit: list member role permission checks
 - [ ] E2E: Two-user scenario — share list, both add items, verify sync via Supabase Realtime
 
+### Design Decision: Product Sharing in Shared Lists (4.x)
+
+**Issue Identified:** When User A shares a list with User B, items added with private products (created by A with `is_shared=false`) appear with a "—" placeholder to B because RLS denies access to private products.
+
+**Decision Point:** Choose one of these approaches:
+
+1. **Auto-share products on list share (recommended for MVP)**
+   - When a list is shared with members, all product items currently in the list are temporarily treated as visible to members (via shared list context, not global)
+   - Implementation: Modify products RLS to include `id IN (select product_id from shopping_items where list_id IN (select id from shopping_lists where list_id = ... and user in list_members))`
+   - Pro: Simple, no UI changes needed
+   - Con: Complex RLS logic; doesn't apply to products added *after* sharing
+
+2. **Per-product share on item add**
+   - When adding items to a shared list, prompt: "Share this product with list members?" Y/N
+   - Implementation: New UI flow in `AddItemSheet`, new `products_list_access` junction table
+   - Pro: Granular user control
+   - Con: Additional complexity, friction in UX
+
+3. **Global user share-all setting**
+   - Add profile toggle: "Share all my new products with everyone"
+   - Implementation: Add `auto_share_products` to profiles, check in product insert trigger
+   - Pro: One-time decision, solves sharing going forward
+   - Con: Doesn't help existing private products
+
+4. **Role-based visibility (advanced)**
+   - If `item.added_by` is a list member, their products become visible to other members *in that list's context*
+   - Implementation: RLS policy checks if product creator is a member of the list containing the item
+   - Pro: Context-specific, elegant
+   - Con: Very complex RLS; may have performance implications
+
+**Current state:** Items with inaccessible products show "—" gracefully (no crash). Functional but poor UX.
+
+**Recommendation:** Implement approach (1) or (3) for MVP, with approach (2) as future nice-to-have. Revisit after user testing.
+
 ---
 
 ## STAGE 5 — Recipes
