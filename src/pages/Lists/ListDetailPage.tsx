@@ -77,10 +77,14 @@ interface ItemRowProps {
 }
 
 function ItemRow({ item, lang, onToggle, onRemove, isToggling, shoppingMode }: ItemRowProps) {
-  const name = lang === 'he' ? item.product.name_he : (item.product.name_en ?? item.product.name_he)
+  const name = item.product
+    ? lang === 'he'
+      ? item.product.name_he
+      : (item.product.name_en ?? item.product.name_he)
+    : '—'
 
   const unitLabel = (() => {
-    const u = item.unit ?? item.product.default_unit
+    const u = item.unit ?? item.product?.default_unit
     if (!u) return null
     return lang === 'he' ? u.label_he : u.label_en
   })()
