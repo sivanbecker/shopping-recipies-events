@@ -113,5 +113,23 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 
 ---
 
-## Stages 4–8 — Not started
+## Stage 4 — Real-time Sharing — IN PROGRESS
+
+### 4.1 — Invite Users to a List — COMPLETE
+- **DB migration 005** — two `security definer` Postgres functions:
+  - `find_user_by_email(p_email)` — queries `auth.users` by email (inaccessible to anon key otherwise)
+  - `get_list_members(p_list_id)` — fetches list members with joined profile display names
+- **Share button** — owner-only `UserPlus` icon button in list detail header
+- **ShareListDialog component** — center modal with:
+  - Members section: displays member display names + inline role picker (Can Edit / Can View) + remove button
+  - Invite section: email input + role selector + Add button
+  - Empty state: "Not shared with anyone yet"
+  - Error handling: "No account found" / "Already a member" with inline error display
+- **Mutations**: `addMemberMutation`, `removeMemberMutation`, `updateRoleMutation` with optimistic updates via TanStack Query
+- **Types** — added `list_members` table types + RPC function types; exported `ListMember`, `ListMemberWithProfile`
+- **i18n** — 16 new keys under `sharing.*` in both `he` and `en` locales
+
+---
+
+## Stages 4.2–8 — Not started
 See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full plan.
