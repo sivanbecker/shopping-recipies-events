@@ -54,6 +54,24 @@
     "convertToList": "Convert to Shopping List",
     "convertSelected": "Convert selected to list"
   },
+  "sharing": {
+    "shareButton": "Share list",
+    "title": "Share List",
+    "membersSection": "Members",
+    "noMembers": "Not shared with anyone yet",
+    "inviteSection": "Invite someone",
+    "emailPlaceholder": "Email address",
+    "roleEditor": "Can Edit",
+    "roleViewer": "Can View",
+    "addButton": "Add",
+    "addedSuccess": "Member added",
+    "removedSuccess": "Member removed",
+    "removeError": "Failed to remove member",
+    "updateRoleError": "Failed to update role",
+    "notFound": "No account found with this email",
+    "alreadyMember": "This person is already a member",
+    "removeMember": "Remove member"
+  },
   "units": {
     "units": "units",
     "grams": "g",

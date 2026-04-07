@@ -54,6 +54,24 @@
     "convertToList": "המר לרשימת קניות",
     "convertSelected": "המר נבחרים לרשימה"
   },
+  "sharing": {
+    "shareButton": "שתף רשימה",
+    "title": "שתף רשימה",
+    "membersSection": "חברים",
+    "noMembers": "לא משותפת עם אף אחד עדיין",
+    "inviteSection": "הזמן מישהו",
+    "emailPlaceholder": "כתובת אימייל",
+    "roleEditor": "יכול לערוך",
+    "roleViewer": "יכול לצפות",
+    "addButton": "הוסף",
+    "addedSuccess": "חבר נוסף",
+    "removedSuccess": "חבר הוסר",
+    "removeError": "הסרת החבר נכשלה",
+    "updateRoleError": "עדכון ההרשאה נכשל",
+    "notFound": "לא נמצא חשבון עם האימייל הזה",
+    "alreadyMember": "האדם הזה כבר חבר ברשימה",
+    "removeMember": "הסר חבר"
+  },
   "units": {
     "units": "יחידות",
     "grams": "גרם",

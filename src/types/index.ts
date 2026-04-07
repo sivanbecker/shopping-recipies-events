@@ -12,6 +12,7 @@ export type RecipeIngredient = Database['public']['Tables']['recipe_ingredients'
 export type RecipeStep = Database['public']['Tables']['recipe_steps']['Row']
 export type Event = Database['public']['Tables']['events']['Row']
 export type EventGuest = Database['public']['Tables']['event_guests']['Row']
+export type ListMember = Database['public']['Tables']['list_members']['Row']
 
 // Enriched types for UI use
 export type ShoppingItemWithProduct = ShoppingItem & {
@@ -34,6 +35,8 @@ export type RecipeWithDetails = Recipe & {
   })[]
   steps: RecipeStep[]
 }
+
+export type ListMemberWithProfile = ListMember & { display_name: string | null }
 
 export type Language = 'he' | 'en'
 export type UnitCategory = 'weight' | 'volume' | 'count' | 'cooking'
