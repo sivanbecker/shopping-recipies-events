@@ -22,6 +22,7 @@ After completing any change, always verify:
 1. **Tests pass** — run `npm test` (Vitest) and ensure all tests are green.
 2. **Lint is clean** — run `npm run lint` with zero errors.
 3. **Formatting is clean** — run `npm run format` (or the project's formatter) and ensure no diffs remain.
+4. **Migrations applied** — run `supabase migration list` and confirm every migration in `supabase/migrations/` has been applied (no pending rows). If any are pending, remind the user to run `supabase db push` or apply them via the Supabase dashboard before merging.
 
 ### Pull Request descriptions
 

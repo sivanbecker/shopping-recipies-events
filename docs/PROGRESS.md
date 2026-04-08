@@ -163,16 +163,27 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 - **Migration 007** — updated `get_list_members` RPC to return owner + invited members (via UNION query)
 - **PR #13** — All changes committed and pushed
 
-### 4.x — Product Sharing Design — DECIDED, NOT IMPLEMENTED
-- **Issue:** Items with private products (`is_shared=false`) appear as "—" to list members (RLS blocks the product join)
-- **Decision:** Approach (3) — **Global user auto-share-all setting**
-  - Add `auto_share_products` boolean to `profiles` table
-  - Toggle in ProfilePage: "Share all new products I create"
-  - When enabled, new products are inserted with `is_shared=true`
-- **Current state:** Graceful "—" fallback in place, feature not yet implemented
+### 4.x — List-Level Product Sharing — COMPLETE
+- **Issue:** Items with private products (`is_shared=false`) appeared as "—" to list members (RLS blocked the product join)
+- **Approach:** Expand products SELECT RLS to allow visibility when two users share any list together
+- **Migration 008** — new `USING` clause with 5 conditions:
+  1. `is_shared = true` (globally shared, unchanged)
+  2. `created_by = auth.uid()` (own product, unchanged)
+  3. Creator owns a list the current user is an invited member of
+  4. Current user owns a list the creator is an invited member of
+  5. Both are invited members of the same list
+- **ProductsPage catalog** — explicit `.or('is_shared.eq.true,created_by.eq.{uid}')` filter added so the catalog stays as-is (own + globally shared only)
+- **AddItemSheet / Add-to-list** — unchanged; relies on new RLS, automatically surfaces list-mates' private products
+- **Product creation** — unchanged; products default to `is_shared: false`, visible to list-mates through RLS
+
+### 4.6 — Item-Level "Added By" Avatar — COMPLETE
+- Each item row in `ListDetailPage` now shows a 20px avatar of the user who added the item
+- Cross-referenced against the `members` array already loaded in the page — no extra DB query
+- `UserAvatar` placed between quantity label and delete button; tooltip shows display name
+- Works in both normal mode and shopping mode
 
 ---
 
-## Stages 4.3, 4.4, and 4.6+ — Not started
+## Stages 4.3 and 4.4 — Not started
 See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full plan.
 
