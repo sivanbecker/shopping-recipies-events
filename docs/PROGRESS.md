@@ -176,8 +176,14 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 - **AddItemSheet / Add-to-list** — unchanged; relies on new RLS, automatically surfaces list-mates' private products
 - **Product creation** — unchanged; products default to `is_shared: false`, visible to list-mates through RLS
 
+### 4.6 — Item-Level "Added By" Avatar — COMPLETE
+- Each item row in `ListDetailPage` now shows a 20px avatar of the user who added the item
+- Cross-referenced against the `members` array already loaded in the page — no extra DB query
+- `UserAvatar` placed between quantity label and delete button; tooltip shows display name
+- Works in both normal mode and shopping mode
+
 ---
 
-## Stages 4.3, 4.4, and 4.6+ — Not started
+## Stages 4.3 and 4.4 — Not started
 See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full plan.
 
