@@ -346,10 +346,10 @@ export default function RecipeDetailPage() {
 
   // Initialize servings from recipe when it loads
   useEffect(() => {
-    if (recipe && recipe.servings) {
+    if (recipe?.servings) {
       setServings(recipe.servings)
     }
-  }, [recipe?.id])
+  }, [recipe?.id, recipe?.servings])
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -389,14 +389,22 @@ export default function RecipeDetailPage() {
 
   // Group ingredients by substitute_group_id
   const groupedIngredients = ingredients.reduce(
-    (acc: Array<{ primary: typeof ingredients[0]; substitutes: typeof ingredients }>, ing, idx) => {
+    (
+      acc: Array<{ primary: (typeof ingredients)[0]; substitutes: typeof ingredients }>,
+      ing,
+      idx
+    ) => {
       if (
         !ing.substitute_group_id ||
-        ingredients.findIndex((i: typeof ing) => i.substitute_group_id === ing.substitute_group_id) === idx
+        ingredients.findIndex(
+          (i: typeof ing) => i.substitute_group_id === ing.substitute_group_id
+        ) === idx
       ) {
         acc.push({ primary: ing, substitutes: [] })
       } else {
-        const group = acc.find((g: typeof acc[0]) => g.primary.substitute_group_id === ing.substitute_group_id)
+        const group = acc.find(
+          (g: (typeof acc)[0]) => g.primary.substitute_group_id === ing.substitute_group_id
+        )
         if (group) {
           group.substitutes.push(ing)
         }
