@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -341,7 +341,15 @@ export default function RecipeDetailPage() {
       if (error) throw error
       return data
     },
+    enabled: !!recipeId,
   })
+
+  // Initialize servings from recipe when it loads
+  useEffect(() => {
+    if (recipe && recipe.servings) {
+      setServings(recipe.servings)
+    }
+  }, [recipe?.id])
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -372,11 +380,6 @@ export default function RecipeDetailPage() {
         <p className="text-gray-500">{tCommon('status.notFound')}</p>
       </div>
     )
-  }
-
-  // Initialize servings from recipe on first load
-  if (servings === 4 && recipe.servings !== 4) {
-    setServings(recipe.servings)
   }
 
   const isOwner = recipe.owner_id === user?.id
