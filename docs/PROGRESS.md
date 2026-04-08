@@ -152,6 +152,17 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
   - Shared lists now appear on the overview page for invited members (removed erroneous `owner_id` filter from `ListsPage` query — RLS handles access control)
   - `ItemRow` now guards against `product: null` for items whose products are private to the owner — shows "—" instead of crashing
 
+### 4.5 — User Avatars & Shared List Social UX — COMPLETE
+- **Avatar generation** — installed `boring-avatars` package; deterministic SVG avatars seeded by `user_id`
+- **`UserAvatar` component** — renders avatar with optional ring highlight for owner distinction; includes title tooltip
+- **`AvatarStack` component** — overlapping avatar display (owner always first, max 3 visible, "+N" for overflow)
+- **ProfilePage header** — replaced generic user icon with large avatar next to display name
+- **ShareListDialog** — replaced user icons in member rows with avatars; each member shows their unique avatar
+- **ListDetailPage header** — added AvatarStack below list name (shows owner + invited members)
+- **ListsPage cards** — added AvatarStack below item count (shows owner + invited members)
+- **Migration 007** — updated `get_list_members` RPC to return owner + invited members (via UNION query)
+- **PR #13** — All changes committed and pushed
+
 ### 4.x — Product Sharing Design — DECIDED, NOT IMPLEMENTED
 - **Issue:** Items with private products (`is_shared=false`) appear as "—" to list members (RLS blocks the product join)
 - **Decision:** Approach (3) — **Global user auto-share-all setting**
@@ -162,5 +173,6 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 
 ---
 
-## Stages 4.3–8 — Not started
+## Stages 4.3, 4.4, and 4.6+ — Not started
 See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full plan.
+
