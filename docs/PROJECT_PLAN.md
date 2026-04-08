@@ -503,6 +503,28 @@ Moved and expanded — see Stage 4.5 below.
 6. Add `AvatarStack` to list detail header
 7. Add single `UserAvatar` to Profile page header
 
+#### 4.6 — Item-Level "Added By" Avatar
+
+> **Goal:** Each item row in a shared list shows a small avatar of the user who added it, so members know at a glance who is responsible for each item.
+
+**Where it appears**
+- Every item row in `ListDetailPage` (`/lists/:id`) — a small avatar (20px) to the right of the quantity/unit label, before the delete button
+- Shown in both normal mode and shopping mode
+- Tooltip on hover/press shows the display name
+
+**Data source**
+- `shopping_items.added_by` (UUID, already fetched) is cross-referenced against the `members` array already loaded in `ListDetailPage` via `useQuery(['list_members', id])` (includes owner + invited members)
+- No extra DB query required
+
+**Implementation plan**
+1. Pass the `members` array into `ItemRow` props (or look it up via a prop passed from the parent)
+2. Inside `ItemRow`, find `members.find(m => m.user_id === item.added_by)`
+3. Render `<UserAvatar userId={item.added_by} displayName={found?.display_name} size={20} />` in the item row
+4. Place avatar between quantity label and delete button
+
+**DB changes**
+- None. `added_by` is already on `shopping_items` and `members` data is already fetched.
+
 #### Stage 4 Manual Testing Checklist
 - [x] Open the same list on two browser tabs → add item in one → appears in the other within 1 second
 - [x] Check an item in one session → immediately reflects in the other session
@@ -512,6 +534,8 @@ Moved and expanded — see Stage 4.5 below.
 - [ ] Owner avatar is visually distinct from member avatars (ring/highlight)
 - [ ] Avatars show in list detail header; tooltips reveal display names
 - [ ] Profile page shows the user's own avatar next to their display name
+- [ ] Each item row shows a small avatar of the user who added it
+- [ ] Avatar tooltip shows the user's display name
 
 #### Automated Tests
 - [ ] Unit: RLS policies — User A cannot read User B's private list
