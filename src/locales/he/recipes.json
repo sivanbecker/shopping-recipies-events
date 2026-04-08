@@ -34,6 +34,31 @@
     "added": "נוסף לרשימה!",
     "forRecipe": "עבור מתכון: {{name}}"
   },
+  "search": "חפש מתכונים",
+  "filterByTool": "סנן לפי כלים",
+  "shared": "משותף",
+  "personal": "אישי",
+  "edit": "ערוך",
+  "delete": "מחק",
+  "confirmDelete": "מחק מתכון?",
+  "confirmDeleteHint": "לא ניתן לבטל פעולה זו.",
+  "noMatch": "לא נמצאו מתכונים",
+  "form": {
+    "title": "שם המתכון",
+    "description": "תיאור",
+    "servings": "מספר המנות",
+    "prepTime": "זמן הכנה (דקות)",
+    "tools": "כלים נדרשים",
+    "ingredients": "מצרכים",
+    "addIngredient": "הוסף מצרך",
+    "addSubstitute": "הוסף תחליף",
+    "steps": "אופן הכנה",
+    "addStep": "הוסף שלב",
+    "save": "שמור מתכון",
+    "saving": "שומר..."
+  },
+  "substituteGroup": "<{{n}}>",
+  "scaledQty": "בקנה מידה ל-{{servings}} מנות",
   "empty": "אין מתכונים עדיין",
   "emptyHint": "לחץ על + כדי להוסיף מתכון ראשון"
 }

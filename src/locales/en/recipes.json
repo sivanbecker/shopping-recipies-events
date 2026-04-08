@@ -34,6 +34,31 @@
     "added": "Added to list!",
     "forRecipe": "For recipe: {{name}}"
   },
+  "search": "Search recipes",
+  "filterByTool": "Filter by tool",
+  "shared": "Shared",
+  "personal": "Personal",
+  "edit": "Edit",
+  "delete": "Delete",
+  "confirmDelete": "Delete recipe?",
+  "confirmDeleteHint": "This action cannot be undone.",
+  "noMatch": "No recipes match your search",
+  "form": {
+    "title": "Recipe title",
+    "description": "Description",
+    "servings": "Number of servings",
+    "prepTime": "Prep time (minutes)",
+    "tools": "Required tools",
+    "ingredients": "Ingredients",
+    "addIngredient": "Add ingredient",
+    "addSubstitute": "Add substitute",
+    "steps": "Instructions",
+    "addStep": "Add step",
+    "save": "Save Recipe",
+    "saving": "Saving..."
+  },
+  "substituteGroup": "<{{n}}>",
+  "scaledQty": "Scaled for {{servings}} servings",
   "empty": "No recipes yet",
   "emptyHint": "Tap + to add your first recipe"
 }
