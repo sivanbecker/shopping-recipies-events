@@ -759,10 +759,10 @@ export default function ProductsPage() {
     queryKey: ['products'],
     queryFn: async () => {
       const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .or(`is_shared.eq.true,created_by.eq.${user!.id}`)
-          .order('name_he')
+        .from('products')
+        .select('*')
+        .or(`is_shared.eq.true,created_by.eq.${user!.id}`)
+        .order('name_he')
       if (error) throw error
       return data as Product[]
     },

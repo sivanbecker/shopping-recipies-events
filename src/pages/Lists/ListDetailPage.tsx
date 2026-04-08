@@ -94,7 +94,15 @@ interface ItemRowProps {
   members?: ListMemberWithProfile[]
 }
 
-function ItemRow({ item, lang, onToggle, onRemove, isToggling, shoppingMode, members }: ItemRowProps) {
+function ItemRow({
+  item,
+  lang,
+  onToggle,
+  onRemove,
+  isToggling,
+  shoppingMode,
+  members,
+}: ItemRowProps) {
   const addedBy = members?.find(m => m.user_id === item.added_by)
   const name = item.product
     ? lang === 'he'
