@@ -82,9 +82,7 @@ function ProductSearchSheet({
         <div className="flex-1 overflow-y-auto space-y-1">
           {filtered.length === 0 ? (
             <div className="py-8 text-center text-sm text-gray-500">
-              {search
-                ? tCommon('status.noMatch')
-                : tCommon('status.startTyping')}
+              {search ? tCommon('status.noMatch') : tCommon('status.startTyping')}
             </div>
           ) : (
             filtered.map(product => (
