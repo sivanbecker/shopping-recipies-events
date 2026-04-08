@@ -27,6 +27,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { filterProducts } from '@/lib/filterProducts'
 import { ShareListDialog } from './ShareListDialog'
 import { AvatarStack } from '@/components/AvatarStack'
+import { UserAvatar } from '@/components/UserAvatar'
 import type {
   ShoppingList,
   ShoppingItemWithProduct,
@@ -90,9 +91,11 @@ interface ItemRowProps {
   onRemove: () => void
   isToggling: boolean
   shoppingMode?: boolean
+  members?: ListMemberWithProfile[]
 }
 
-function ItemRow({ item, lang, onToggle, onRemove, isToggling, shoppingMode }: ItemRowProps) {
+function ItemRow({ item, lang, onToggle, onRemove, isToggling, shoppingMode, members }: ItemRowProps) {
+  const addedBy = members?.find(m => m.user_id === item.added_by)
   const name = item.product
     ? lang === 'he'
       ? item.product.name_he
@@ -145,6 +148,8 @@ function ItemRow({ item, lang, onToggle, onRemove, isToggling, shoppingMode }: I
         )}
         {item.note && <span className="block text-xs italic text-gray-400">{item.note}</span>}
       </div>
+
+      <UserAvatar userId={item.added_by} displayName={addedBy?.display_name} size={20} />
 
       {!shoppingMode && (
         <button
@@ -911,6 +916,7 @@ export default function ListDetailPage() {
               item={item}
               lang={lang}
               shoppingMode
+              members={members}
               isToggling={togglingIds.has(item.id)}
               onToggle={() => toggleMutation.mutate({ itemId: item.id, checked: !item.is_checked })}
               onRemove={() => removeMutation.mutate(item.id)}
@@ -958,6 +964,7 @@ export default function ListDetailPage() {
               key={item.id}
               item={item}
               lang={lang}
+              members={members}
               isToggling={togglingIds.has(item.id)}
               onToggle={() => toggleMutation.mutate({ itemId: item.id, checked: !item.is_checked })}
               onRemove={() => removeMutation.mutate(item.id)}
