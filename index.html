@@ -16,6 +16,20 @@
     />
 
     <title>Shopping · Recipes · Events</title>
+    <!-- FOUC prevention: apply dark class before first paint -->
+    <script>
+      ;(function () {
+        var stored = localStorage.getItem('app-store')
+        var dark = false
+        if (stored) {
+          try { dark = JSON.parse(stored).state.isDarkMode } catch (e) {}
+        }
+        if (typeof dark !== 'boolean') {
+          dark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        }
+        if (dark) document.documentElement.classList.add('dark')
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

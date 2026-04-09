@@ -128,14 +128,14 @@ function IngredientRow({
   return (
     <div className={groupingIndicator ? 'ps-6' : ''}>
       <div className="flex gap-2 items-start py-2">
-        {groupingIndicator && <div className="text-xs text-gray-500 mt-1">{groupingIndicator}</div>}
+        {groupingIndicator && <div className="text-xs text-gray-500 mt-1 dark:text-gray-400">{groupingIndicator}</div>}
 
         <div className="flex-1 min-w-0">
           <button
             onClick={() => {
               /* open product search */
             }}
-            className="block text-sm font-medium text-gray-900 truncate hover:underline"
+            className="block text-sm font-medium text-gray-900 truncate hover:underline dark:text-gray-100"
           >
             {ingredient.product?.name_he || ingredient.product?.name_en || '—'}
           </button>
@@ -146,7 +146,7 @@ function IngredientRow({
           step="0.1"
           value={ingredient.quantity}
           onChange={e => onUpdate({ quantity: Number(e.target.value) })}
-          className="w-16 rounded-lg border border-gray-200 px-2 py-1 text-sm outline-none focus:border-brand-400"
+          className="w-16 rounded-lg border border-gray-200 px-2 py-1 text-sm outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
         />
 
         {/* Unit select */}
@@ -157,7 +157,7 @@ function IngredientRow({
               const unit = unitTypes.find(u => u.id === e.target.value) || null
               onUpdate({ unit })
             }}
-            className="rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400"
+            className="rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
           >
             <option value="">—</option>
             {productUnits.map(u => (
@@ -167,7 +167,7 @@ function IngredientRow({
             ))}
           </select>
         ) : (
-          <span className="text-xs text-gray-500">—</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400">—</span>
         )}
 
         <button onClick={onRemove} className="text-red-500 hover:text-red-700">
@@ -182,11 +182,11 @@ function IngredientRow({
           placeholder={t('ingredients.note')}
           value={ingredient.note}
           onChange={e => onUpdate({ note: e.target.value })}
-          className="w-full rounded-lg border border-gray-200 px-3 py-1 text-xs outline-none focus:border-brand-400"
+          className="w-full rounded-lg border border-gray-200 px-3 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
         />
 
         {/* Shopping unit section */}
-        <div className="text-xs text-gray-600 pt-1">
+        <div className="text-xs text-gray-600 pt-1 dark:text-gray-400">
           <div className="font-medium mb-1">{t('ingredients.shoppingUnit')}</div>
           <div className="flex gap-2">
             {/* Shopping unit select */}
@@ -196,7 +196,7 @@ function IngredientRow({
                 const unit = unitTypes.find(u => u.id === e.target.value) || null
                 onUpdate({ shopping_unit_id: unit?.id || null, shopping_unit: unit })
               }}
-              className="flex-1 rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400"
+              className="flex-1 rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
             >
               <option value="">{t('ingredients.inherit')}</option>
               {unitTypes.map(u => (
@@ -215,13 +215,13 @@ function IngredientRow({
                 value={ingredient.shopping_quantity_multiplier || 1}
                 onChange={e => onUpdate({ shopping_quantity_multiplier: Number(e.target.value) })}
                 title={t('ingredients.conversionHint')}
-                className="w-20 rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400"
+                className="w-20 rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                 placeholder={t('ingredients.multiplier')}
               />
             )}
           </div>
           {ingredient.shopping_unit_id && (
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
               {t('ingredients.conversionExample', {
                 qty: ingredient.quantity,
                 shopping: (ingredient.quantity * ingredient.shopping_quantity_multiplier).toFixed(
@@ -486,10 +486,10 @@ export default function RecipeFormPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-10">
+      <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-10 dark:bg-gray-900 dark:border-gray-700">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
         >
           <ArrowLeft className="h-5 w-5" />
           <span className="text-sm font-medium">{isEditing ? t('edit') : t('new')}</span>
@@ -514,7 +514,7 @@ export default function RecipeFormPage() {
             placeholder={t('form.title')}
             value={formData.title}
             onChange={e => setFormData({ ...formData, title: e.target.value })}
-            className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 font-semibold"
+            className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 font-semibold dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
 
           <textarea
@@ -522,7 +522,7 @@ export default function RecipeFormPage() {
             value={formData.description}
             onChange={e => setFormData({ ...formData, description: e.target.value })}
             rows={3}
-            className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+            className="w-full rounded-lg border border-gray-200 px-4 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
 
           <div className="grid grid-cols-2 gap-3">
@@ -532,7 +532,7 @@ export default function RecipeFormPage() {
               value={formData.servings}
               onChange={e => setFormData({ ...formData, servings: Number(e.target.value) })}
               placeholder={t('form.servings')}
-              className="rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
             />
             <input
               type="number"
@@ -545,14 +545,14 @@ export default function RecipeFormPage() {
                 })
               }
               placeholder={t('form.prepTime')}
-              className="rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
             />
           </div>
         </div>
 
         {/* Tools section */}
         <div>
-          <label className="block text-xs font-semibold text-gray-700 mb-2">
+          <label className="block text-xs font-semibold text-gray-700 mb-2 dark:text-gray-300">
             {t('form.tools')}
           </label>
           <div className="flex flex-wrap gap-2">
@@ -570,7 +570,7 @@ export default function RecipeFormPage() {
                 className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                   formData.tools.includes(tool)
                     ? 'bg-brand-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
                 }`}
               >
                 {t(`tools.${tool}`)}
@@ -582,7 +582,7 @@ export default function RecipeFormPage() {
         {/* Ingredients section */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-semibold text-gray-700">{t('form.ingredients')}</label>
+            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">{t('form.ingredients')}</label>
             <button
               onClick={() => {
                 setPendingIngredient(null)
@@ -595,9 +595,9 @@ export default function RecipeFormPage() {
             </button>
           </div>
 
-          <div className="space-y-2 border border-gray-200 rounded-lg p-3">
+          <div className="space-y-2 border border-gray-200 rounded-lg p-3 dark:border-gray-700">
             {ingredients.length === 0 ? (
-              <p className="text-xs text-gray-500 text-center py-4">{tCommon('status.empty')}</p>
+              <p className="text-xs text-gray-500 text-center py-4 dark:text-gray-400">{tCommon('status.empty')}</p>
             ) : (
               ingredients.map((ing, idx) => {
                 // Check if this is a substitute (has a group and is not the first in the group)
@@ -636,7 +636,7 @@ export default function RecipeFormPage() {
         {/* Steps section */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-semibold text-gray-700">{t('form.steps')}</label>
+            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">{t('form.steps')}</label>
             <button
               onClick={handleAddStep}
               className="flex items-center gap-1 text-xs text-brand-500 hover:text-brand-600 font-medium"
@@ -646,13 +646,13 @@ export default function RecipeFormPage() {
             </button>
           </div>
 
-          <div className="space-y-2 border border-gray-200 rounded-lg p-3">
+          <div className="space-y-2 border border-gray-200 rounded-lg p-3 dark:border-gray-700">
             {steps.length === 0 ? (
-              <p className="text-xs text-gray-500 text-center py-4">{tCommon('status.empty')}</p>
+              <p className="text-xs text-gray-500 text-center py-4 dark:text-gray-400">{tCommon('status.empty')}</p>
             ) : (
               steps.map((step, idx) => (
                 <div key={step.id} className="flex gap-2">
-                  <span className="flex-shrink-0 font-semibold text-sm text-gray-600 mt-2 min-w-[2rem]">
+                  <span className="flex-shrink-0 font-semibold text-sm text-gray-600 mt-2 min-w-[2rem] dark:text-gray-400">
                     {idx + 1}.
                   </span>
                   <textarea
@@ -664,7 +664,7 @@ export default function RecipeFormPage() {
                     }}
                     placeholder={t('form.addStep')}
                     rows={2}
-                    className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+                    className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
                   />
                   <button
                     onClick={() => setSteps(steps.filter((_, i) => i !== idx))}
