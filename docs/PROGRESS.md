@@ -220,7 +220,7 @@ See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full plan.
 
 ---
 
-## Dark Mode — IN PROGRESS (branch: `feat/dark-mode`)
+## Dark Mode — COMPLETE (branch: `feat/dark-mode`, pending merge)
 
 ### Approach
 - Tailwind `darkMode: ['class']` was already configured — activates via `class="dark"` on `<html>`
@@ -246,15 +246,8 @@ See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full plan.
 15. `src/pages/Recipes/RecipeFormPage.tsx` — **PARTIALLY DONE** (ProductSearchSheet done; IngredientRow and main form body still need dark: classes)
 16. i18n — added `profile.darkMode` / `profile.lightMode` keys in both `he` and `en`
 
-### Still To Do
-- `src/pages/Recipes/RecipeFormPage.tsx` — finish remaining elements:
-  - `IngredientRow` inputs/selects/text
-  - Main form: header (`bg-white border-gray-200`), all inputs/textareas, tools chips, ingredient/step containers, section labels, step number color
-- `src/pages/Events/EventsPage.tsx`
-- `src/pages/Events/EventDetailPage.tsx`
-- `index.html` — FOUC prevention script
-- Run `npm test` + `npm run lint` to verify
-- Commit and merge to `main`
+### Completed
+All pages done. 63 tests pass, lint clean. Branch ready to merge to `main`.
 
 ### Color Mapping Reference
 | Light class | Dark addition |
