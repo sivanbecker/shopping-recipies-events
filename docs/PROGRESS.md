@@ -218,3 +218,59 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 ## Stages 4.3 and 4.4 — Not started
 See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full plan.
 
+---
+
+## Dark Mode — IN PROGRESS (branch: `feat/dark-mode`)
+
+### Approach
+- Tailwind `darkMode: ['class']` was already configured — activates via `class="dark"` on `<html>`
+- `dark:` prefix overrides added alongside existing classes (no full CSS variable refactor)
+- Toggle in ProfilePage (moon/sun icon), persisted to localStorage, defaults to OS `prefers-color-scheme`
+- FOUC prevention script planned for `index.html`
+
+### Completed
+1. `src/index.css` — `.dark { --background: ...; --foreground: ...; }` block added
+2. `src/store/useAppStore.ts` — `isDarkMode` + `toggleDarkMode` added, persisted to localStorage
+3. `src/App.tsx` — `useEffect` applies/removes `dark` class on `<html>`
+4. `src/pages/Profile/ProfilePage.tsx` — dark mode toggle card (sun/moon) + all elements updated
+5. `src/components/layout/AppLayout.tsx` — `dark:bg-gray-950` added
+6. `src/components/layout/Header.tsx` — full dark mode coverage
+7. `src/components/layout/BottomNav.tsx` — full dark mode coverage
+8. `src/pages/Auth/AuthPage.tsx` — full dark mode coverage (refactored repeated input/label classes)
+9. `src/pages/Lists/ListsPage.tsx` — full dark mode coverage
+10. `src/pages/Lists/ListDetailPage.tsx` — full dark mode coverage (items, sheets, dialogs, nav)
+11. `src/pages/Lists/ShareListDialog.tsx` — full dark mode coverage
+12. `src/pages/Products/ProductsPage.tsx` — full dark mode coverage (sticky search bar, import button, category chips, group badges, ImportSummaryDialog, AddToListSheet list buttons + empty text)
+13. `src/pages/Recipes/RecipesPage.tsx` — full dark mode coverage (RecipeCard, ConfirmDeleteDialog, search bar, tool filter chips, empty/loading states)
+14. `src/pages/Recipes/RecipeDetailPage.tsx` — full dark mode coverage (header, title/description, meta row, servings spinner, tools, ingredients section, substitutes, steps, ConfirmDeleteDialog, AddToListSheet)
+15. `src/pages/Recipes/RecipeFormPage.tsx` — **PARTIALLY DONE** (ProductSearchSheet done; IngredientRow and main form body still need dark: classes)
+16. i18n — added `profile.darkMode` / `profile.lightMode` keys in both `he` and `en`
+
+### Still To Do
+- `src/pages/Recipes/RecipeFormPage.tsx` — finish remaining elements:
+  - `IngredientRow` inputs/selects/text
+  - Main form: header (`bg-white border-gray-200`), all inputs/textareas, tools chips, ingredient/step containers, section labels, step number color
+- `src/pages/Events/EventsPage.tsx`
+- `src/pages/Events/EventDetailPage.tsx`
+- `index.html` — FOUC prevention script
+- Run `npm test` + `npm run lint` to verify
+- Commit and merge to `main`
+
+### Color Mapping Reference
+| Light class | Dark addition |
+|---|---|
+| `bg-white` | `dark:bg-gray-900` (top-level cards) or `dark:bg-gray-800` (nested) |
+| `bg-gray-50` | `dark:bg-gray-950` or `dark:bg-gray-900` |
+| `bg-gray-100` | `dark:bg-gray-800` |
+| `bg-gray-200` | `dark:bg-gray-700` |
+| `text-gray-900/800` | `dark:text-gray-100` |
+| `text-gray-700` | `dark:text-gray-300` |
+| `text-gray-600` | `dark:text-gray-400` |
+| `text-gray-500/400` | `dark:text-gray-400/500` |
+| `border-gray-200` | `dark:border-gray-700` |
+| `border-gray-100` | `dark:border-gray-800` |
+| `hover:bg-gray-100` | `dark:hover:bg-gray-800` |
+| `hover:bg-gray-50` | `dark:hover:bg-gray-800` |
+| inputs | `dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500` |
+| selects | `dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200` |
+

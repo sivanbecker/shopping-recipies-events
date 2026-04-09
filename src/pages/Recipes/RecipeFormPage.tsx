@@ -66,10 +66,10 @@ function ProductSearchSheet({
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-md rounded-t-2xl bg-white p-4 shadow-xl sm:rounded-2xl max-h-[80vh] flex flex-col">
+      <div className="w-full max-w-md rounded-t-2xl bg-white p-4 shadow-xl sm:rounded-2xl max-h-[80vh] flex flex-col dark:bg-gray-900">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900">{t('ingredients.add')}</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">{t('ingredients.add')}</h3>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -79,12 +79,12 @@ function ProductSearchSheet({
           placeholder={tCommon('actions.search')}
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 mb-4"
+          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 mb-4 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
         />
 
         <div className="flex-1 overflow-y-auto space-y-1">
           {filtered.length === 0 ? (
-            <div className="py-8 text-center text-sm text-gray-500">
+            <div className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">
               {search ? tCommon('status.noMatch') : tCommon('status.startTyping')}
             </div>
           ) : (
@@ -95,7 +95,7 @@ function ProductSearchSheet({
                   onSelect(product)
                   onClose()
                 }}
-                className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 text-sm"
+                className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 text-sm dark:text-gray-200 dark:hover:bg-gray-800"
               >
                 {product.name_he || product.name_en}
               </button>

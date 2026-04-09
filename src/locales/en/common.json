@@ -52,7 +52,9 @@
     "language": "Language",
     "editName": "Edit name",
     "namePlaceholder": "Your name",
-    "nameSaved": "Name saved"
+    "nameSaved": "Name saved",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode"
   },
   "validation": {
     "required": "This field is required",

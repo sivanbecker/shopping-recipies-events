@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useEffect } from 'react'
+import { useAppStore } from './store/useAppStore'
 
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AppLayout } from './components/layout/AppLayout'
@@ -19,6 +20,7 @@ import ProfilePage from './pages/Profile/ProfilePage'
 
 export default function App() {
   const { i18n } = useTranslation()
+  const isDarkMode = useAppStore(s => s.isDarkMode)
 
   // Keep <html> dir and lang in sync with the active language
   useEffect(() => {
@@ -27,6 +29,11 @@ export default function App() {
     document.documentElement.lang = isHebrew ? 'he' : 'en'
     document.documentElement.dir = isHebrew ? 'rtl' : 'ltr'
   }, [i18n.language])
+
+  // Keep <html> dark class in sync with dark mode preference
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode)
+  }, [isDarkMode])
 
   return (
     <Routes>

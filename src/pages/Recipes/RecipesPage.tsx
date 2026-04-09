@@ -32,16 +32,16 @@ function RecipeCard({
   const { t } = useTranslation('recipes')
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow dark:border-gray-700 dark:bg-gray-900">
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-900">{recipe.title}</h3>
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100">{recipe.title}</h3>
           <div className="mt-2 flex flex-wrap gap-2">
-            <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+            <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
               {t('servings')}: {recipe.servings}
             </span>
             {recipe.prep_time_minutes && (
-              <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+              <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                 {recipe.prep_time_minutes} {t('minutes')}
               </span>
             )}
@@ -67,7 +67,7 @@ function RecipeCard({
           <div className="flex gap-2 ml-4">
             <button
               onClick={() => onEdit(recipe.id)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
               title={t('edit')}
             >
               <Edit2 className="h-4 w-4" />
@@ -105,13 +105,13 @@ function ConfirmDeleteDialog({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       onClick={e => e.target === e.currentTarget && onCancel()}
     >
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-gray-900">{t('confirmDelete')}</h3>
-        <p className="mt-2 text-sm text-gray-600">{t('confirmDeleteHint')}</p>
+      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('confirmDelete')}</h3>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t('confirmDeleteHint')}</p>
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="rounded-xl px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            className="rounded-xl px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             {tCommon('actions.cancel')}
           </button>
@@ -178,13 +178,13 @@ export default function RecipesPage() {
   return (
     <div className="flex flex-col gap-4 pb-24">
       {/* Search bar */}
-      <div className="sticky top-0 bg-white">
+      <div className="sticky top-0 bg-white dark:bg-gray-950">
         <input
           type="search"
           placeholder={t('search')}
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+          className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
         />
 
         {/* Tool filters */}
@@ -195,7 +195,7 @@ export default function RecipesPage() {
               className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
                 !selectedTool
                   ? 'bg-brand-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
               }`}
             >
               {tCommon('actions.all')}
@@ -207,7 +207,7 @@ export default function RecipesPage() {
                 className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
                   selectedTool === tool
                     ? 'bg-brand-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
                 }`}
               >
                 {t(`tools.${tool}`)}
@@ -219,17 +219,17 @@ export default function RecipesPage() {
 
       {/* Content */}
       {isLoading ? (
-        <div className="py-8 text-center text-gray-500">Loading...</div>
+        <div className="py-8 text-center text-gray-500 dark:text-gray-400">Loading...</div>
       ) : filteredRecipes.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <BookOpen className="h-8 w-8 text-green-600" />
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+            <BookOpen className="h-8 w-8 text-green-600 dark:text-green-400" />
           </div>
-          <h2 className="text-xl font-bold text-gray-800">
+          <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">
             {search || selectedTool ? t('noMatch') : t('empty')}
           </h2>
           {!search && !selectedTool && (
-            <p className="mt-2 text-sm text-gray-500">{t('emptyHint')}</p>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{t('emptyHint')}</p>
           )}
         </div>
       ) : (

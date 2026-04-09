@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Pencil, Check, X, Loader2 } from 'lucide-react'
+import { LogOut, Pencil, Check, X, Loader2, Moon, Sun } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
 import { UserAvatar } from '@/components/UserAvatar'
+import { useAppStore } from '@/store/useAppStore'
 
 export default function ProfilePage() {
   const { t, i18n } = useTranslation()
   const { user, profile, signOut, updateProfile } = useAuth()
+  const { isDarkMode, toggleDarkMode } = useAppStore()
   const navigate = useNavigate()
 
   const [editingName, setEditingName] = useState(false)
@@ -57,7 +59,7 @@ export default function ProfilePage() {
   return (
     <div className="space-y-4">
       {/* Profile card */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm">
+      <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
         <div className="flex items-center gap-4">
           <UserAvatar userId={user?.id ?? ''} displayName={profile?.display_name} size={56} />
           <div className="min-w-0 flex-1">
@@ -72,7 +74,7 @@ export default function ProfilePage() {
                   }}
                   autoFocus
                   placeholder={t('profile.namePlaceholder')}
-                  className="min-w-0 flex-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                  className="min-w-0 flex-1 rounded-lg border border-gray-200 px-3 py-1.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
                 />
                 <button
                   onClick={saveName}
@@ -88,7 +90,7 @@ export default function ProfilePage() {
                 </button>
                 <button
                   onClick={cancelEdit}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                   aria-label={t('actions.cancel')}
                 >
                   <X className="h-4 w-4" />
@@ -96,7 +98,7 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <p className="truncate font-semibold text-gray-900">
+                <p className="truncate font-semibold text-gray-900 dark:text-gray-100">
                   {profile?.display_name ?? user?.email ?? '—'}
                 </p>
                 <button
@@ -108,14 +110,14 @@ export default function ProfilePage() {
                 </button>
               </div>
             )}
-            <p className="mt-0.5 truncate text-sm text-gray-500">{user?.email}</p>
+            <p className="mt-0.5 truncate text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
           </div>
         </div>
       </div>
 
       {/* Language toggle */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm">
-        <p className="mb-3 text-sm font-medium text-gray-700">{t('profile.language')}</p>
+      <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
+        <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">{t('profile.language')}</p>
         <div className="flex gap-2">
           {(['he', 'en'] as const).map(lang => (
             <button
@@ -124,7 +126,7 @@ export default function ProfilePage() {
               className={`flex-1 rounded-xl py-2 text-sm font-medium transition ${
                 i18n.language === lang
                   ? 'bg-brand-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
               }`}
             >
               {lang === 'he' ? 'עברית' : 'English'}
@@ -133,10 +135,22 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Dark mode toggle */}
+      <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
+        <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">{t('profile.darkMode')}</p>
+        <button
+          onClick={toggleDarkMode}
+          className="flex w-full items-center justify-between rounded-xl bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+        >
+          <span>{isDarkMode ? t('profile.lightMode') : t('profile.darkMode')}</span>
+          {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
+      </div>
+
       {/* Sign out */}
       <button
         onClick={handleSignOut}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white p-4 text-sm font-medium text-red-500 shadow-sm transition hover:bg-red-50"
+        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white p-4 text-sm font-medium text-red-500 shadow-sm transition hover:bg-red-50 dark:bg-gray-900 dark:hover:bg-red-950"
       >
         <LogOut className="h-4 w-4" />
         {t('auth.logout')}

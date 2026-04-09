@@ -41,7 +41,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="sticky bottom-0 z-40 border-t border-gray-200 bg-white pb-safe"
+      className="sticky bottom-0 z-40 border-t border-gray-200 bg-white pb-safe dark:border-gray-700 dark:bg-gray-900"
       aria-label={isHebrew ? 'ניווט ראשי' : 'Main navigation'}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-around">
@@ -51,7 +51,7 @@ export function BottomNav() {
             to={to}
             className={({ isActive }) =>
               `flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors ${
-                isActive ? 'text-brand-500' : 'text-gray-500 hover:text-gray-800'
+                isActive ? 'text-brand-500' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
               }`
             }
           >

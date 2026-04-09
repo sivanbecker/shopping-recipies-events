@@ -65,7 +65,7 @@ function ProductCard({
   const name = lang === 'he' ? product.name_he : (product.name_en ?? product.name_he)
 
   return (
-    <div className="relative flex flex-col gap-1.5 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm">
+    <div className="relative flex flex-col gap-1.5 rounded-2xl border border-gray-100 bg-white p-3 shadow-sm dark:border-gray-700 dark:bg-gray-900">
       {/* Category color stripe */}
       {category?.color && (
         <div
@@ -75,7 +75,7 @@ function ProductCard({
       )}
 
       <div className="flex items-start justify-between gap-1 ps-2">
-        <p className="flex-1 text-sm font-semibold leading-tight text-gray-800">{name}</p>
+        <p className="flex-1 text-sm font-semibold leading-tight text-gray-800 dark:text-gray-100">{name}</p>
 
         <div className="flex shrink-0 gap-0.5">
           <button
@@ -90,7 +90,7 @@ function ProductCard({
               <button
                 onClick={onEdit}
                 aria-label={t('products.editProduct')}
-                className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+                className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"
               >
                 <Pencil className="h-3.5 w-3.5" />
               </button>
@@ -123,7 +123,7 @@ function ProductCard({
             {t('products.shared')}
           </span>
         ) : (
-          <span className="inline-flex items-center gap-0.5 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500">
+          <span className="inline-flex items-center gap-0.5 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-800 dark:text-gray-400">
             <Lock className="h-3 w-3" />
             {t('products.personal')}
           </span>
@@ -185,10 +185,10 @@ function ProductDialog({
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="w-full max-w-md rounded-t-3xl bg-white p-6 sm:rounded-2xl">
+      <div className="w-full max-w-md rounded-t-3xl bg-white p-6 sm:rounded-2xl dark:bg-gray-900">
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-gray-900">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
             {mode === 'add' ? t('products.addProduct') : t('products.editProduct')}
           </h2>
           <button
@@ -202,7 +202,7 @@ function ProductDialog({
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {/* Hebrew name */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               {t('products.nameHe')}
             </label>
             <input
@@ -210,7 +210,7 @@ function ProductDialog({
               type="text"
               placeholder={t('products.namePlaceholder')}
               dir="rtl"
-              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
             {errors.name_he && (
               <p className="mt-1 text-xs text-red-500">{t('validation.required')}</p>
@@ -219,7 +219,7 @@ function ProductDialog({
 
           {/* English name */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               {t('products.nameEn')}
             </label>
             <input
@@ -227,18 +227,18 @@ function ProductDialog({
               type="text"
               placeholder={t('products.nameEnPlaceholder')}
               dir="ltr"
-              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             />
           </div>
 
           {/* Category */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               {t('products.category')}
             </label>
             <select
               {...register('category_id')}
-              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             >
               <option value="">{t('products.noCategory')}</option>
               {categories.map(c => (
@@ -252,12 +252,12 @@ function ProductDialog({
 
           {/* Default unit */}
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               {t('products.defaultUnit')}
             </label>
             <select
               {...register('default_unit_id')}
-              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
             >
               <option value="">{t('products.noUnit')}</option>
               {unitGroups.map(group =>
@@ -279,7 +279,7 @@ function ProductDialog({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               {t('actions.cancel')}
             </button>
@@ -332,12 +332,12 @@ function ImportSummaryDialog({ summary, onClose }: ImportSummaryDialogProps) {
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6">
+      <div className="w-full max-w-sm rounded-2xl bg-white p-6 dark:bg-gray-900">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-gray-900">{t('products.import.title')}</h3>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('products.import.title')}</h3>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+            className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"
           >
             <X className="h-5 w-5" />
           </button>
@@ -371,9 +371,9 @@ function ImportSummaryDialog({ summary, onClose }: ImportSummaryDialogProps) {
         </div>
 
         {summary.skipped.length > 0 && (
-          <div className="mt-3 max-h-32 overflow-y-auto rounded-xl border border-gray-100 bg-gray-50 p-3">
+          <div className="mt-3 max-h-32 overflow-y-auto rounded-xl border border-gray-100 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-800">
             {summary.skipped.map(s => (
-              <p key={s.rowIndex} className="text-xs text-gray-500">
+              <p key={s.rowIndex} className="text-xs text-gray-500 dark:text-gray-400">
                 #{s.rowIndex} — {t(`products.import.reasons.${s.reason}`, s.raw.name_he ?? '')}
               </p>
             ))}
@@ -384,7 +384,7 @@ function ImportSummaryDialog({ summary, onClose }: ImportSummaryDialogProps) {
           {summary.skipped.length > 0 && (
             <button
               onClick={downloadSkipped}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
             >
               <Download className="h-4 w-4" />
               {t('products.import.downloadSkipped')}
@@ -429,12 +429,12 @@ function ConfirmDeleteDialog({
         if (e.target === e.currentTarget) onCancel()
       }}
     >
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6">
+      <div className="w-full max-w-sm rounded-2xl bg-white p-6 dark:bg-gray-900">
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
           <Trash2 className="h-6 w-6 text-red-500" />
         </div>
-        <h3 className="mb-1 text-base font-semibold text-gray-900">{name}</h3>
-        <p className="mb-5 text-sm text-gray-500">{t('products.confirmDelete')}</p>
+        <h3 className="mb-1 text-base font-semibold text-gray-900 dark:text-gray-100">{name}</h3>
+        <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">{t('products.confirmDelete')}</p>
         <div className="flex gap-3">
           <button
             onClick={onCancel}
@@ -578,39 +578,39 @@ function AddToListSheet({ product, unitTypes, lang, onClose }: AddToListSheetPro
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-md rounded-t-2xl bg-white shadow-xl">
+      <div className="w-full max-w-md rounded-t-2xl bg-white shadow-xl dark:bg-gray-900">
         <div className="flex justify-center pb-1 pt-3">
-          <div className="h-1 w-10 rounded-full bg-gray-200" />
+          <div className="h-1 w-10 rounded-full bg-gray-200 dark:bg-gray-700" />
         </div>
 
         <div className="px-4 pb-8">
           {/* Header */}
           <div className="mb-4 flex items-center justify-between">
-            <span className="text-base font-semibold text-gray-800">{productName}</span>
-            <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100">
+            <span className="text-base font-semibold text-gray-800 dark:text-gray-100">{productName}</span>
+            <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Quantity */}
           <div className="mb-4">
-            <label className="mb-1.5 block text-xs font-medium text-gray-500">
+            <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
               {t('products.addToList.quantity')}
             </label>
             {isCount ? (
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
-                <span className="w-10 text-center text-lg font-semibold text-gray-800">
+                <span className="w-10 text-center text-lg font-semibold text-gray-800 dark:text-gray-100">
                   {quantity}
                 </span>
                 <button
                   onClick={() => setQuantity(q => q + 1)}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
+                  className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
                 >
                   <Plus className="h-4 w-4" />
                 </button>
@@ -630,7 +630,7 @@ function AddToListSheet({ product, unitTypes, lang, onClose }: AddToListSheetPro
           {/* Unit chips */}
           {relevantUnits.length > 0 && (
             <div className="mb-5">
-              <label className="mb-1.5 block text-xs font-medium text-gray-500">
+              <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
                 {t('products.addToList.unit')}
               </label>
               <div className="flex flex-wrap gap-2">
@@ -639,7 +639,7 @@ function AddToListSheet({ product, unitTypes, lang, onClose }: AddToListSheetPro
                   className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
                     unitId === null
                       ? 'border-brand-500 bg-brand-500 text-white'
-                      : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                      : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800'
                   }`}
                 >
                   {t('products.addToList.noUnit')}
@@ -651,7 +651,7 @@ function AddToListSheet({ product, unitTypes, lang, onClose }: AddToListSheetPro
                     className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
                       unitId === u.id
                         ? 'border-brand-500 bg-brand-500 text-white'
-                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800'
                     }`}
                   >
                     {lang === 'he' ? u.label_he : u.label_en}
@@ -681,7 +681,7 @@ function AddToListSheet({ product, unitTypes, lang, onClose }: AddToListSheetPro
                     key={list.id}
                     onClick={() => addToListMutation.mutate({ listId: list.id, listName })}
                     disabled={isPending}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-medium text-gray-800 transition hover:bg-brand-50 disabled:opacity-60"
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-medium text-gray-800 transition hover:bg-brand-50 disabled:opacity-60 dark:text-gray-100 dark:hover:bg-brand-900/20"
                   >
                     <ShoppingCart className="h-4 w-4 shrink-0 text-brand-400" />
                     <span className="flex-1 truncate">{listName}</span>
@@ -690,7 +690,7 @@ function AddToListSheet({ product, unitTypes, lang, onClose }: AddToListSheetPro
               })}
 
               {activeLists.length === 0 && (
-                <p className="py-3 text-center text-sm text-gray-400">
+                <p className="py-3 text-center text-sm text-gray-400 dark:text-gray-500">
                   {t('products.addToList.noActiveLists')}
                 </p>
               )}
@@ -931,7 +931,7 @@ export default function ProductsPage() {
   return (
     <div className="flex flex-col pb-24">
       {/* Sticky search + filters */}
-      <div className="sticky top-0 z-10 bg-gray-50 px-4 pb-3 pt-4 shadow-sm">
+      <div className="sticky top-0 z-10 bg-gray-50 px-4 pb-3 pt-4 shadow-sm dark:bg-gray-950">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -940,14 +940,14 @@ export default function ProductsPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder={t('products.search')}
-              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 ps-9 pe-4 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 ps-9 pe-4 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
             />
           </div>
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={importMutation.isPending}
             aria-label={t('products.import.button')}
-            className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
+            className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             {importMutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -970,7 +970,7 @@ export default function ProductsPage() {
           {selectedCategory !== null && (
             <button
               onClick={() => setSelectedCategory(null)}
-              className="flex items-center gap-1 rounded-full bg-gray-200 px-2 py-1 text-xs font-medium text-gray-600 transition-all hover:bg-gray-300"
+              className="flex items-center gap-1 rounded-full bg-gray-200 px-2 py-1 text-xs font-medium text-gray-600 transition-all hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
             >
               <X className="h-3 w-3" />
             </button>
@@ -982,7 +982,7 @@ export default function ProductsPage() {
               className={`flex shrink-0 items-center gap-1 rounded-full px-3 py-1 text-xs font-medium transition-all ${
                 selectedCategory === c.id
                   ? 'text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-100'
+                  : 'bg-white text-gray-600 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
               }`}
               style={selectedCategory === c.id && c.color ? { backgroundColor: c.color } : {}}
             >
@@ -1019,7 +1019,7 @@ export default function ProductsPage() {
                   >
                     {lang === 'he' ? category.name_he : category.name_en}
                   </h3>
-                  <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-500">
+                  <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-500 dark:bg-gray-700 dark:text-gray-400">
                     {groupProducts.length}
                   </span>
                 </div>
@@ -1043,7 +1043,7 @@ export default function ProductsPage() {
             {uncategorized.length > 0 && (
               <section>
                 <div className="mb-2 flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-gray-500">
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">
                     {t('products.uncategorized')}
                   </h3>
                   <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-500">

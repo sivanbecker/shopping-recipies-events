@@ -27,7 +27,7 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white shadow-sm">
+    <header className="sticky top-0 z-40 border-b border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-2">
           <Link to="/lists" aria-label={isHebrew ? 'ראשי' : 'Home'}>
@@ -35,13 +35,13 @@ export function Header() {
               <ShoppingCart className="h-4 w-4 text-white" />
             </div>
           </Link>
-          <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
+          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h1>
         </div>
 
         {/* Language switcher */}
         <button
           onClick={toggleLanguage}
-          className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
+          className="rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
           aria-label={isHebrew ? 'Switch to English' : 'עבור לעברית'}
         >
           {isHebrew ? 'EN' : 'עב'}

@@ -68,11 +68,11 @@ function ProgressBar({ done, total }: ProgressBarProps) {
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
         <span>{t('shopping.progress', { done, total })}</span>
         <span>{pct}%</span>
       </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
         <div
           className="h-full rounded-full bg-brand-500 transition-all duration-300"
           style={{ width: `${pct}%` }}
@@ -118,9 +118,9 @@ function ItemRow({
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-2xl border bg-white shadow-sm transition ${
+      className={`flex items-center gap-3 rounded-2xl border bg-white shadow-sm transition dark:bg-gray-900 ${
         shoppingMode ? 'p-4' : 'p-3.5'
-      } ${item.is_checked ? 'border-green-100 opacity-60' : 'border-gray-100'}`}
+      } ${item.is_checked ? 'border-green-100 dark:border-green-900 opacity-60' : 'border-gray-100 dark:border-gray-700'}`}
     >
       <button
         onClick={onToggle}
@@ -130,7 +130,7 @@ function ItemRow({
         } ${
           item.is_checked
             ? 'border-green-500 bg-green-500 text-white'
-            : 'border-gray-300 hover:border-brand-400'
+            : 'border-gray-300 hover:border-brand-400 dark:border-gray-600'
         }`}
       >
         {isToggling ? (
@@ -143,13 +143,13 @@ function ItemRow({
       <div className="min-w-0 flex-1">
         <span
           className={`block truncate font-medium ${shoppingMode ? 'text-base' : 'text-sm'} ${
-            item.is_checked ? 'text-gray-400 line-through' : 'text-gray-800'
+            item.is_checked ? 'text-gray-400 line-through' : 'text-gray-800 dark:text-gray-100'
           }`}
         >
           {name}
         </span>
         {(item.quantity !== 1 || unitLabel) && (
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-400 dark:text-gray-500">
             {item.quantity}
             {unitLabel ? ` ${unitLabel}` : ''}
           </span>
@@ -295,9 +295,9 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
         className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
         onClick={e => e.target === e.currentTarget && onClose()}
       >
-        <div className="w-full max-w-md rounded-t-2xl bg-white shadow-xl">
+        <div className="w-full max-w-md rounded-t-2xl bg-white shadow-xl dark:bg-gray-900">
           <div className="flex justify-center pb-1 pt-3">
-            <div className="h-1 w-10 rounded-full bg-gray-200" />
+            <div className="h-1 w-10 rounded-full bg-gray-200 dark:bg-gray-700" />
           </div>
 
           <div className="px-4 pb-8">
@@ -305,12 +305,12 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
             <div className="mb-4 flex items-center justify-between">
               <button
                 onClick={() => setConfiguring(null)}
-                className="rounded-lg p-1 text-gray-400 hover:bg-gray-100"
+                className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <span className="text-base font-semibold text-gray-800">{name}</span>
-              <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100">
+              <span className="text-base font-semibold text-gray-800 dark:text-gray-100">{name}</span>
+              <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -324,23 +324,23 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
 
             {/* Quantity */}
             <div className="mb-4">
-              <label className="mb-1.5 block text-xs font-medium text-gray-500">
+              <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
                 {t('items.quantity')}
               </label>
               {isCount ? (
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
                   >
                     <Minus className="h-4 w-4" />
                   </button>
-                  <span className="w-10 text-center text-lg font-semibold text-gray-800">
+                  <span className="w-10 text-center text-lg font-semibold text-gray-800 dark:text-gray-100">
                     {quantity}
                   </span>
                   <button
                     onClick={() => setQuantity(q => q + 1)}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
@@ -360,7 +360,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
             {/* Unit chips */}
             {relevantUnits.length > 0 && (
               <div className="mb-6">
-                <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                <label className="mb-1.5 block text-xs font-medium text-gray-500 dark:text-gray-400">
                   {t('items.unit')}
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -369,7 +369,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
                     className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
                       unitId === null
                         ? 'border-brand-500 bg-brand-500 text-white'
-                        : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                        : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800'
                     }`}
                   >
                     {t('items.noUnit')}
@@ -381,7 +381,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
                       className={`rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
                         unitId === u.id
                           ? 'border-brand-500 bg-brand-500 text-white'
-                          : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                          : 'border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800'
                       }`}
                     >
                       {lang === 'he' ? u.label_he : u.label_en}
@@ -413,15 +413,15 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-md rounded-t-2xl bg-white shadow-xl">
+      <div className="w-full max-w-md rounded-t-2xl bg-white shadow-xl dark:bg-gray-900">
         <div className="flex justify-center pb-1 pt-3">
-          <div className="h-1 w-10 rounded-full bg-gray-200" />
+          <div className="h-1 w-10 rounded-full bg-gray-200 dark:bg-gray-700" />
         </div>
 
         <div className="px-4 pb-2">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-gray-800">{t('items.add')}</h2>
-            <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100">
+            <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">{t('items.add')}</h2>
+            <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -433,7 +433,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder={t('items.searchPlaceholder')}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 ps-9 pe-4 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 ps-9 pe-4 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
               autoFocus
             />
           </div>
@@ -447,7 +447,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
               <button
                 key={product.id}
                 onClick={() => openConfigure(product)}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-medium text-gray-800 transition hover:bg-gray-50"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-medium text-gray-800 transition hover:bg-gray-50 dark:text-gray-100 dark:hover:bg-gray-800"
               >
                 <Plus className="h-4 w-4 shrink-0 text-brand-400" />
                 <span className="flex-1">{name}</span>
@@ -786,7 +786,7 @@ export default function ListDetailPage() {
           <ArrowLeft className="h-4 w-4" />
           {t('lists.title')}
         </Link>
-        <div className="rounded-xl bg-white p-6 text-center text-sm text-gray-500 shadow-sm">
+        <div className="rounded-xl bg-white p-6 text-center text-sm text-gray-500 shadow-sm dark:bg-gray-900 dark:text-gray-400">
           {t('lists.notFound')}
         </div>
       </div>
@@ -804,12 +804,12 @@ export default function ListDetailPage() {
         <div className="flex min-w-0 flex-col gap-0.5">
           <Link
             to="/lists"
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800"
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
           >
             <ArrowLeft className="h-4 w-4 shrink-0" />
             {t('lists.title')}
           </Link>
-          <h1 className="truncate text-xl font-bold text-gray-800">{displayName}</h1>
+          <h1 className="truncate text-xl font-bold text-gray-800 dark:text-gray-100">{displayName}</h1>
           <AvatarStack members={members} size={28} />
         </div>
 
@@ -818,7 +818,7 @@ export default function ListDetailPage() {
           /* Exit shopping mode button */
           <button
             onClick={() => setShoppingMode(false)}
-            className="flex shrink-0 items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-200"
+            className="flex shrink-0 items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             <X className="h-4 w-4" />
             {t('shopping.exitMode')}
@@ -845,7 +845,7 @@ export default function ListDetailPage() {
               <button
                 onClick={() => setShowShareDialog(true)}
                 aria-label={t('sharing.shareButton')}
-                className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-200"
+                className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
               >
                 <UserPlus className="h-4 w-4" />
               </button>
@@ -854,7 +854,7 @@ export default function ListDetailPage() {
                 onClick={() => cloneMutation.mutate()}
                 disabled={cloneMutation.isPending}
                 aria-label={t('lists.clone')}
-                className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-200 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-200 disabled:opacity-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
               >
                 {cloneMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -870,7 +870,7 @@ export default function ListDetailPage() {
                 className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition ${
                   list.is_archived
                     ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
                 }`}
               >
                 {archiveMutation.isPending ? (
@@ -936,7 +936,7 @@ export default function ListDetailPage() {
             <div className="pt-1">
               <button
                 onClick={() => setShowInCart(s => !s)}
-                className="flex items-center gap-1.5 py-2 text-sm text-gray-500 hover:text-gray-700"
+                className="flex items-center gap-1.5 py-2 text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
               >
                 <ChevronDown
                   className={`h-4 w-4 transition-transform duration-200 ${showInCart ? 'rotate-180' : ''}`}
@@ -996,7 +996,7 @@ export default function ListDetailPage() {
 
       {/* Done Shopping fixed bar */}
       {shoppingMode && (
-        <div className="fixed inset-x-0 bottom-16 z-30 border-t border-gray-100 bg-white px-4 py-3">
+        <div className="fixed inset-x-0 bottom-16 z-30 border-t border-gray-100 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
           <button
             onClick={() => setShowDoneDialog(true)}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-green-500 py-3.5 text-base font-semibold text-white transition hover:bg-green-600"
@@ -1010,15 +1010,15 @@ export default function ListDetailPage() {
       {/* Done Shopping confirmation dialog */}
       {showDoneDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <h2 className="mb-2 text-lg font-bold text-gray-800">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900">
+            <h2 className="mb-2 text-lg font-bold text-gray-800 dark:text-gray-100">
               {t('shopping.donePromptTitle')}
             </h2>
-            <p className="mb-6 text-sm text-gray-500">{t('shopping.donePromptBody')}</p>
+            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">{t('shopping.donePromptBody')}</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDoneDialog(false)}
-                className="flex-1 rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
+                className="flex-1 rounded-xl border border-gray-200 py-3 text-sm font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
               >
                 {t('shopping.keepShopping')}
               </button>
