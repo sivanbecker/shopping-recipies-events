@@ -144,15 +144,22 @@ function AddToListSheet({
     mutationFn: async (listId: string) => {
       const itemsToInsert = ingredients
         .filter(ing => ing.product?.id)
-        .map(ing => ({
-          list_id: listId,
-          product_id: ing.product.id,
-          quantity: ing.quantity,
-          unit_id: ing.unit?.id || null,
-          added_by: user!.id,
-          recipe_id: recipe.id,
-          note: t('addToShoppingList.forRecipe', { name: recipe.title }),
-        }))
+        .map(ing => {
+          // Use shopping unit if specified, otherwise use recipe unit
+          const unitId = ing.shopping_unit_id || ing.unit?.id || null
+          // Calculate shopping quantity using multiplier
+          const shoppingQuantity = ing.quantity * ing.shopping_quantity_multiplier
+
+          return {
+            list_id: listId,
+            product_id: ing.product.id,
+            quantity: shoppingQuantity,
+            unit_id: unitId,
+            added_by: user!.id,
+            recipe_id: recipe.id,
+            note: t('addToShoppingList.forRecipe', { name: recipe.title }),
+          }
+        })
 
       for (const item of itemsToInsert) {
         const { data: existingItems } = await supabase
@@ -333,7 +340,7 @@ export default function RecipeDetailPage() {
       const { data, error } = await supabase
         .from('recipes')
         .select(
-          '*, ingredients:recipe_ingredients(*, product:products(*, default_unit:unit_types(*)), unit:unit_types(*)), steps:recipe_steps(*)'
+          '*, ingredients:recipe_ingredients(*, product:products(*, default_unit:unit_types(*)), unit:unit_types(*), shopping_unit:unit_types(*)), steps:recipe_steps(*)'
         )
         .eq('id', recipeId)
         .single()

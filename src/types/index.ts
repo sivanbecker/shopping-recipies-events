@@ -32,6 +32,7 @@ export type RecipeWithDetails = Recipe & {
   ingredients: (RecipeIngredient & {
     product: Product
     unit: UnitType | null
+    shopping_unit: UnitType | null
   })[]
   steps: RecipeStep[]
 }

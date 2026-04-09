@@ -18,6 +18,11 @@
     "add": "Add ingredient",
     "note": "Note (e.g. chopped, crushed)",
     "substitute": "Substitute",
+    "shoppingUnit": "Shopping unit (optional)",
+    "inherit": "Use recipe unit",
+    "multiplier": "Multiplier",
+    "conversionExample": "{{qty}} {{name}} = {{shopping}} in shopping units",
+    "conversionHint": "If recipe uses 800g and one package is 400g, enter 0.005 (800÷400÷200)",
     "addToList": "Add to shopping list",
     "addAllToList": "Add all to shopping list"
   },

@@ -29,6 +29,9 @@ interface FormIngredient {
   note: string
   substitute_group_id: number | null
   sort_order: number
+  shopping_unit_id: string | null
+  shopping_unit: UnitType | null
+  shopping_quantity_multiplier: number
 }
 
 interface FormStep {
@@ -182,6 +185,53 @@ function IngredientRow({
           className="w-full rounded-lg border border-gray-200 px-3 py-1 text-xs outline-none focus:border-brand-400"
         />
 
+        {/* Shopping unit section */}
+        <div className="text-xs text-gray-600 pt-1">
+          <div className="font-medium mb-1">{t('ingredients.shoppingUnit')}</div>
+          <div className="flex gap-2">
+            {/* Shopping unit select */}
+            <select
+              value={ingredient.shopping_unit_id || ''}
+              onChange={e => {
+                const unit = unitTypes.find(u => u.id === e.target.value) || null
+                onUpdate({ shopping_unit_id: unit?.id || null, shopping_unit: unit })
+              }}
+              className="flex-1 rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400"
+            >
+              <option value="">{t('ingredients.inherit')}</option>
+              {unitTypes.map(u => (
+                <option key={u.id} value={u.id}>
+                  {u.label_he}
+                </option>
+              ))}
+            </select>
+
+            {/* Multiplier input */}
+            {ingredient.shopping_unit_id && (
+              <input
+                type="number"
+                step="0.0001"
+                min="0.0001"
+                value={ingredient.shopping_quantity_multiplier || 1}
+                onChange={e => onUpdate({ shopping_quantity_multiplier: Number(e.target.value) })}
+                title={t('ingredients.conversionHint')}
+                className="w-20 rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400"
+                placeholder={t('ingredients.multiplier')}
+              />
+            )}
+          </div>
+          {ingredient.shopping_unit_id && (
+            <p className="text-xs text-gray-500 mt-1">
+              {t('ingredients.conversionExample', {
+                qty: ingredient.quantity,
+                shopping: (ingredient.quantity * ingredient.shopping_quantity_multiplier).toFixed(
+                  2
+                ),
+              })}
+            </p>
+          )}
+        </div>
+
         {!groupingIndicator && (
           <button
             onClick={onAddSubstitute}
@@ -230,7 +280,7 @@ export default function RecipeFormPage() {
       const { data, error } = await supabase
         .from('recipes')
         .select(
-          '*, ingredients:recipe_ingredients(*, product:products(*), unit:unit_types(*)), steps:recipe_steps(*)'
+          '*, ingredients:recipe_ingredients(*, product:products(*), unit:unit_types(*), shopping_unit:unit_types(*)), steps:recipe_steps(*)'
         )
         .eq('id', recipeId)
         .single()
@@ -281,6 +331,9 @@ export default function RecipeFormPage() {
           note: ing.note || '',
           substitute_group_id: ing.substitute_group_id,
           sort_order: ing.sort_order,
+          shopping_unit_id: ing.shopping_unit_id || null,
+          shopping_unit: ing.shopping_unit || null,
+          shopping_quantity_multiplier: ing.shopping_quantity_multiplier || 1,
         })) || []
       )
 
@@ -303,6 +356,9 @@ export default function RecipeFormPage() {
       note: '',
       substitute_group_id: null,
       sort_order: ingredients.length,
+      shopping_unit_id: null,
+      shopping_unit: null,
+      shopping_quantity_multiplier: 1,
     }
 
     if (pendingIngredient?.isSubstitute && pendingIngredient.index >= 0) {
@@ -358,6 +414,8 @@ export default function RecipeFormPage() {
               note: ing.note || null,
               substitute_group_id: ing.substitute_group_id,
               sort_order: idx,
+              shopping_unit_id: ing.shopping_unit_id,
+              shopping_quantity_multiplier: ing.shopping_quantity_multiplier,
             }))
           )
         }
@@ -397,6 +455,8 @@ export default function RecipeFormPage() {
               note: ing.note || null,
               substitute_group_id: ing.substitute_group_id,
               sort_order: idx,
+              shopping_unit_id: ing.shopping_unit_id,
+              shopping_quantity_multiplier: ing.shopping_quantity_multiplier,
             }))
           )
         }
