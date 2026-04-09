@@ -101,6 +101,11 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 - **Pinned at top** — missing list sorts above all other active lists (`order by is_missing_list desc`).
 - **"Convert to Shopping List" button** — appears in the ListDetailPage header when viewing a missing list; copies all items to a new regular list then **deletes** the missing list; navigates directly to the new list.
 - **`filterProducts` generic** — made `<T extends Product>` so enriched types (`ProductWithUnit`) are preserved through filtering.
+### Tests — Stage 3 (`src/__tests__/listLogic.test.ts`)
+- **Progress bar `pct`** — empty list, none/all checked, partial, rounding edge cases
+- **`AddItemSheet` upsert** — finds unchecked item → UPDATE path; checked/unknown product → INSERT; bumped qty correct
+- **Clone items mapping** — all items reset to `is_checked: false`; quantities preserved; `list_id`/`added_by` set correctly
+
 ### 3.7 — Shopping Mode (In-Store UX) — COMPLETE
 - **"Start Shopping" button** — appears below the progress bar on active, non-archived, non-missing lists with items; enters shopping mode.
 - **Larger touch targets** — check circle grows from `h-6 w-6` → `h-8 w-8`; row padding `p-3.5` → `p-4`; item name `text-sm` → `text-base`.
@@ -176,6 +181,12 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 - **AddItemSheet / Add-to-list** — unchanged; relies on new RLS, automatically surfaces list-mates' private products
 - **Product creation** — unchanged; products default to `is_shared: false`, visible to list-mates through RLS
 
+### Tests — Stage 4 (`src/__tests__/listLogic.test.ts` + `listDetail.test.tsx`)
+- **Realtime DELETE** — removes only the targeted item by ID using `['shopping_items', listId]` query key; other items untouched
+- **Realtime `is_checked` UPDATE** — patches only the matching item in-place; sibling items unchanged
+- **Cross-list cache isolation** — patching one list's cache does not affect another list's cache entry
+- Note: broadcast send-path (`broadcastChange` calling `supabase.getChannels().find().send()`) is not unit-tested — the function is integration-level and relies on a live Supabase channel reference
+
 ### 4.6 — Item-Level "Added By" Avatar — COMPLETE
 - Each item row in `ListDetailPage` now shows a 20px avatar of the user who added the item
 - Cross-referenced against the `members` array already loaded in the page — no extra DB query
@@ -200,6 +211,10 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 - **i18n** — 25+ new keys for recipe UI in both `he` and `en`
 - **DB Migration 009** — creates `recipes`, `recipe_ingredients`, `recipe_steps` tables with RLS
 - **Shared/Personal badges** — recipes default to personal; can be shared
+
+### Tests — Stage 5 (`src/__tests__/recipeLogic.test.ts`)
+- **Ingredient scaling** — double/halve/identity/fractional/single-serving/arbitrary scaling factor
+- **"Add all to list" upsert** — merges qty for existing unchecked item; inserts for new product; inserts when matching item is checked; decimal qty handled correctly
 
 ### Known Issues / Design Decisions (to address in future sessions)
 1. **Unit mismatch between shopping and recipes:**
