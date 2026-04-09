@@ -966,17 +966,15 @@ export default function ProductsPage() {
         </div>
 
         {/* Category filter chips */}
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
-          <button
-            onClick={() => setSelectedCategory(null)}
-            className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-all ${
-              selectedCategory === null
-                ? 'bg-brand-500 text-white'
-                : 'bg-white text-gray-600 hover:bg-gray-100'
-            }`}
-          >
-            {t('products.allCategories')}
-          </button>
+        <div className="mt-3 flex flex-wrap gap-2 max-h-[88px] overflow-y-auto sm:max-h-none sm:overflow-visible">
+          {selectedCategory !== null && (
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className="flex items-center gap-1 rounded-full bg-gray-200 px-2 py-1 text-xs font-medium text-gray-600 transition-all hover:bg-gray-300"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
           {categories.map(c => (
             <button
               key={c.id}
@@ -1025,7 +1023,7 @@ export default function ProductsPage() {
                     {groupProducts.length}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                   {groupProducts.map(product => (
                     <ProductCard
                       key={product.id}
@@ -1052,7 +1050,7 @@ export default function ProductsPage() {
                     {uncategorized.length}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                   {uncategorized.map(product => (
                     <ProductCard
                       key={product.id}

@@ -9,7 +9,7 @@ export function AppLayout() {
 
       {/* Scrollable main content */}
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-2xl px-4 py-4">
+        <div className="mx-auto max-w-7xl px-4 py-4">
           <Outlet />
         </div>
       </main>

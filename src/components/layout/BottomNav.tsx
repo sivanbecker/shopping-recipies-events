@@ -44,7 +44,7 @@ export function BottomNav() {
       className="sticky bottom-0 z-40 border-t border-gray-200 bg-white pb-safe"
       aria-label={isHebrew ? 'ניווט ראשי' : 'Main navigation'}
     >
-      <div className="mx-auto flex max-w-2xl items-center justify-around">
+      <div className="mx-auto flex max-w-7xl items-center justify-around">
         {navItems.map(({ to, icon: Icon, labelHe, labelEn }) => (
           <NavLink
             key={to}
