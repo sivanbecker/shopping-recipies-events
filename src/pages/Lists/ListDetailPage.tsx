@@ -309,8 +309,13 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <span className="text-base font-semibold text-gray-800 dark:text-gray-100">{name}</span>
-              <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+              <span className="text-base font-semibold text-gray-800 dark:text-gray-100">
+                {name}
+              </span>
+              <button
+                onClick={onClose}
+                className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -420,8 +425,13 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
 
         <div className="px-4 pb-2">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">{t('items.add')}</h2>
-            <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">
+              {t('items.add')}
+            </h2>
+            <button
+              onClick={onClose}
+              className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -809,7 +819,9 @@ export default function ListDetailPage() {
             <ArrowLeft className="h-4 w-4 shrink-0" />
             {t('lists.title')}
           </Link>
-          <h1 className="truncate text-xl font-bold text-gray-800 dark:text-gray-100">{displayName}</h1>
+          <h1 className="truncate text-xl font-bold text-gray-800 dark:text-gray-100">
+            {displayName}
+          </h1>
           <AvatarStack members={members} size={28} />
         </div>
 
@@ -1014,7 +1026,9 @@ export default function ListDetailPage() {
             <h2 className="mb-2 text-lg font-bold text-gray-800 dark:text-gray-100">
               {t('shopping.donePromptTitle')}
             </h2>
-            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">{t('shopping.donePromptBody')}</p>
+            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+              {t('shopping.donePromptBody')}
+            </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDoneDialog(false)}

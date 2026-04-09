@@ -75,7 +75,9 @@ function ProductCard({
       )}
 
       <div className="flex items-start justify-between gap-1 ps-2">
-        <p className="flex-1 text-sm font-semibold leading-tight text-gray-800 dark:text-gray-100">{name}</p>
+        <p className="flex-1 text-sm font-semibold leading-tight text-gray-800 dark:text-gray-100">
+          {name}
+        </p>
 
         <div className="flex shrink-0 gap-0.5">
           <button
@@ -334,7 +336,9 @@ function ImportSummaryDialog({ summary, onClose }: ImportSummaryDialogProps) {
     >
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 dark:bg-gray-900">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('products.import.title')}</h3>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+            {t('products.import.title')}
+          </h3>
           <button
             onClick={onClose}
             className="rounded-lg p-1 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"
@@ -434,7 +438,9 @@ function ConfirmDeleteDialog({
           <Trash2 className="h-6 w-6 text-red-500" />
         </div>
         <h3 className="mb-1 text-base font-semibold text-gray-900 dark:text-gray-100">{name}</h3>
-        <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">{t('products.confirmDelete')}</p>
+        <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">
+          {t('products.confirmDelete')}
+        </p>
         <div className="flex gap-3">
           <button
             onClick={onCancel}
@@ -586,8 +592,13 @@ function AddToListSheet({ product, unitTypes, lang, onClose }: AddToListSheetPro
         <div className="px-4 pb-8">
           {/* Header */}
           <div className="mb-4 flex items-center justify-between">
-            <span className="text-base font-semibold text-gray-800 dark:text-gray-100">{productName}</span>
-            <button onClick={onClose} className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <span className="text-base font-semibold text-gray-800 dark:text-gray-100">
+              {productName}
+            </span>
+            <button
+              onClick={onClose}
+              className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
               <X className="h-5 w-5" />
             </button>
           </div>

@@ -51,7 +51,9 @@ export function BottomNav() {
             to={to}
             className={({ isActive }) =>
               `flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors ${
-                isActive ? 'text-brand-500' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
+                isActive
+                  ? 'text-brand-500'
+                  : 'text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200'
               }`
             }
           >

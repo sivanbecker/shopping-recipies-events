@@ -59,7 +59,9 @@ function ListCard({ list, lang }: ListCardProps) {
     >
       <div className="flex min-w-0 flex-col gap-0.5">
         <span className="truncate font-semibold text-gray-800 dark:text-gray-100">{name}</span>
-        <span className="text-xs text-gray-400 dark:text-gray-500">{t('lists.itemCount', { count })}</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500">
+          {t('lists.itemCount', { count })}
+        </span>
         <div className="mt-1">
           <AvatarStack members={members} size={20} max={4} />
         </div>
@@ -115,7 +117,9 @@ function NewListDialog({ onClose }: NewListDialogProps) {
       onClick={e => e.target === e.currentTarget && onClose()}
     >
       <div className="w-full max-w-md rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl dark:bg-gray-900">
-        <h2 className="mb-4 text-lg font-bold text-gray-800 dark:text-gray-100">{t('lists.new')}</h2>
+        <h2 className="mb-4 text-lg font-bold text-gray-800 dark:text-gray-100">
+          {t('lists.new')}
+        </h2>
 
         <input
           type="text"

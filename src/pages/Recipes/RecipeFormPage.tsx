@@ -69,7 +69,10 @@ function ProductSearchSheet({
       <div className="w-full max-w-md rounded-t-2xl bg-white p-4 shadow-xl sm:rounded-2xl max-h-[80vh] flex flex-col dark:bg-gray-900">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="font-semibold text-gray-900 dark:text-gray-100">{t('ingredients.add')}</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -128,7 +131,9 @@ function IngredientRow({
   return (
     <div className={groupingIndicator ? 'ps-6' : ''}>
       <div className="flex gap-2 items-start py-2">
-        {groupingIndicator && <div className="text-xs text-gray-500 mt-1 dark:text-gray-400">{groupingIndicator}</div>}
+        {groupingIndicator && (
+          <div className="text-xs text-gray-500 mt-1 dark:text-gray-400">{groupingIndicator}</div>
+        )}
 
         <div className="flex-1 min-w-0">
           <button
@@ -582,7 +587,9 @@ export default function RecipeFormPage() {
         {/* Ingredients section */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">{t('form.ingredients')}</label>
+            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+              {t('form.ingredients')}
+            </label>
             <button
               onClick={() => {
                 setPendingIngredient(null)
@@ -597,7 +604,9 @@ export default function RecipeFormPage() {
 
           <div className="space-y-2 border border-gray-200 rounded-lg p-3 dark:border-gray-700">
             {ingredients.length === 0 ? (
-              <p className="text-xs text-gray-500 text-center py-4 dark:text-gray-400">{tCommon('status.empty')}</p>
+              <p className="text-xs text-gray-500 text-center py-4 dark:text-gray-400">
+                {tCommon('status.empty')}
+              </p>
             ) : (
               ingredients.map((ing, idx) => {
                 // Check if this is a substitute (has a group and is not the first in the group)
@@ -636,7 +645,9 @@ export default function RecipeFormPage() {
         {/* Steps section */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">{t('form.steps')}</label>
+            <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+              {t('form.steps')}
+            </label>
             <button
               onClick={handleAddStep}
               className="flex items-center gap-1 text-xs text-brand-500 hover:text-brand-600 font-medium"
@@ -648,7 +659,9 @@ export default function RecipeFormPage() {
 
           <div className="space-y-2 border border-gray-200 rounded-lg p-3 dark:border-gray-700">
             {steps.length === 0 ? (
-              <p className="text-xs text-gray-500 text-center py-4 dark:text-gray-400">{tCommon('status.empty')}</p>
+              <p className="text-xs text-gray-500 text-center py-4 dark:text-gray-400">
+                {tCommon('status.empty')}
+              </p>
             ) : (
               steps.map((step, idx) => (
                 <div key={step.id} className="flex gap-2">

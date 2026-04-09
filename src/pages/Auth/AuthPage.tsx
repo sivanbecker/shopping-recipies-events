@@ -100,8 +100,12 @@ export default function AuthPage() {
         {/* Forgot password view */}
         {view === 'forgot' && (
           <form onSubmit={handleForgotPassword} className="space-y-4">
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{t('auth.forgotPassword')}</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{t('auth.resetPasswordHint')}</p>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+              {t('auth.forgotPassword')}
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {t('auth.resetPasswordHint')}
+            </p>
             <div>
               <label className={labelClass}>{t('auth.email')}</label>
               <input

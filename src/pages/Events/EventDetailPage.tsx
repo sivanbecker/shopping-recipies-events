@@ -14,7 +14,9 @@ export default function EventDetailPage() {
       </Link>
       <div className="rounded-xl bg-white p-6 shadow-sm dark:bg-gray-900">
         <h2 className="font-bold text-gray-800 dark:text-gray-100">Event: {id}</h2>
-        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Stage 6 — Full event detail coming soon</p>
+        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+          Stage 6 — Full event detail coming soon
+        </p>
       </div>
     </div>
   )

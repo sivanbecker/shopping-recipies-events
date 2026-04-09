@@ -110,14 +110,18 @@ export default function ProfilePage() {
                 </button>
               </div>
             )}
-            <p className="mt-0.5 truncate text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
+            <p className="mt-0.5 truncate text-sm text-gray-500 dark:text-gray-400">
+              {user?.email}
+            </p>
           </div>
         </div>
       </div>
 
       {/* Language toggle */}
       <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
-        <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">{t('profile.language')}</p>
+        <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t('profile.language')}
+        </p>
         <div className="flex gap-2">
           {(['he', 'en'] as const).map(lang => (
             <button
@@ -137,7 +141,9 @@ export default function ProfilePage() {
 
       {/* Dark mode toggle */}
       <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
-        <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">{t('profile.darkMode')}</p>
+        <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t('profile.darkMode')}
+        </p>
         <button
           onClick={toggleDarkMode}
           className="flex w-full items-center justify-between rounded-xl bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"

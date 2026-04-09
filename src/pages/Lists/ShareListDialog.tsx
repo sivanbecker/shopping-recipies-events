@@ -118,7 +118,9 @@ export function ShareListDialog({ listId, onClose }: Props) {
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900">
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">{t('sharing.title')}</h2>
+          <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+            {t('sharing.title')}
+          </h2>
           <button
             onClick={onClose}
             className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800"

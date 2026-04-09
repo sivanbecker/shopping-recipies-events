@@ -62,7 +62,9 @@ function ConfirmDeleteDialog({
       onClick={e => e.target === e.currentTarget && onCancel()}
     >
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('confirmDelete')}</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          {t('confirmDelete')}
+        </h3>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t('confirmDeleteHint')}</p>
         <div className="mt-6 flex justify-end gap-3">
           <button
@@ -210,8 +212,13 @@ function AddToListSheet({
         {step === 'select' ? (
           <>
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100">{t('addToShoppingList.title')}</h3>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                {t('addToShoppingList.title')}
+              </h3>
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -283,7 +290,10 @@ function AddToListSheet({
               <h3 className="font-semibold text-gray-900 dark:text-gray-100">
                 {t('addToShoppingList.added')} to {targetList?.name}
               </h3>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -292,7 +302,10 @@ function AddToListSheet({
               {ingredients
                 .filter(ing => ing.product?.id)
                 .map((ing, idx) => (
-                  <div key={idx} className="text-sm text-gray-700 py-1 px-2 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-300">
+                  <div
+                    key={idx}
+                    className="text-sm text-gray-700 py-1 px-2 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-300"
+                  >
                     {ing.product.name_he || ing.product.name_en} — {ing.quantity}{' '}
                     {ing.unit?.label_he || ''}
                   </div>
@@ -457,7 +470,9 @@ export default function RecipeDetailPage() {
         {/* Title */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{recipe.title}</h1>
-          {recipe.description && <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{recipe.description}</p>}
+          {recipe.description && (
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{recipe.description}</p>
+          )}
         </div>
 
         {/* Meta row */}
@@ -472,7 +487,9 @@ export default function RecipeDetailPage() {
             </button>
             <div className="text-center">
               <div className="text-xs text-gray-500 dark:text-gray-400">{t('servings')}</div>
-              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">{servings}</div>
+              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {servings}
+              </div>
             </div>
             <button
               onClick={() => setServings(servings + 1)}
@@ -519,7 +536,9 @@ export default function RecipeDetailPage() {
         {/* Ingredients */}
         {ingredients.length > 0 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-3 dark:text-gray-100">{t('ingredients.title')}</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-3 dark:text-gray-100">
+              {t('ingredients.title')}
+            </h2>
             <div className="space-y-3 border border-gray-200 rounded-lg p-4 dark:border-gray-700">
               {groupedIngredients.map((group, groupIdx) => (
                 <div key={groupIdx}>
@@ -583,7 +602,9 @@ export default function RecipeDetailPage() {
         {/* Steps */}
         {steps.length > 0 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-3 dark:text-gray-100">{t('steps.title')}</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-3 dark:text-gray-100">
+              {t('steps.title')}
+            </h2>
             <div className="space-y-3">
               {steps
                 .sort((a, b) => a.step_number - b.step_number)
