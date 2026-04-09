@@ -1,7 +1,7 @@
 ---
 name: add-category
 description: Add one or more new categories to the DB with full git workflow (branch, migrate, push, PR, merge, rebase).
-argument-hint: <category-name-he> [additional categories...]
+argument-hint: <category-he> [| <category-he> ...]
 user-invocable: true
 allowed-tools: Bash, Read, Write, Glob, Grep
 ---
@@ -37,7 +37,7 @@ Execute the following steps exactly, in order. Do not skip any step.
 
 1. List `supabase/migrations/` and find the highest-numbered prefix (e.g., `013`). The new file gets the next number (e.g., `014`).
 2. Determine the next `sort_order` by finding the highest `sort_order` value across all migration files in `supabase/migrations/`. Increment from there.
-3. For each category in `$ARGUMENTS`, pick an appropriate icon (emoji) and color (hex). Use judgement based on the category name.
+3. Parse `$ARGUMENTS` by splitting on `|` — each trimmed segment is one category. For each category, pick an appropriate icon (emoji) and color (hex). Use judgement based on the category name.
 4. Write the migration file `supabase/migrations/<NNN>_add_<slug>_category.sql`:
 
 ```sql
