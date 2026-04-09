@@ -28,3 +28,8 @@ export const supabase = createClient<Database>(
     },
   }
 )
+
+export function broadcastChange(listId: string, event: 'items-changed' | 'list-changed') {
+  const ch = supabase.getChannels().find(c => c.topic === `realtime:list-detail-${listId}`)
+  void ch?.send({ type: 'broadcast', event, payload: {} })
+}

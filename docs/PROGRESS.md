@@ -184,6 +184,37 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 
 ---
 
+## Stage 5 — Recipes — COMPLETE (branch: feat/stage-5-recipes, pending merge)
+
+### 5.1–5.5 — Full recipe management — COMPLETE
+- **RecipesPage** — list view with live search by title, filter by tool (oven, stovetop, pot, pan, baking tray, blender), and owner-only delete
+- **RecipeFormPage** — create/edit recipes with:
+  - Metadata: title, description, servings, prep time, tool checkboxes
+  - Ingredient builder: product search, quantity, unit, notes, substitute grouping
+  - Steps builder: add/remove/reorder preparation steps
+- **RecipeDetailPage** — view recipes with:
+  - **Servings scaling**: adjust servings spinner → all ingredient quantities scale reactively
+  - Ingredient grouping with substitutes (indented, dimmed, `<1>` badge)
+  - Preparation steps
+  - "Add all ingredients to shopping list" sheet with upsert logic (merges quantities if item already exists)
+- **i18n** — 25+ new keys for recipe UI in both `he` and `en`
+- **DB Migration 009** — creates `recipes`, `recipe_ingredients`, `recipe_steps` tables with RLS
+- **Shared/Personal badges** — recipes default to personal; can be shared
+
+### Known Issues / Design Decisions (to address in future sessions)
+1. **Unit mismatch between shopping and recipes:**
+   - **Problem:** The same product (e.g., flour) has different units in different contexts:
+     - **Shopping context**: measured in packages/units (1, 2, 3 units) — reflects how items are bought
+     - **Recipe context**: measured in weight/volume (800g, 2 cups) — reflects culinary measurements
+   - **Current behavior:** Recipe ingredient units are independent from product default units. When adding recipe ingredients to a shopping list, the recipe's unit is used (e.g., 800g), not the product's shopping unit (packages).
+   - **Example:** 
+     - Product "Flour" has `default_unit: units (count)` for shopping
+     - Recipe "Cake" lists "Flour: 800g" (weight unit, not packages)
+     - When you add cake ingredients to shopping list → "Flour 800g" is added, not "Flour 1 package"
+   - **To fix:** Either (a) allow products to have context-aware unit overrides, or (b) add a conversion mapping (e.g., "1 package = 500g"), or (c) show recipe units separately from shopping units in the list
+
+---
+
 ## Stages 4.3 and 4.4 — Not started
 See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full plan.
 

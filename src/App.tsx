@@ -12,6 +12,7 @@ import ListDetailPage from './pages/Lists/ListDetailPage'
 import ProductsPage from './pages/Products/ProductsPage'
 import RecipesPage from './pages/Recipes/RecipesPage'
 import RecipeDetailPage from './pages/Recipes/RecipeDetailPage'
+import RecipeFormPage from './pages/Recipes/RecipeFormPage'
 import EventsPage from './pages/Events/EventsPage'
 import EventDetailPage from './pages/Events/EventDetailPage'
 import ProfilePage from './pages/Profile/ProfilePage'
@@ -44,6 +45,8 @@ export default function App() {
         <Route path="/lists/:id" element={<ListDetailPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/recipes" element={<RecipesPage />} />
+        <Route path="/recipes/new" element={<RecipeFormPage />} />
+        <Route path="/recipes/:id/edit" element={<RecipeFormPage />} />
         <Route path="/recipes/:id" element={<RecipeDetailPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/events/:id" element={<EventDetailPage />} />

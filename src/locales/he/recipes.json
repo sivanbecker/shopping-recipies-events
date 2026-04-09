@@ -18,6 +18,11 @@
     "add": "הוסף מצרך",
     "note": "הערה (למשל: קצוץ, כתוש)",
     "substitute": "תחליף",
+    "shoppingUnit": "יחידת קניות (אופציונלי)",
+    "inherit": "השתמש ביחידת המתכון",
+    "multiplier": "מכפיל",
+    "conversionExample": "{{qty}} {{name}} = {{shopping}} ביחידת קניות",
+    "conversionHint": "אם המתכון משתמש ב-800 גרם וחבילה אחת זה 400 גרם, הזן 0.005 (800÷400÷200)",
     "addToList": "הוסף לרשימת קניות",
     "addAllToList": "הוסף את כל המצרכים לרשימה"
   },
@@ -34,6 +39,31 @@
     "added": "נוסף לרשימה!",
     "forRecipe": "עבור מתכון: {{name}}"
   },
+  "search": "חפש מתכונים",
+  "filterByTool": "סנן לפי כלים",
+  "shared": "משותף",
+  "personal": "אישי",
+  "edit": "ערוך",
+  "delete": "מחק",
+  "confirmDelete": "מחק מתכון?",
+  "confirmDeleteHint": "לא ניתן לבטל פעולה זו.",
+  "noMatch": "לא נמצאו מתכונים",
+  "form": {
+    "title": "שם המתכון",
+    "description": "תיאור",
+    "servings": "מספר המנות",
+    "prepTime": "זמן הכנה (דקות)",
+    "tools": "כלים נדרשים",
+    "ingredients": "מצרכים",
+    "addIngredient": "הוסף מצרך",
+    "addSubstitute": "הוסף תחליף",
+    "steps": "אופן הכנה",
+    "addStep": "הוסף שלב",
+    "save": "שמור מתכון",
+    "saving": "שומר..."
+  },
+  "substituteGroup": "<{{n}}>",
+  "scaledQty": "בקנה מידה ל-{{servings}} מנות",
   "empty": "אין מתכונים עדיין",
   "emptyHint": "לחץ על + כדי להוסיף מתכון ראשון"
 }

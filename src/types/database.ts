@@ -215,6 +215,8 @@ export type Database = {
           note: string | null
           substitute_group_id: number | null
           sort_order: number
+          shopping_unit_id: string | null
+          shopping_quantity_multiplier: number
         }
         Insert: {
           id?: string
@@ -225,6 +227,8 @@ export type Database = {
           note?: string | null
           substitute_group_id?: number | null
           sort_order?: number
+          shopping_unit_id?: string | null
+          shopping_quantity_multiplier?: number
         }
         Update: {
           quantity?: number
@@ -232,6 +236,8 @@ export type Database = {
           note?: string | null
           substitute_group_id?: number | null
           sort_order?: number
+          shopping_unit_id?: string | null
+          shopping_quantity_multiplier?: number
         }
         Relationships: []
       }
