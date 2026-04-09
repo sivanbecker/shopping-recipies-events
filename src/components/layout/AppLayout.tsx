@@ -4,7 +4,7 @@ import { BottomNav } from './BottomNav'
 
 export function AppLayout() {
   return (
-    <div className="flex h-dvh flex-col bg-gray-50">
+    <div className="flex h-dvh flex-col bg-gray-50 dark:bg-gray-950">
       <Header />
 
       {/* Scrollable main content */}

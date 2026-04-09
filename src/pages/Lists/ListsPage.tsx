@@ -55,11 +55,13 @@ function ListCard({ list, lang }: ListCardProps) {
   return (
     <Link
       to={`/lists/${list.id}`}
-      className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:shadow-md active:scale-[0.98]"
+      className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:shadow-md active:scale-[0.98] dark:border-gray-700 dark:bg-gray-900"
     >
       <div className="flex min-w-0 flex-col gap-0.5">
-        <span className="truncate font-semibold text-gray-800">{name}</span>
-        <span className="text-xs text-gray-400">{t('lists.itemCount', { count })}</span>
+        <span className="truncate font-semibold text-gray-800 dark:text-gray-100">{name}</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500">
+          {t('lists.itemCount', { count })}
+        </span>
         <div className="mt-1">
           <AvatarStack members={members} size={20} max={4} />
         </div>
@@ -114,15 +116,17 @@ function NewListDialog({ onClose }: NewListDialogProps) {
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-md rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl">
-        <h2 className="mb-4 text-lg font-bold text-gray-800">{t('lists.new')}</h2>
+      <div className="w-full max-w-md rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl dark:bg-gray-900">
+        <h2 className="mb-4 text-lg font-bold text-gray-800 dark:text-gray-100">
+          {t('lists.new')}
+        </h2>
 
         <input
           type="text"
           value={name}
           onChange={e => setName(e.target.value)}
           placeholder={t('lists.namePlaceholder')}
-          className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100"
+          className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
           onKeyDown={e => {
             if (e.key === 'Enter') createMutation.mutate(name)
             if (e.key === 'Escape') onClose()
@@ -133,7 +137,7 @@ function NewListDialog({ onClose }: NewListDialogProps) {
         <div className="mt-4 flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="rounded-xl px-4 py-2 text-sm text-gray-500 hover:bg-gray-100"
+            className="rounded-xl px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
           >
             {t('lists.cancel')}
           </button>
@@ -223,7 +227,7 @@ export default function ListsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-800">{t('lists.title')}</h1>
+        <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">{t('lists.title')}</h1>
       </div>
 
       {/* Active lists */}
@@ -236,8 +240,8 @@ export default function ListsPage() {
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-100">
             <ShoppingCart className="h-8 w-8 text-brand-500" />
           </div>
-          <p className="font-semibold text-gray-700">{t('lists.empty')}</p>
-          <p className="mt-1 text-sm text-gray-400">{t('lists.emptyHint')}</p>
+          <p className="font-semibold text-gray-700 dark:text-gray-300">{t('lists.empty')}</p>
+          <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">{t('lists.emptyHint')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -250,13 +254,13 @@ export default function ListsPage() {
       {/* Archived section toggle */}
       <button
         onClick={() => setShowArchived(v => !v)}
-        className="flex w-full items-center justify-between rounded-xl px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-100"
+        className="flex w-full items-center justify-between rounded-xl px-2 py-1.5 text-sm text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
       >
         <span className="flex items-center gap-1.5">
           {showArchived ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           {t('lists.archived')}
           {archivedLists.length > 0 && (
-            <span className="rounded-full bg-gray-200 px-1.5 py-0.5 text-xs">
+            <span className="rounded-full bg-gray-200 px-1.5 py-0.5 text-xs dark:bg-gray-700 dark:text-gray-300">
               {archivedLists.length}
             </span>
           )}

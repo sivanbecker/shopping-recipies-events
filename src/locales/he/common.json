@@ -52,7 +52,9 @@
     "language": "שפה",
     "editName": "עריכת שם",
     "namePlaceholder": "השם שלך",
-    "nameSaved": "השם נשמר בהצלחה"
+    "nameSaved": "השם נשמר בהצלחה",
+    "darkMode": "מצב כהה",
+    "lightMode": "מצב בהיר"
   },
   "validation": {
     "required": "שדה חובה",

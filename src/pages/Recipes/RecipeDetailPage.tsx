@@ -61,13 +61,15 @@ function ConfirmDeleteDialog({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       onClick={e => e.target === e.currentTarget && onCancel()}
     >
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-        <h3 className="text-lg font-semibold text-gray-900">{t('confirmDelete')}</h3>
-        <p className="mt-2 text-sm text-gray-600">{t('confirmDeleteHint')}</p>
+      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          {t('confirmDelete')}
+        </h3>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t('confirmDeleteHint')}</p>
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onCancel}
-            className="rounded-xl px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
+            className="rounded-xl px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             {tCommon('actions.cancel')}
           </button>
@@ -206,12 +208,17 @@ function AddToListSheet({
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center"
       onClick={e => e.target === e.currentTarget && onClose()}
     >
-      <div className="w-full max-w-md rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl max-h-[80vh] flex flex-col">
+      <div className="w-full max-w-md rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl max-h-[80vh] flex flex-col dark:bg-gray-900">
         {step === 'select' ? (
           <>
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900">{t('addToShoppingList.title')}</h3>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                {t('addToShoppingList.title')}
+              </h3>
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -224,14 +231,14 @@ function AddToListSheet({
                     setSelectedListId(list.id)
                     setStep('confirm')
                   }}
-                  className="w-full text-left rounded-lg border border-gray-200 p-3 hover:bg-gray-50 transition-colors"
+                  className="w-full text-left rounded-lg border border-gray-200 p-3 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:hover:bg-gray-800"
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-900">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">
                         {list.name || tCommon('status.untitled')}
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {list.shopping_items?.length || 0} {tCommon('items.items')}
                       </p>
                     </div>
@@ -240,7 +247,7 @@ function AddToListSheet({
                 </button>
               ))}
 
-              <div className="border-t border-gray-200 pt-2">
+              <div className="border-t border-gray-200 pt-2 dark:border-gray-700">
                 <button
                   onClick={() => setIsCreating(!isCreating)}
                   className="w-full flex items-center gap-2 text-brand-500 hover:text-brand-600 font-medium text-sm py-2"
@@ -256,7 +263,7 @@ function AddToListSheet({
                       placeholder={tCommon('actions.name')}
                       value={newListName}
                       onChange={e => setNewListName(e.target.value)}
-                      className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-400"
+                      className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                     />
                     <button
                       onClick={() => {
@@ -280,10 +287,13 @@ function AddToListSheet({
         ) : (
           <>
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900">
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">
                 {t('addToShoppingList.added')} to {targetList?.name}
               </h3>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              <button
+                onClick={onClose}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -292,7 +302,10 @@ function AddToListSheet({
               {ingredients
                 .filter(ing => ing.product?.id)
                 .map((ing, idx) => (
-                  <div key={idx} className="text-sm text-gray-700 py-1 px-2 rounded-lg bg-gray-50">
+                  <div
+                    key={idx}
+                    className="text-sm text-gray-700 py-1 px-2 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-300"
+                  >
                     {ing.product.name_he || ing.product.name_en} — {ing.quantity}{' '}
                     {ing.unit?.label_he || ''}
                   </div>
@@ -302,7 +315,7 @@ function AddToListSheet({
             <div className="flex gap-3">
               <button
                 onClick={() => setStep('select')}
-                className="flex-1 rounded-xl px-4 py-2 text-sm font-medium text-gray-700 border border-gray-200 hover:bg-gray-100"
+                className="flex-1 rounded-xl px-4 py-2 text-sm font-medium text-gray-700 border border-gray-200 hover:bg-gray-100 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-800"
               >
                 {tCommon('actions.back')}
               </button>
@@ -424,10 +437,10 @@ export default function RecipeDetailPage() {
   return (
     <div className="flex flex-col pb-20">
       {/* Header */}
-      <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-start justify-between z-10">
+      <div className="sticky top-0 bg-white border-b border-gray-200 px-4 py-3 flex items-start justify-between z-10 dark:bg-gray-900 dark:border-gray-700">
         <button
           onClick={() => navigate('/recipes')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 flex-shrink-0"
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 flex-shrink-0 dark:text-gray-400 dark:hover:text-gray-100"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -436,7 +449,7 @@ export default function RecipeDetailPage() {
           <div className="flex gap-2">
             <button
               onClick={() => navigate(`/recipes/${recipeId}/edit`)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
               title={t('edit')}
             >
               <Edit2 className="h-4 w-4" />
@@ -456,27 +469,31 @@ export default function RecipeDetailPage() {
       <div className="flex-1 px-4 py-4 space-y-4">
         {/* Title */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{recipe.title}</h1>
-          {recipe.description && <p className="mt-2 text-sm text-gray-600">{recipe.description}</p>}
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{recipe.title}</h1>
+          {recipe.description && (
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{recipe.description}</p>
+          )}
         </div>
 
         {/* Meta row */}
-        <div className="flex flex-wrap gap-3 items-center py-3 border-y border-gray-200">
+        <div className="flex flex-wrap gap-3 items-center py-3 border-y border-gray-200 dark:border-gray-700">
           {/* Servings spinner */}
           <div className="flex items-center gap-2">
             <button
               onClick={() => setServings(Math.max(1, servings - 1))}
-              className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600"
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-gray-400"
             >
               −
             </button>
             <div className="text-center">
-              <div className="text-xs text-gray-500">{t('servings')}</div>
-              <div className="text-lg font-semibold text-gray-900">{servings}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{t('servings')}</div>
+              <div className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {servings}
+              </div>
             </div>
             <button
               onClick={() => setServings(servings + 1)}
-              className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600"
+              className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 hover:bg-gray-100 text-gray-600 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-gray-400"
             >
               +
             </button>
@@ -484,7 +501,7 @@ export default function RecipeDetailPage() {
 
           {/* Prep time */}
           {recipe.prep_time_minutes && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <span className="font-medium">{recipe.prep_time_minutes}</span>
               <span>{t('minutes')}</span>
             </div>
@@ -506,7 +523,7 @@ export default function RecipeDetailPage() {
             {recipe.tools.map(tool => (
               <div
                 key={tool}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-gray-100 text-gray-700"
+                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
                 title={t(`tools.${tool}`)}
               >
                 {TOOL_ICONS[tool]}
@@ -519,23 +536,25 @@ export default function RecipeDetailPage() {
         {/* Ingredients */}
         {ingredients.length > 0 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-3">{t('ingredients.title')}</h2>
-            <div className="space-y-3 border border-gray-200 rounded-lg p-4">
+            <h2 className="text-lg font-bold text-gray-900 mb-3 dark:text-gray-100">
+              {t('ingredients.title')}
+            </h2>
+            <div className="space-y-3 border border-gray-200 rounded-lg p-4 dark:border-gray-700">
               {groupedIngredients.map((group, groupIdx) => (
                 <div key={groupIdx}>
                   {/* Primary ingredient */}
                   <div className="flex items-start gap-3">
                     <span className="text-gray-400 text-sm mt-1">•</span>
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-gray-900">
+                      <div className="font-medium text-gray-900 dark:text-gray-100">
                         {group.primary.product?.name_he || group.primary.product?.name_en || '—'}
                       </div>
-                      <div className="text-sm text-gray-600 mt-0.5">
+                      <div className="text-sm text-gray-600 mt-0.5 dark:text-gray-400">
                         {(group.primary.quantity * scalingFactor).toFixed(2)}{' '}
                         {group.primary.unit?.label_he || ''}
                       </div>
                       {group.primary.note && (
-                        <div className="text-xs text-gray-500 mt-1 italic">
+                        <div className="text-xs text-gray-500 mt-1 italic dark:text-gray-400">
                           {group.primary.note}
                         </div>
                       )}
@@ -548,18 +567,18 @@ export default function RecipeDetailPage() {
                       <div key={subIdx} className="flex items-start gap-3 ml-4 mt-2 opacity-75">
                         <span className="text-gray-400 text-xs">↳</span>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm text-gray-700 flex items-center gap-1">
-                            <span className="inline-flex items-center gap-0.5 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                          <div className="text-sm text-gray-700 flex items-center gap-1 dark:text-gray-300">
+                            <span className="inline-flex items-center gap-0.5 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded dark:bg-gray-800 dark:text-gray-400">
                               {t('substituteGroup', { n: group.primary.substitute_group_id })}
                             </span>
                             {substitute.product?.name_he || substitute.product?.name_en || '—'}
                           </div>
-                          <div className="text-xs text-gray-500 mt-0.5">
+                          <div className="text-xs text-gray-500 mt-0.5 dark:text-gray-400">
                             {(substitute.quantity * scalingFactor).toFixed(2)}{' '}
                             {substitute.unit?.label_he || ''}
                           </div>
                           {substitute.note && (
-                            <div className="text-xs text-gray-500 mt-1 italic">
+                            <div className="text-xs text-gray-500 mt-1 italic dark:text-gray-400">
                               {substitute.note}
                             </div>
                           )}
@@ -583,16 +602,18 @@ export default function RecipeDetailPage() {
         {/* Steps */}
         {steps.length > 0 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-3">{t('steps.title')}</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-3 dark:text-gray-100">
+              {t('steps.title')}
+            </h2>
             <div className="space-y-3">
               {steps
                 .sort((a, b) => a.step_number - b.step_number)
                 .map(step => (
                   <div key={step.id} className="flex gap-3">
-                    <span className="flex-shrink-0 font-semibold text-gray-900 text-sm min-w-[2rem]">
+                    <span className="flex-shrink-0 font-semibold text-gray-900 text-sm min-w-[2rem] dark:text-gray-100">
                       {step.step_number}.
                     </span>
-                    <p className="text-sm text-gray-700">{step.description}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{step.description}</p>
                   </div>
                 ))}
             </div>

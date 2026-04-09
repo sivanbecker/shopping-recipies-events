@@ -10,6 +10,11 @@ import { loginSchema, registerSchema, type LoginData, type RegisterData } from '
 
 type View = 'login' | 'register' | 'forgot'
 
+const inputClass =
+  'w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500'
+
+const labelClass = 'mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300'
+
 export default function AuthPage() {
   const [view, setView] = useState<View>('login')
   const [loading, setLoading] = useState(false)
@@ -65,13 +70,13 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 dark:bg-gray-950">
       {/* Logo */}
       <div className="mb-8 flex flex-col items-center gap-3">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-500 shadow-lg">
           <ShoppingCart className="h-8 w-8 text-white" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">{t('app.name')}</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('app.name')}</h1>
       </div>
 
       {/* Setup banner */}
@@ -91,23 +96,25 @@ export default function AuthPage() {
         </div>
       )}
 
-      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm">
+      <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-900">
         {/* Forgot password view */}
         {view === 'forgot' && (
           <form onSubmit={handleForgotPassword} className="space-y-4">
-            <h2 className="text-base font-semibold text-gray-900">{t('auth.forgotPassword')}</h2>
-            <p className="text-sm text-gray-500">{t('auth.resetPasswordHint')}</p>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+              {t('auth.forgotPassword')}
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {t('auth.resetPasswordHint')}
+            </p>
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                {t('auth.email')}
-              </label>
+              <label className={labelClass}>{t('auth.email')}</label>
               <input
                 type="email"
                 value={forgotEmail}
                 onChange={e => setForgotEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                className={inputClass}
                 placeholder="you@example.com"
               />
             </div>
@@ -132,15 +139,15 @@ export default function AuthPage() {
         {/* Login / Register tabs */}
         {view !== 'forgot' && (
           <>
-            <div className="mb-6 flex rounded-xl bg-gray-100 p-1">
+            <div className="mb-6 flex rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
               {(['login', 'register'] as const).map(v => (
                 <button
                   key={v}
                   onClick={() => setView(v)}
                   className={`flex-1 rounded-lg py-2 text-sm font-medium transition-all ${
                     view === v
-                      ? 'bg-white text-gray-900 shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-gray-100'
+                      : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                   }`}
                 >
                   {v === 'login' ? t('auth.login') : t('auth.register')}
@@ -152,14 +159,12 @@ export default function AuthPage() {
             {view === 'login' && (
               <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    {t('auth.email')}
-                  </label>
+                  <label className={labelClass}>{t('auth.email')}</label>
                   <input
                     {...loginForm.register('email')}
                     type="email"
                     autoComplete="email"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                    className={inputClass}
                     placeholder="you@example.com"
                   />
                   {loginForm.formState.errors.email && (
@@ -168,14 +173,12 @@ export default function AuthPage() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    {t('auth.password')}
-                  </label>
+                  <label className={labelClass}>{t('auth.password')}</label>
                   <input
                     {...loginForm.register('password')}
                     type="password"
                     autoComplete="current-password"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                    className={inputClass}
                   />
                   <div className="mt-1 text-end">
                     <button
@@ -203,52 +206,44 @@ export default function AuthPage() {
             {view === 'register' && (
               <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-4">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    {t('auth.name')}
-                  </label>
+                  <label className={labelClass}>{t('auth.name')}</label>
                   <input
                     {...registerForm.register('name')}
                     type="text"
                     autoComplete="name"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                    className={inputClass}
                     placeholder={t('auth.name')}
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    {t('auth.email')}
-                  </label>
+                  <label className={labelClass}>{t('auth.email')}</label>
                   <input
                     {...registerForm.register('email')}
                     type="email"
                     autoComplete="email"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                    className={inputClass}
                     placeholder="you@example.com"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    {t('auth.password')}
-                  </label>
+                  <label className={labelClass}>{t('auth.password')}</label>
                   <input
                     {...registerForm.register('password')}
                     type="password"
                     autoComplete="new-password"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                    className={inputClass}
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    {t('auth.confirmPassword')}
-                  </label>
+                  <label className={labelClass}>{t('auth.confirmPassword')}</label>
                   <input
                     {...registerForm.register('confirmPassword')}
                     type="password"
                     autoComplete="new-password"
-                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                    className={inputClass}
                   />
                   {registerForm.formState.errors.confirmPassword && (
                     <p className="mt-1 text-xs text-red-500">{t('validation.passwordsMismatch')}</p>
