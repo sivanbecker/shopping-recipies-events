@@ -197,7 +197,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
         .select('*, default_unit:unit_types(*)')
         .order('name_he')
       if (error) throw error
-      return data as ProductWithUnit[]
+      return data as unknown as ProductWithUnit[]
     },
     staleTime: 5 * 60 * 1000,
   })
@@ -263,7 +263,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
         .select('*, default_unit:unit_types(*)')
         .single()
       if (error) throw error
-      return product as ProductWithUnit
+      return product as unknown as ProductWithUnit
     },
     onSuccess: product => {
       queryClient.invalidateQueries({ queryKey: ['products_with_units'] })
@@ -537,7 +537,7 @@ export default function ListDetailPage() {
         .order('sort_order', { ascending: true })
         .order('created_at', { ascending: true })
       if (error) throw error
-      return (data ?? []) as ShoppingItemWithProduct[]
+      return (data ?? []) as unknown as ShoppingItemWithProduct[]
     },
     enabled: !!id,
   })
@@ -618,7 +618,7 @@ export default function ListDetailPage() {
             Database['public']['Tables']['shopping_lists']['Row']
           >
         ) => {
-          if (payload.new?.id !== id) return
+          if (!('id' in payload.new) || payload.new.id !== id) return
           queryClient.invalidateQueries({ queryKey: ['shopping_list', id] })
           queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
         }

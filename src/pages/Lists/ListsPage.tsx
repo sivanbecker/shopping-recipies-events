@@ -176,7 +176,7 @@ export default function ListsPage() {
         .order('is_missing_list', { ascending: false }) // pin missing list first
         .order('created_at', { ascending: false })
       if (error) throw error
-      return (data ?? []) as ListWithCount[]
+      return (data ?? []) as unknown as ListWithCount[]
     },
     enabled: !!user,
   })
@@ -218,7 +218,7 @@ export default function ListsPage() {
         .eq('is_archived', true)
         .order('updated_at', { ascending: false })
       if (error) throw error
-      return (data ?? []) as ListWithCount[]
+      return (data ?? []) as unknown as ListWithCount[]
     },
     enabled: !!user && showArchived,
   })
