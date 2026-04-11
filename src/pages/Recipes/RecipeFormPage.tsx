@@ -40,8 +40,6 @@ interface FormStep {
   step_number: number
 }
 
-const TOOLS = ['oven', 'stovetop', 'pot', 'pan', 'bakingTray', 'blender'] as const
-
 function ProductSearchSheet({
   isOpen,
   onClose,
@@ -126,7 +124,6 @@ function IngredientRow({
   groupingIndicator?: React.ReactNode
 }) {
   const { t } = useTranslation('recipes')
-  const productUnits = unitTypes.filter(u => u.type === ingredient.product?.default_unit?.type)
 
   return (
     <div className={groupingIndicator ? 'ps-6' : ''}>
@@ -154,26 +151,22 @@ function IngredientRow({
           className="w-16 rounded-lg border border-gray-200 px-2 py-1 text-sm outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
         />
 
-        {/* Unit select */}
-        {productUnits.length > 0 ? (
-          <select
-            value={ingredient.unit?.id || ''}
-            onChange={e => {
-              const unit = unitTypes.find(u => u.id === e.target.value) || null
-              onUpdate({ unit })
-            }}
-            className="rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-          >
-            <option value="">—</option>
-            {productUnits.map(u => (
-              <option key={u.id} value={u.id}>
-                {u.label_he}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <span className="text-xs text-gray-500 dark:text-gray-400">—</span>
-        )}
+        {/* Unit select — all units from DB */}
+        <select
+          value={ingredient.unit?.id || ''}
+          onChange={e => {
+            const unit = unitTypes.find(u => u.id === e.target.value) || null
+            onUpdate({ unit })
+          }}
+          className="rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+        >
+          <option value="">—</option>
+          {unitTypes.map(u => (
+            <option key={u.id} value={u.id}>
+              {u.label_he}
+            </option>
+          ))}
+        </select>
 
         <button onClick={onRemove} className="text-red-500 hover:text-red-700">
           <Trash2 className="h-4 w-4" />
@@ -190,53 +183,6 @@ function IngredientRow({
           className="w-full rounded-lg border border-gray-200 px-3 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
         />
 
-        {/* Shopping unit section */}
-        <div className="text-xs text-gray-600 pt-1 dark:text-gray-400">
-          <div className="font-medium mb-1">{t('ingredients.shoppingUnit')}</div>
-          <div className="flex gap-2">
-            {/* Shopping unit select */}
-            <select
-              value={ingredient.shopping_unit_id || ''}
-              onChange={e => {
-                const unit = unitTypes.find(u => u.id === e.target.value) || null
-                onUpdate({ shopping_unit_id: unit?.id || null, shopping_unit: unit })
-              }}
-              className="flex-1 rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-            >
-              <option value="">{t('ingredients.inherit')}</option>
-              {unitTypes.map(u => (
-                <option key={u.id} value={u.id}>
-                  {u.label_he}
-                </option>
-              ))}
-            </select>
-
-            {/* Multiplier input */}
-            {ingredient.shopping_unit_id && (
-              <input
-                type="number"
-                step="0.0001"
-                min="0.0001"
-                value={ingredient.shopping_quantity_multiplier || 1}
-                onChange={e => onUpdate({ shopping_quantity_multiplier: Number(e.target.value) })}
-                title={t('ingredients.conversionHint')}
-                className="w-20 rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                placeholder={t('ingredients.multiplier')}
-              />
-            )}
-          </div>
-          {ingredient.shopping_unit_id && (
-            <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
-              {t('ingredients.conversionExample', {
-                qty: ingredient.quantity,
-                shopping: (ingredient.quantity * ingredient.shopping_quantity_multiplier).toFixed(
-                  2
-                ),
-              })}
-            </p>
-          )}
-        </div>
-
         {!groupingIndicator && (
           <button
             onClick={onAddSubstitute}
@@ -251,7 +197,7 @@ function IngredientRow({
 }
 
 export default function RecipeFormPage() {
-  const { t } = useTranslation('recipes')
+  const { t, i18n } = useTranslation('recipes')
   const { t: tCommon } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -285,7 +231,7 @@ export default function RecipeFormPage() {
       const { data, error } = await supabase
         .from('recipes')
         .select(
-          '*, ingredients:recipe_ingredients(*, product:products(*), unit:unit_types(*), shopping_unit:unit_types(*)), steps:recipe_steps(*)'
+          '*, ingredients:recipe_ingredients(id, quantity, unit_id, note, substitute_group_id, sort_order, shopping_unit_id, shopping_quantity_multiplier, product:products(*)), steps:recipe_steps(*)'
         )
         .eq('id', recipeId)
         .single()
@@ -316,6 +262,15 @@ export default function RecipeFormPage() {
     },
   })
 
+  const { data: tools = [] } = useQuery({
+    queryKey: ['tools'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('tools').select('*').order('label_he')
+      if (error) throw error
+      return data as { id: string; key: string; label_he: string; label_en: string }[]
+    },
+  })
+
   // Initialize form from recipe (if editing)
   useEffect(() => {
     if (recipe) {
@@ -327,30 +282,45 @@ export default function RecipeFormPage() {
         tools: recipe.tools || [],
       })
 
+      const r = recipe as unknown as {
+        ingredients: Array<{
+          id: string
+          product: import('@/types').Product
+          quantity: number
+          unit_id: string | null
+          note: string | null
+          substitute_group_id: number | null
+          sort_order: number
+          shopping_unit_id: string | null
+          shopping_quantity_multiplier: number
+        }>
+        steps: Array<{ description: string; step_number: number }>
+      }
+
       setIngredients(
-        recipe.ingredients?.map((ing, idx) => ({
+        (r.ingredients || []).map((ing, idx) => ({
           id: `ing-${idx}`,
           product: ing.product,
           quantity: ing.quantity,
-          unit: ing.unit,
+          unit: unitTypes.find(u => u.id === ing.unit_id) ?? null,
           note: ing.note || '',
           substitute_group_id: ing.substitute_group_id,
           sort_order: ing.sort_order,
           shopping_unit_id: ing.shopping_unit_id || null,
-          shopping_unit: ing.shopping_unit || null,
+          shopping_unit: null,
           shopping_quantity_multiplier: ing.shopping_quantity_multiplier || 1,
-        })) || []
+        }))
       )
 
       setSteps(
-        recipe.steps?.map((step, idx) => ({
+        (r.steps || []).map((step, idx) => ({
           id: `step-${idx}`,
           description: step.description,
           step_number: step.step_number,
-        })) || []
+        }))
       )
     }
-  }, [recipe])
+  }, [recipe, unitTypes])
 
   const handleAddIngredient = (product: Product) => {
     const newIngredient: FormIngredient = {
@@ -561,24 +531,24 @@ export default function RecipeFormPage() {
             {t('form.tools')}
           </label>
           <div className="flex flex-wrap gap-2">
-            {TOOLS.map(tool => (
+            {tools.map(tool => (
               <button
-                key={tool}
+                key={tool.key}
                 onClick={() => {
                   setFormData({
                     ...formData,
-                    tools: formData.tools.includes(tool)
-                      ? formData.tools.filter(t => t !== tool)
-                      : [...formData.tools, tool],
+                    tools: formData.tools.includes(tool.key)
+                      ? formData.tools.filter(k => k !== tool.key)
+                      : [...formData.tools, tool.key],
                   })
                 }}
                 className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-                  formData.tools.includes(tool)
+                  formData.tools.includes(tool.key)
                     ? 'bg-brand-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
                 }`}
               >
-                {t(`tools.${tool}`)}
+                {i18n.language.startsWith('he') ? tool.label_he : tool.label_en}
               </button>
             ))}
           </div>

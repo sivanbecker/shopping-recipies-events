@@ -2,7 +2,18 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Plus, Edit2, Trash2, BookOpen, Flame, ChefHat, Circle, Square, Zap } from 'lucide-react'
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  BookOpen,
+  Flame,
+  ChefHat,
+  Circle,
+  Square,
+  Zap,
+  Wind,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useAuth } from '@/hooks/useAuth'
@@ -16,6 +27,7 @@ const TOOL_ICONS: Record<string, React.ReactNode> = {
   pan: <Circle className="h-4 w-4 text-green-500" />,
   bakingTray: <Square className="h-4 w-4 text-purple-500" />,
   blender: <Zap className="h-4 w-4 text-yellow-500" />,
+  mixer: <Wind className="h-4 w-4 text-pink-500" />,
 }
 
 function RecipeCard({
@@ -55,7 +67,7 @@ function RecipeCard({
           {recipe.tools && recipe.tools.length > 0 && (
             <div className="mt-3 flex gap-2">
               {recipe.tools.map(tool => (
-                <div key={tool} title={t(`tools.${tool}`)} className="flex items-center">
+                <div key={tool} title={toolLabel(tool)} className="flex items-center">
                   {TOOL_ICONS[tool]}
                 </div>
               ))}
@@ -130,7 +142,7 @@ function ConfirmDeleteDialog({
 }
 
 export default function RecipesPage() {
-  const { t } = useTranslation('recipes')
+  const { t, i18n } = useTranslation('recipes')
   const { user } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -153,6 +165,21 @@ export default function RecipesPage() {
     },
     enabled: !!user,
   })
+
+  const { data: dbTools = [] } = useQuery({
+    queryKey: ['tools'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('tools').select('*').order('label_he')
+      if (error) throw error
+      return data as { id: string; key: string; label_he: string; label_en: string }[]
+    },
+  })
+
+  const toolLabel = (key: string) => {
+    const tool = dbTools.find(t => t.key === key)
+    if (!tool) return key
+    return i18n.language.startsWith('he') ? tool.label_he : tool.label_en
+  }
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -212,7 +239,7 @@ export default function RecipesPage() {
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
                 }`}
               >
-                {t(`tools.${tool}`)}
+                {toolLabel(tool)}
               </button>
             ))}
           </div>

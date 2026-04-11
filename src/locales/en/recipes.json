@@ -24,7 +24,10 @@
     "conversionExample": "{{qty}} {{name}} = {{shopping}} in shopping units",
     "conversionHint": "If recipe uses 800g and one package is 400g, enter 0.005 (800÷400÷200)",
     "addToList": "Add to shopping list",
-    "addAllToList": "Add all to shopping list"
+    "addAllToList": "Add all to shopping list",
+    "addMarkedToList": "Add marked to list",
+    "checkAll": "Check all",
+    "uncheckAll": "Uncheck all"
   },
   "steps": {
     "title": "Instructions",

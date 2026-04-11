@@ -20,14 +20,24 @@
     "back": "Back",
     "done": "Done",
     "create": "Create",
-    "search": "Search"
+    "search": "Search",
+    "all": "All",
+    "name": "Name"
   },
   "status": {
     "loading": "Loading...",
     "error": "Error",
     "empty": "No results",
     "saving": "Saving...",
-    "saved": "Saved"
+    "saved": "Saved",
+    "deleted": "Deleted",
+    "notFound": "Not found",
+    "noMatch": "No results match",
+    "startTyping": "Start typing to search",
+    "untitled": "Untitled"
+  },
+  "items": {
+    "items": "items"
   },
   "auth": {
     "login": "Log In",

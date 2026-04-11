@@ -1,3 +1,5 @@
 - recipies shuold also have a sharing model like lists do.
 - how will sharing work with events ? will members be able to see everything in an event ? (i.e recipies, date, all members, related shopping lists, missing equipement like chairs, tables etc ) -
 -  i want to have a collection of users that are more likely for me to share lists or any other stuff with. when sharing i want these users to popup as first opttions without me having to type an email. its like a family group. perhaps even having ,multiple such groups (i.e family, friends, work etc ). 
+- feat: change list name
+- feat: cahnge event name

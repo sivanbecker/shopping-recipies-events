@@ -20,14 +20,24 @@
     "back": "חזרה",
     "done": "סיום",
     "create": "יצירה",
-    "search": "חיפוש"
+    "search": "חיפוש",
+    "all": "הכל",
+    "name": "שם"
   },
   "status": {
     "loading": "טוען...",
     "error": "שגיאה",
     "empty": "אין תוצאות",
     "saving": "שומר...",
-    "saved": "נשמר"
+    "saved": "נשמר",
+    "deleted": "נמחק",
+    "notFound": "לא נמצא",
+    "noMatch": "לא נמצאו תוצאות",
+    "startTyping": "הקלד לחיפוש",
+    "untitled": "ללא שם"
+  },
+  "items": {
+    "items": "פריטים"
   },
   "auth": {
     "login": "כניסה",

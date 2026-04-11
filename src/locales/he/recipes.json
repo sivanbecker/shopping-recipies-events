@@ -24,7 +24,10 @@
     "conversionExample": "{{qty}} {{name}} = {{shopping}} ביחידת קניות",
     "conversionHint": "אם המתכון משתמש ב-800 גרם וחבילה אחת זה 400 גרם, הזן 0.005 (800÷400÷200)",
     "addToList": "הוסף לרשימת קניות",
-    "addAllToList": "הוסף את כל המצרכים לרשימה"
+    "addAllToList": "הוסף את כל המצרכים לרשימה",
+    "addMarkedToList": "הוסף מסומנים לרשימה",
+    "checkAll": "סמן הכל",
+    "uncheckAll": "בטל סימון"
   },
   "steps": {
     "title": "אופן הכנה",
