@@ -353,7 +353,7 @@ export default function RecipeDetailPage() {
       const { data, error } = await supabase
         .from('recipes')
         .select(
-          '*, ingredients:recipe_ingredients(*, product:products(*, default_unit:unit_types(*)), unit:unit_types(*), shopping_unit:unit_types(*)), steps:recipe_steps(*)'
+          '*, ingredients:recipe_ingredients(*, product:products(*, default_unit:unit_types(*)), unit:unit_types!unit_id(*)), steps:recipe_steps(*)'
         )
         .eq('id', recipeId)
         .single()
