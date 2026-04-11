@@ -40,7 +40,6 @@ interface FormStep {
   step_number: number
 }
 
-
 function ProductSearchSheet({
   isOpen,
   onClose,
@@ -285,9 +284,15 @@ export default function RecipeFormPage() {
 
       const r = recipe as unknown as {
         ingredients: Array<{
-          id: string; product: import('@/types').Product; quantity: number; unit_id: string | null
-          note: string | null; substitute_group_id: number | null; sort_order: number
-          shopping_unit_id: string | null; shopping_quantity_multiplier: number
+          id: string
+          product: import('@/types').Product
+          quantity: number
+          unit_id: string | null
+          note: string | null
+          substitute_group_id: number | null
+          sort_order: number
+          shopping_unit_id: string | null
+          shopping_quantity_multiplier: number
         }>
         steps: Array<{ description: string; step_number: number }>
       }

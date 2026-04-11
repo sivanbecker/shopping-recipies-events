@@ -2,7 +2,18 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Plus, Edit2, Trash2, BookOpen, Flame, ChefHat, Circle, Square, Zap, Wind } from 'lucide-react'
+import {
+  Plus,
+  Edit2,
+  Trash2,
+  BookOpen,
+  Flame,
+  ChefHat,
+  Circle,
+  Square,
+  Zap,
+  Wind,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 import { useAuth } from '@/hooks/useAuth'

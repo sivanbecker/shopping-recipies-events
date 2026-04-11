@@ -194,15 +194,17 @@ function AddToListSheet({
             .update({ quantity: Number(existingItems[0].quantity) + item.quantity })
             .eq('id', existingItems[0].id)
         } else {
-          await supabase.from('shopping_items').insert([{
-            list_id: listId,
-            product_id: item.productId,
-            quantity: item.quantity,
-            unit_id: item.unitId,
-            added_by: user!.id,
-            recipe_id: recipe.id,
-            note: t('addToShoppingList.forRecipe', { name: recipe.title }),
-          }])
+          await supabase.from('shopping_items').insert([
+            {
+              list_id: listId,
+              product_id: item.productId,
+              quantity: item.quantity,
+              unit_id: item.unitId,
+              added_by: user!.id,
+              recipe_id: recipe.id,
+              note: t('addToShoppingList.forRecipe', { name: recipe.title }),
+            },
+          ])
         }
       }
 
@@ -480,12 +482,15 @@ export default function RecipeDetailPage() {
 
   const isOwner = recipe.owner_id === user?.id
   const scalingFactor = servings / recipe.servings
-  const rawIngredients = ((recipe as unknown as { ingredients: RecipeIngredientWithProduct[] }).ingredients || [])
+  const rawIngredients =
+    (recipe as unknown as { ingredients: RecipeIngredientWithProduct[] }).ingredients || []
   const ingredients: RecipeIngredientWithProduct[] = rawIngredients.map(ing => ({
     ...ing,
     unit: unitTypes.find(u => u.id === ing.unit_id) ?? null,
   }))
-  const steps = ((recipe as unknown as { steps: { id: string; step_number: number; description: string }[] }).steps || [])
+  const steps =
+    (recipe as unknown as { steps: { id: string; step_number: number; description: string }[] })
+      .steps || []
 
   // Group ingredients by substitute_group_id
   const groupedIngredients = ingredients.reduce(
@@ -637,13 +642,17 @@ export default function RecipeDetailPage() {
               {groupedIngredients.map((group, groupIdx) => (
                 <div key={groupIdx}>
                   {/* Primary ingredient */}
-                  <div className={`flex items-start gap-3 transition-opacity ${checkedIds.has(group.primary.id) ? '' : 'opacity-40'}`}>
+                  <div
+                    className={`flex items-start gap-3 transition-opacity ${checkedIds.has(group.primary.id) ? '' : 'opacity-40'}`}
+                  >
                     <input
                       type="checkbox"
                       checked={checkedIds.has(group.primary.id)}
                       onChange={e => {
                         const next = new Set(checkedIds)
-                        e.target.checked ? next.add(group.primary.id) : next.delete(group.primary.id)
+                        e.target.checked
+                          ? next.add(group.primary.id)
+                          : next.delete(group.primary.id)
                         setCheckedIds(next)
                       }}
                       className="mt-1 h-4 w-4 rounded accent-brand-500 cursor-pointer flex-shrink-0"
@@ -667,7 +676,10 @@ export default function RecipeDetailPage() {
                   {/* Substitutes */}
                   {group.substitutes.length > 0 &&
                     group.substitutes.map((substitute, subIdx) => (
-                      <div key={subIdx} className={`flex items-start gap-3 ml-4 mt-2 transition-opacity ${checkedIds.has(substitute.id) ? '' : 'opacity-40'}`}>
+                      <div
+                        key={subIdx}
+                        className={`flex items-start gap-3 ml-4 mt-2 transition-opacity ${checkedIds.has(substitute.id) ? '' : 'opacity-40'}`}
+                      >
                         <span className="text-gray-400 text-xs mt-1">↳</span>
                         <input
                           type="checkbox"
