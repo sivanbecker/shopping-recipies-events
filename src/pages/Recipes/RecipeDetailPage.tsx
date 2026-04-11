@@ -444,9 +444,7 @@ export default function RecipeDetailPage() {
     if (recipe?.servings) {
       setServings(recipe.servings)
     }
-    if (recipe?.ingredients) {
-      setCheckedIds(new Set())
-    }
+    setCheckedIds(new Set())
   }, [recipe?.id, recipe?.servings])
 
   const deleteMutation = useMutation({

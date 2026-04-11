@@ -320,7 +320,7 @@ export default function RecipeFormPage() {
         }))
       )
     }
-  }, [recipe])
+  }, [recipe, unitTypes])
 
   const handleAddIngredient = (product: Product) => {
     const newIngredient: FormIngredient = {
