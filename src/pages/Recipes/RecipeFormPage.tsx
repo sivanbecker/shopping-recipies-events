@@ -126,7 +126,6 @@ function IngredientRow({
   groupingIndicator?: React.ReactNode
 }) {
   const { t } = useTranslation('recipes')
-  const productUnits = unitTypes.filter(u => u.type === ingredient.product?.default_unit?.type)
 
   return (
     <div className={groupingIndicator ? 'ps-6' : ''}>
@@ -154,26 +153,22 @@ function IngredientRow({
           className="w-16 rounded-lg border border-gray-200 px-2 py-1 text-sm outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
         />
 
-        {/* Unit select */}
-        {productUnits.length > 0 ? (
-          <select
-            value={ingredient.unit?.id || ''}
-            onChange={e => {
-              const unit = unitTypes.find(u => u.id === e.target.value) || null
-              onUpdate({ unit })
-            }}
-            className="rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-          >
-            <option value="">—</option>
-            {productUnits.map(u => (
-              <option key={u.id} value={u.id}>
-                {u.label_he}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <span className="text-xs text-gray-500 dark:text-gray-400">—</span>
-        )}
+        {/* Unit select — all units from DB */}
+        <select
+          value={ingredient.unit?.id || ''}
+          onChange={e => {
+            const unit = unitTypes.find(u => u.id === e.target.value) || null
+            onUpdate({ unit })
+          }}
+          className="rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+        >
+          <option value="">—</option>
+          {unitTypes.map(u => (
+            <option key={u.id} value={u.id}>
+              {u.label_he}
+            </option>
+          ))}
+        </select>
 
         <button onClick={onRemove} className="text-red-500 hover:text-red-700">
           <Trash2 className="h-4 w-4" />
@@ -189,53 +184,6 @@ function IngredientRow({
           onChange={e => onUpdate({ note: e.target.value })}
           className="w-full rounded-lg border border-gray-200 px-3 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
         />
-
-        {/* Shopping unit section */}
-        <div className="text-xs text-gray-600 pt-1 dark:text-gray-400">
-          <div className="font-medium mb-1">{t('ingredients.shoppingUnit')}</div>
-          <div className="flex gap-2">
-            {/* Shopping unit select */}
-            <select
-              value={ingredient.shopping_unit_id || ''}
-              onChange={e => {
-                const unit = unitTypes.find(u => u.id === e.target.value) || null
-                onUpdate({ shopping_unit_id: unit?.id || null, shopping_unit: unit })
-              }}
-              className="flex-1 rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-            >
-              <option value="">{t('ingredients.inherit')}</option>
-              {unitTypes.map(u => (
-                <option key={u.id} value={u.id}>
-                  {u.label_he}
-                </option>
-              ))}
-            </select>
-
-            {/* Multiplier input */}
-            {ingredient.shopping_unit_id && (
-              <input
-                type="number"
-                step="0.0001"
-                min="0.0001"
-                value={ingredient.shopping_quantity_multiplier || 1}
-                onChange={e => onUpdate({ shopping_quantity_multiplier: Number(e.target.value) })}
-                title={t('ingredients.conversionHint')}
-                className="w-20 rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-                placeholder={t('ingredients.multiplier')}
-              />
-            )}
-          </div>
-          {ingredient.shopping_unit_id && (
-            <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
-              {t('ingredients.conversionExample', {
-                qty: ingredient.quantity,
-                shopping: (ingredient.quantity * ingredient.shopping_quantity_multiplier).toFixed(
-                  2
-                ),
-              })}
-            </p>
-          )}
-        </div>
 
         {!groupingIndicator && (
           <button
