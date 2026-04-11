@@ -27,6 +27,7 @@ interface RecipeIngredientWithProduct {
   id: string
   product: Product | null
   quantity: number
+  unit_id: string | null
   unit: UnitType | null
   note: string | null
   substitute_group_id: number | null
@@ -85,6 +86,13 @@ function ConfirmDeleteDialog({
   )
 }
 
+interface EditableIngredient {
+  productId: string
+  name: string
+  quantity: number
+  unitId: string | null
+}
+
 function AddToListSheet({
   isOpen,
   onClose,
@@ -105,6 +113,7 @@ function AddToListSheet({
   const [selectedListId, setSelectedListId] = useState<string | null>(null)
   const [isCreating, setIsCreating] = useState(false)
   const [newListName, setNewListName] = useState('')
+  const [editableIngredients, setEditableIngredients] = useState<EditableIngredient[]>([])
 
   const { data: activeLists = [] } = useQuery({
     queryKey: ['shopping_lists', 'active', user?.id],
@@ -122,6 +131,31 @@ function AddToListSheet({
     enabled: isOpen && !!user,
   })
 
+  const { data: unitTypes = [] } = useQuery({
+    queryKey: ['unit_types'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('unit_types').select('*').order('label_he')
+      if (error) throw error
+      return data
+    },
+    enabled: isOpen,
+  })
+
+  const goToConfirm = (listId: string) => {
+    setSelectedListId(listId)
+    setEditableIngredients(
+      ingredients
+        .filter(ing => ing.product?.id)
+        .map(ing => ({
+          productId: ing.product!.id,
+          name: ing.product!.name_he || ing.product!.name_en || '',
+          quantity: ing.quantity,
+          unitId: ing.unit?.id || null,
+        }))
+    )
+    setStep('confirm')
+  }
+
   const createListMutation = useMutation({
     mutationFn: async (name: string) => {
       const { data, error } = await supabase
@@ -136,39 +170,19 @@ function AddToListSheet({
       return data
     },
     onSuccess: newList => {
-      setSelectedListId(newList.id)
-      setStep('confirm')
+      goToConfirm(newList.id)
       queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
     },
   })
 
   const addItemsMutation = useMutation({
     mutationFn: async (listId: string) => {
-      const itemsToInsert = ingredients
-        .filter(ing => ing.product?.id)
-        .map(ing => {
-          // Use shopping unit if specified, otherwise use recipe unit
-          const unitId = ing.shopping_unit_id || ing.unit?.id || null
-          // Calculate shopping quantity using multiplier
-          const shoppingQuantity = ing.quantity * ing.shopping_quantity_multiplier
-
-          return {
-            list_id: listId,
-            product_id: ing.product.id,
-            quantity: shoppingQuantity,
-            unit_id: unitId,
-            added_by: user!.id,
-            recipe_id: recipe.id,
-            note: t('addToShoppingList.forRecipe', { name: recipe.title }),
-          }
-        })
-
-      for (const item of itemsToInsert) {
+      for (const item of editableIngredients) {
         const { data: existingItems } = await supabase
           .from('shopping_items')
           .select('*')
           .eq('list_id', listId)
-          .eq('product_id', item.product_id)
+          .eq('product_id', item.productId)
           .eq('is_checked', false)
           .limit(1)
 
@@ -178,7 +192,15 @@ function AddToListSheet({
             .update({ quantity: Number(existingItems[0].quantity) + item.quantity })
             .eq('id', existingItems[0].id)
         } else {
-          await supabase.from('shopping_items').insert([item])
+          await supabase.from('shopping_items').insert([{
+            list_id: listId,
+            product_id: item.productId,
+            quantity: item.quantity,
+            unit_id: item.unitId,
+            added_by: user!.id,
+            recipe_id: recipe.id,
+            note: t('addToShoppingList.forRecipe', { name: recipe.title }),
+          }])
         }
       }
 
@@ -227,10 +249,7 @@ function AddToListSheet({
               {activeLists.map(list => (
                 <button
                   key={list.id}
-                  onClick={() => {
-                    setSelectedListId(list.id)
-                    setStep('confirm')
-                  }}
+                  onClick={() => goToConfirm(list.id)}
                   className="w-full text-left rounded-lg border border-gray-200 p-3 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:hover:bg-gray-800"
                 >
                   <div className="flex items-center justify-between">
@@ -288,7 +307,7 @@ function AddToListSheet({
           <>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-semibold text-gray-900 dark:text-gray-100">
-                {t('addToShoppingList.added')} to {targetList?.name}
+                {targetList?.name || tCommon('status.untitled')}
               </h3>
               <button
                 onClick={onClose}
@@ -299,17 +318,44 @@ function AddToListSheet({
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-2 mb-4">
-              {ingredients
-                .filter(ing => ing.product?.id)
-                .map((ing, idx) => (
-                  <div
-                    key={idx}
-                    className="text-sm text-gray-700 py-1 px-2 rounded-lg bg-gray-50 dark:bg-gray-800 dark:text-gray-300"
+              {editableIngredients.map((item, idx) => (
+                <div
+                  key={item.productId}
+                  className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 dark:border-gray-700"
+                >
+                  <span className="flex-1 text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                    {item.name}
+                  </span>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    value={item.quantity}
+                    onChange={e => {
+                      const updated = [...editableIngredients]
+                      updated[idx] = { ...item, quantity: Number(e.target.value) }
+                      setEditableIngredients(updated)
+                    }}
+                    className="w-16 rounded-lg border border-gray-200 px-2 py-1 text-sm outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                  />
+                  <select
+                    value={item.unitId || ''}
+                    onChange={e => {
+                      const updated = [...editableIngredients]
+                      updated[idx] = { ...item, unitId: e.target.value || null }
+                      setEditableIngredients(updated)
+                    }}
+                    className="rounded-lg border border-gray-200 px-2 py-1 text-xs outline-none focus:border-brand-400 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                   >
-                    {ing.product.name_he || ing.product.name_en} — {ing.quantity}{' '}
-                    {ing.unit?.label_he || ''}
-                  </div>
-                ))}
+                    <option value="">—</option>
+                    {unitTypes.map(u => (
+                      <option key={u.id} value={u.id}>
+                        {u.label_he}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
             </div>
 
             <div className="flex gap-3">
@@ -346,6 +392,16 @@ export default function RecipeDetailPage() {
   const [servings, setServings] = useState(4)
   const [showAddToList, setShowAddToList] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [checkedIds, setCheckedIds] = useState<Set<string>>(new Set())
+
+  const { data: unitTypes = [] } = useQuery({
+    queryKey: ['unit_types'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('unit_types').select('*').order('label_he')
+      if (error) throw error
+      return data as UnitType[]
+    },
+  })
 
   const { data: recipe, isLoading } = useQuery({
     queryKey: ['recipe', recipeId],
@@ -353,7 +409,7 @@ export default function RecipeDetailPage() {
       const { data, error } = await supabase
         .from('recipes')
         .select(
-          '*, ingredients:recipe_ingredients(*, product:products(*, default_unit:unit_types(*)), unit:unit_types!unit_id(*)), steps:recipe_steps(*)'
+          '*, ingredients:recipe_ingredients(id, quantity, unit_id, note, substitute_group_id, sort_order, product:products(*)), steps:recipe_steps(*)'
         )
         .eq('id', recipeId)
         .single()
@@ -364,10 +420,13 @@ export default function RecipeDetailPage() {
     enabled: !!recipeId,
   })
 
-  // Initialize servings from recipe when it loads
+  // Initialize servings and checked ingredients when recipe loads
   useEffect(() => {
     if (recipe?.servings) {
       setServings(recipe.servings)
+    }
+    if (recipe?.ingredients) {
+      setCheckedIds(new Set())
     }
   }, [recipe?.id, recipe?.servings])
 
@@ -404,8 +463,12 @@ export default function RecipeDetailPage() {
 
   const isOwner = recipe.owner_id === user?.id
   const scalingFactor = servings / recipe.servings
-  const ingredients = recipe.ingredients || []
-  const steps = recipe.steps || []
+  const rawIngredients = ((recipe as unknown as { ingredients: RecipeIngredientWithProduct[] }).ingredients || [])
+  const ingredients: RecipeIngredientWithProduct[] = rawIngredients.map(ing => ({
+    ...ing,
+    unit: unitTypes.find(u => u.id === ing.unit_id) ?? null,
+  }))
+  const steps = ((recipe as unknown as { steps: { id: string; step_number: number; description: string }[] }).steps || [])
 
   // Group ingredients by substitute_group_id
   const groupedIngredients = ingredients.reduce(
@@ -536,15 +599,38 @@ export default function RecipeDetailPage() {
         {/* Ingredients */}
         {ingredients.length > 0 && (
           <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-3 dark:text-gray-100">
-              {t('ingredients.title')}
-            </h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                {t('ingredients.title')}
+              </h2>
+              <button
+                onClick={() => {
+                  const allIds = ingredients.map((ing: { id: string }) => ing.id)
+                  const allChecked = allIds.every((id: string) => checkedIds.has(id))
+                  setCheckedIds(allChecked ? new Set() : new Set(allIds))
+                }}
+                className="text-xs text-brand-500 hover:text-brand-600 font-medium"
+              >
+                {ingredients.every((ing: { id: string }) => checkedIds.has(ing.id))
+                  ? t('ingredients.uncheckAll')
+                  : t('ingredients.checkAll')}
+              </button>
+            </div>
             <div className="space-y-3 border border-gray-200 rounded-lg p-4 dark:border-gray-700">
               {groupedIngredients.map((group, groupIdx) => (
                 <div key={groupIdx}>
                   {/* Primary ingredient */}
-                  <div className="flex items-start gap-3">
-                    <span className="text-gray-400 text-sm mt-1">•</span>
+                  <div className={`flex items-start gap-3 transition-opacity ${checkedIds.has(group.primary.id) ? '' : 'opacity-40'}`}>
+                    <input
+                      type="checkbox"
+                      checked={checkedIds.has(group.primary.id)}
+                      onChange={e => {
+                        const next = new Set(checkedIds)
+                        e.target.checked ? next.add(group.primary.id) : next.delete(group.primary.id)
+                        setCheckedIds(next)
+                      }}
+                      className="mt-1 h-4 w-4 rounded accent-brand-500 cursor-pointer flex-shrink-0"
+                    />
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-gray-900 dark:text-gray-100">
                         {group.primary.product?.name_he || group.primary.product?.name_en || '—'}
@@ -564,8 +650,18 @@ export default function RecipeDetailPage() {
                   {/* Substitutes */}
                   {group.substitutes.length > 0 &&
                     group.substitutes.map((substitute, subIdx) => (
-                      <div key={subIdx} className="flex items-start gap-3 ml-4 mt-2 opacity-75">
-                        <span className="text-gray-400 text-xs">↳</span>
+                      <div key={subIdx} className={`flex items-start gap-3 ml-4 mt-2 transition-opacity ${checkedIds.has(substitute.id) ? '' : 'opacity-40'}`}>
+                        <span className="text-gray-400 text-xs mt-1">↳</span>
+                        <input
+                          type="checkbox"
+                          checked={checkedIds.has(substitute.id)}
+                          onChange={e => {
+                            const next = new Set(checkedIds)
+                            e.target.checked ? next.add(substitute.id) : next.delete(substitute.id)
+                            setCheckedIds(next)
+                          }}
+                          className="mt-0.5 h-4 w-4 rounded accent-brand-500 cursor-pointer flex-shrink-0"
+                        />
                         <div className="flex-1 min-w-0">
                           <div className="text-sm text-gray-700 flex items-center gap-1 dark:text-gray-300">
                             <span className="inline-flex items-center gap-0.5 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded dark:bg-gray-800 dark:text-gray-400">
@@ -589,12 +685,13 @@ export default function RecipeDetailPage() {
               ))}
             </div>
 
-            {/* Add to shopping list button */}
+            {/* Add marked to shopping list button */}
             <button
               onClick={() => setShowAddToList(true)}
-              className="mt-3 w-full rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"
+              disabled={checkedIds.size === 0}
+              className="mt-3 w-full rounded-xl bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {t('ingredients.addAllToList')}
+              {t('ingredients.addMarkedToList')} ({checkedIds.size})
             </button>
           </div>
         )}
@@ -626,7 +723,7 @@ export default function RecipeDetailPage() {
         isOpen={showAddToList}
         onClose={() => setShowAddToList(false)}
         recipe={recipe}
-        ingredients={ingredients}
+        ingredients={ingredients.filter((ing: { id: string }) => checkedIds.has(ing.id))}
       />
 
       {/* Delete confirmation */}

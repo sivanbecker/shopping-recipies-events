@@ -233,7 +233,7 @@ export default function RecipeFormPage() {
       const { data, error } = await supabase
         .from('recipes')
         .select(
-          '*, ingredients:recipe_ingredients(*, product:products(*), unit:unit_types!unit_id(*)), steps:recipe_steps(*)'
+          '*, ingredients:recipe_ingredients(id, quantity, unit_id, note, substitute_group_id, sort_order, shopping_unit_id, shopping_quantity_multiplier, product:products(*)), steps:recipe_steps(*)'
         )
         .eq('id', recipeId)
         .single()
@@ -275,27 +275,36 @@ export default function RecipeFormPage() {
         tools: recipe.tools || [],
       })
 
+      const r = recipe as unknown as {
+        ingredients: Array<{
+          id: string; product: import('@/types').Product; quantity: number; unit_id: string | null
+          note: string | null; substitute_group_id: number | null; sort_order: number
+          shopping_unit_id: string | null; shopping_quantity_multiplier: number
+        }>
+        steps: Array<{ description: string; step_number: number }>
+      }
+
       setIngredients(
-        recipe.ingredients?.map((ing, idx) => ({
+        (r.ingredients || []).map((ing, idx) => ({
           id: `ing-${idx}`,
           product: ing.product,
           quantity: ing.quantity,
-          unit: ing.unit,
+          unit: unitTypes.find(u => u.id === ing.unit_id) ?? null,
           note: ing.note || '',
           substitute_group_id: ing.substitute_group_id,
           sort_order: ing.sort_order,
           shopping_unit_id: ing.shopping_unit_id || null,
-          shopping_unit: ing.shopping_unit || null,
+          shopping_unit: null,
           shopping_quantity_multiplier: ing.shopping_quantity_multiplier || 1,
-        })) || []
+        }))
       )
 
       setSteps(
-        recipe.steps?.map((step, idx) => ({
+        (r.steps || []).map((step, idx) => ({
           id: `step-${idx}`,
           description: step.description,
           step_number: step.step_number,
-        })) || []
+        }))
       )
     }
   }, [recipe])
