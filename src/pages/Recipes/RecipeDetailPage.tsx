@@ -11,6 +11,7 @@ import {
   Circle,
   Square,
   Zap,
+  Wind,
   Plus,
   X,
   Loader2,
@@ -41,6 +42,7 @@ const TOOL_ICONS: Record<string, React.ReactNode> = {
   pan: <Circle className="h-4 w-4 text-green-500" />,
   bakingTray: <Square className="h-4 w-4 text-purple-500" />,
   blender: <Zap className="h-4 w-4 text-yellow-500" />,
+  mixer: <Wind className="h-4 w-4 text-pink-500" />,
 }
 
 function ConfirmDeleteDialog({
@@ -382,7 +384,7 @@ function AddToListSheet({
 }
 
 export default function RecipeDetailPage() {
-  const { t } = useTranslation('recipes')
+  const { t, i18n } = useTranslation('recipes')
   const { t: tCommon } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -402,6 +404,21 @@ export default function RecipeDetailPage() {
       return data as UnitType[]
     },
   })
+
+  const { data: dbTools = [] } = useQuery({
+    queryKey: ['tools'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('tools').select('*').order('label_he')
+      if (error) throw error
+      return data as { id: string; key: string; label_he: string; label_en: string }[]
+    },
+  })
+
+  const toolLabel = (key: string) => {
+    const tool = dbTools.find(t => t.key === key)
+    if (!tool) return key
+    return i18n.language.startsWith('he') ? tool.label_he : tool.label_en
+  }
 
   const { data: recipe, isLoading } = useQuery({
     queryKey: ['recipe', recipeId],
@@ -587,10 +604,10 @@ export default function RecipeDetailPage() {
               <div
                 key={tool}
                 className="flex items-center gap-1 px-3 py-2 rounded-lg bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
-                title={t(`tools.${tool}`)}
+                title={toolLabel(tool)}
               >
                 {TOOL_ICONS[tool]}
-                <span className="text-xs font-medium">{t(`tools.${tool}`)}</span>
+                <span className="text-xs font-medium">{toolLabel(tool)}</span>
               </div>
             ))}
           </div>

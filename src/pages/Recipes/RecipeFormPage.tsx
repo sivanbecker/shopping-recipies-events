@@ -40,7 +40,6 @@ interface FormStep {
   step_number: number
 }
 
-const TOOLS = ['oven', 'stovetop', 'pot', 'pan', 'bakingTray', 'blender'] as const
 
 function ProductSearchSheet({
   isOpen,
@@ -199,7 +198,7 @@ function IngredientRow({
 }
 
 export default function RecipeFormPage() {
-  const { t } = useTranslation('recipes')
+  const { t, i18n } = useTranslation('recipes')
   const { t: tCommon } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -261,6 +260,15 @@ export default function RecipeFormPage() {
       const { data, error } = await supabase.from('unit_types').select('*').order('type')
       if (error) throw error
       return data
+    },
+  })
+
+  const { data: tools = [] } = useQuery({
+    queryKey: ['tools'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('tools').select('*').order('label_he')
+      if (error) throw error
+      return data as { id: string; key: string; label_he: string; label_en: string }[]
     },
   })
 
@@ -518,24 +526,24 @@ export default function RecipeFormPage() {
             {t('form.tools')}
           </label>
           <div className="flex flex-wrap gap-2">
-            {TOOLS.map(tool => (
+            {tools.map(tool => (
               <button
-                key={tool}
+                key={tool.key}
                 onClick={() => {
                   setFormData({
                     ...formData,
-                    tools: formData.tools.includes(tool)
-                      ? formData.tools.filter(t => t !== tool)
-                      : [...formData.tools, tool],
+                    tools: formData.tools.includes(tool.key)
+                      ? formData.tools.filter(k => k !== tool.key)
+                      : [...formData.tools, tool.key],
                   })
                 }}
                 className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
-                  formData.tools.includes(tool)
+                  formData.tools.includes(tool.key)
                     ? 'bg-brand-500 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
                 }`}
               >
-                {t(`tools.${tool}`)}
+                {i18n.language.startsWith('he') ? tool.label_he : tool.label_en}
               </button>
             ))}
           </div>
