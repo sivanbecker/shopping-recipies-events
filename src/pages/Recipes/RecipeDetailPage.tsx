@@ -430,7 +430,7 @@ export default function RecipeDetailPage() {
         .select(
           '*, ingredients:recipe_ingredients(id, quantity, unit_id, note, substitute_group_id, sort_order, product:products(*)), steps:recipe_steps(*)'
         )
-        .eq('id', recipeId)
+        .eq('id', recipeId!)
         .single()
 
       if (error) throw error

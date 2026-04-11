@@ -35,11 +35,13 @@ function RecipeCard({
   onEdit,
   onDelete,
   isOwner,
+  toolLabel,
 }: {
   recipe: Recipe
   onEdit: (id: string) => void
   onDelete: (id: string) => void
   isOwner: boolean
+  toolLabel: (key: string) => string
 }) {
   const { t } = useTranslation('recipes')
 
@@ -272,6 +274,7 @@ export default function RecipesPage() {
               <RecipeCard
                 recipe={recipe}
                 isOwner={recipe.owner_id === user?.id}
+                toolLabel={toolLabel}
                 onEdit={id => {
                   navigate(`/recipes/${id}/edit`)
                 }}

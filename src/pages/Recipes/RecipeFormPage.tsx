@@ -327,7 +327,7 @@ export default function RecipeFormPage() {
       id: `ing-${Date.now()}`,
       product,
       quantity: 1,
-      unit: product.default_unit || null,
+      unit: unitTypes.find(u => u.id === product.default_unit_id) ?? null,
       note: '',
       substitute_group_id: null,
       sort_order: ingredients.length,
@@ -381,17 +381,19 @@ export default function RecipeFormPage() {
         // Re-insert ingredients and steps
         if (ingredients.length > 0) {
           await supabase.from('recipe_ingredients').insert(
-            ingredients.map((ing, idx) => ({
-              recipe_id: recipeId,
-              product_id: ing.product?.id,
-              quantity: ing.quantity,
-              unit_id: ing.unit?.id || null,
-              note: ing.note || null,
-              substitute_group_id: ing.substitute_group_id,
-              sort_order: idx,
-              shopping_unit_id: ing.shopping_unit_id,
-              shopping_quantity_multiplier: ing.shopping_quantity_multiplier,
-            }))
+            ingredients
+              .filter(ing => ing.product?.id != null)
+              .map((ing, idx) => ({
+                recipe_id: recipeId,
+                product_id: ing.product!.id,
+                quantity: ing.quantity,
+                unit_id: ing.unit?.id || null,
+                note: ing.note || null,
+                substitute_group_id: ing.substitute_group_id,
+                sort_order: idx,
+                shopping_unit_id: ing.shopping_unit_id,
+                shopping_quantity_multiplier: ing.shopping_quantity_multiplier,
+              }))
           )
         }
 
@@ -422,17 +424,19 @@ export default function RecipeFormPage() {
         // Insert ingredients and steps
         if (ingredients.length > 0) {
           await supabase.from('recipe_ingredients').insert(
-            ingredients.map((ing, idx) => ({
-              recipe_id: newRecipe.id,
-              product_id: ing.product?.id,
-              quantity: ing.quantity,
-              unit_id: ing.unit?.id || null,
-              note: ing.note || null,
-              substitute_group_id: ing.substitute_group_id,
-              sort_order: idx,
-              shopping_unit_id: ing.shopping_unit_id,
-              shopping_quantity_multiplier: ing.shopping_quantity_multiplier,
-            }))
+            ingredients
+              .filter(ing => ing.product?.id != null)
+              .map((ing, idx) => ({
+                recipe_id: newRecipe.id,
+                product_id: ing.product!.id,
+                quantity: ing.quantity,
+                unit_id: ing.unit?.id || null,
+                note: ing.note || null,
+                substitute_group_id: ing.substitute_group_id,
+                sort_order: idx,
+                shopping_unit_id: ing.shopping_unit_id,
+                shopping_quantity_multiplier: ing.shopping_quantity_multiplier,
+              }))
           )
         }
 

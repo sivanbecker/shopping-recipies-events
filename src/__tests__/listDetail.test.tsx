@@ -27,7 +27,8 @@ describe('Realtime Subscription Infrastructure', () => {
   })
 
   it('should allow chaining on() calls', () => {
-    const channel = supabase.channel('test').on('postgres_changes', {}, () => {})
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const channel = supabase.channel('test').on('postgres_changes' as any, {}, () => {})
     expect(channel.subscribe).toBeDefined()
   })
 
