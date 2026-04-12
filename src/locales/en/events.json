@@ -88,7 +88,10 @@
     "empty": "No equipment items yet",
     "emptyHint": "Tap \"Add Item\" to track chairs, tables, and more",
     "addError": "Failed to add item",
-    "deleteError": "Failed to remove item"
+    "deleteError": "Failed to remove item",
+    "hostInventory": "Host Inventory",
+    "owned": "You have",
+    "stillNeed": "Still need"
   },
   "recipes": {
     "attach": "Attach",
@@ -136,6 +139,10 @@
     "types": {
       "chair": "Chairs",
       "table": "Tables",
+      "plate": "Plates",
+      "bowl": "Bowls",
+      "cold_glass": "Cold Drink Glasses",
+      "hot_cup": "Hot Drink Cups",
       "other": "Other"
     },
     "assignTo": "Assigned to",

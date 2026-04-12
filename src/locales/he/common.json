@@ -64,7 +64,18 @@
     "namePlaceholder": "השם שלך",
     "nameSaved": "השם נשמר בהצלחה",
     "darkMode": "מצב כהה",
-    "lightMode": "מצב בהיר"
+    "lightMode": "מצב בהיר",
+    "hostInventory": {
+      "title": "ציוד בבית",
+      "description": "הגדר פעם אחת - יחוסר אוטומטית מהציוד שנדרש לאירוע",
+      "chair": "כיסאות",
+      "table": "שולחנות אוכל",
+      "plate": "צלחות",
+      "bowl": "קערות",
+      "coldGlass": "כוסות משקה קר",
+      "hotCup": "ספלי משקה חם",
+      "saved": "ציוד הבית עודכן"
+    }
   },
   "validation": {
     "required": "שדה חובה",

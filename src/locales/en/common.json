@@ -64,7 +64,18 @@
     "namePlaceholder": "Your name",
     "nameSaved": "Name saved",
     "darkMode": "Dark mode",
-    "lightMode": "Light mode"
+    "lightMode": "Light mode",
+    "hostInventory": {
+      "title": "Host Equipment",
+      "description": "Set once — automatically deducted from event equipment needs",
+      "chair": "Chairs",
+      "table": "Dining Tables",
+      "plate": "Plates",
+      "bowl": "Bowls",
+      "coldGlass": "Cold Drink Glasses",
+      "hotCup": "Hot Drink Cups",
+      "saved": "Host equipment updated"
+    }
   },
   "validation": {
     "required": "This field is required",

@@ -3,24 +3,95 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import { LogOut, Pencil, Check, X, Loader2, Moon, Sun, Users, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { UserAvatar } from '@/components/UserAvatar'
 import { useAppStore } from '@/store/useAppStore'
+import { supabase } from '@/lib/supabase'
+import type { HostInventoryItem } from '@/types'
+
+const HOST_ITEMS = [
+  { type: 'chair', labelKey: 'profile.hostInventory.chair' },
+  { type: 'table', labelKey: 'profile.hostInventory.table' },
+  { type: 'plate', labelKey: 'profile.hostInventory.plate' },
+  { type: 'bowl', labelKey: 'profile.hostInventory.bowl' },
+  { type: 'cold_glass', labelKey: 'profile.hostInventory.coldGlass' },
+  { type: 'hot_cup', labelKey: 'profile.hostInventory.hotCup' },
+] as const
 
 export default function ProfilePage() {
   const { t, i18n } = useTranslation()
   const { user, profile, signOut, updateProfile } = useAuth()
   const { isDarkMode, toggleDarkMode } = useAppStore()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState('')
   const [saving, setSaving] = useState(false)
+  const [editingHost, setEditingHost] = useState(false)
+  const [hostFormState, setHostFormState] = useState<Record<string, number>>({})
 
-  // Sync input when profile loads
+  // Host inventory query
+  const { data: hostInventory = [] } = useQuery<HostInventoryItem[]>({
+    queryKey: ['host-inventory', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('host_inventory')
+        .select('*')
+        .eq('owner_id', user!.id)
+      if (error) throw error
+      return data
+    },
+    enabled: !!user?.id,
+  })
+
+  // Sync profile name input when profile loads
   useEffect(() => {
     setNameValue(profile?.display_name ?? '')
   }, [profile?.display_name])
+
+  // Sync form state when host inventory loads
+  useEffect(() => {
+    if (hostInventory.length > 0) {
+      const state = Object.fromEntries(hostInventory.map(h => [h.item_type, h.quantity_owned]))
+      setHostFormState(state)
+    }
+  }, [hostInventory])
+
+  // Pre-fill missing types with 0 when entering edit mode
+  useEffect(() => {
+    if (!editingHost) return
+    const filled = { ...hostFormState }
+    HOST_ITEMS.forEach(item => {
+      if (!(item.type in filled)) filled[item.type] = 0
+    })
+    setHostFormState(filled)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingHost])
+
+  // Host inventory save mutation
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const updates = HOST_ITEMS.map(item => ({
+        owner_id: user!.id,
+        item_type: item.type,
+        label: t(item.labelKey),
+        quantity_owned: hostFormState[item.type] ?? 0,
+      }))
+
+      const { error } = await supabase
+        .from('host_inventory')
+        .upsert(updates, { onConflict: 'owner_id,item_type' })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['host-inventory', user?.id] })
+      setEditingHost(false)
+      toast.success(t('profile.hostInventory.saved'))
+    },
+    onError: () => toast.error(t('status.error')),
+  })
 
   async function handleSignOut() {
     await signOut()
@@ -151,6 +222,104 @@ export default function ProfilePage() {
           <span>{isDarkMode ? t('profile.lightMode') : t('profile.darkMode')}</span>
           {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
+      </div>
+
+      {/* Host Equipment */}
+      <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t('profile.hostInventory.title')}
+          </p>
+          {!editingHost && (
+            <button
+              onClick={() => setEditingHost(true)}
+              className="text-xs font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400"
+            >
+              {t('actions.edit')}
+            </button>
+          )}
+        </div>
+
+        {editingHost ? (
+          <>
+            <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
+              {t('profile.hostInventory.description')}
+            </p>
+
+            <div className="mb-4 grid grid-cols-2 gap-4">
+              {HOST_ITEMS.map(item => (
+                <div key={item.type} className="flex flex-col gap-2">
+                  <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                    {t(item.labelKey)}
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() =>
+                        setHostFormState(s => ({
+                          ...s,
+                          [item.type]: Math.max(0, (s[item.type] ?? 0) - 1),
+                        }))
+                      }
+                      disabled={saveMutation.isPending}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                      −
+                    </button>
+                    <span className="w-6 text-center text-sm font-semibold text-gray-800 dark:text-gray-100">
+                      {hostFormState[item.type] ?? 0}
+                    </span>
+                    <button
+                      onClick={() =>
+                        setHostFormState(s => ({
+                          ...s,
+                          [item.type]: (s[item.type] ?? 0) + 1,
+                        }))
+                      }
+                      disabled={saveMutation.isPending}
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => saveMutation.mutate()}
+                disabled={saveMutation.isPending}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-purple-600 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
+              >
+                {saveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                {t('actions.save')}
+              </button>
+              <button
+                onClick={() => setEditingHost(false)}
+                disabled={saveMutation.isPending}
+                className="flex-1 rounded-xl border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+              >
+                {t('actions.cancel')}
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {HOST_ITEMS.map(item => (
+              <div
+                key={item.type}
+                className="flex flex-col gap-1 rounded-lg bg-gray-50 p-3 dark:bg-gray-800"
+              >
+                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                  {t(item.labelKey)}
+                </p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {hostInventory.find(h => h.item_type === item.type)?.quantity_owned ?? 0}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Manage Contacts */}

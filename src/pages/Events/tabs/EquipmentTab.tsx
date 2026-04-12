@@ -5,11 +5,11 @@ import { Plus, Trash2, Loader2, Check, Package } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { equipmentSummary } from '@/lib/eventHelpers'
-import type { EventEquipment } from '@/types'
+import type { EventEquipment, HostInventoryItem } from '@/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ItemType = 'chair' | 'table' | 'other'
+type ItemType = 'chair' | 'table' | 'plate' | 'bowl' | 'cold_glass' | 'hot_cup' | 'other'
 
 interface Props {
   eventId: string
@@ -69,12 +69,14 @@ function AddEquipmentSheet({ eventId, onClose }: AddSheetProps) {
             <label className="mb-1 block text-xs font-medium text-gray-600 dark:text-gray-400">
               {t('equipment.type')}
             </label>
-            <div className="flex gap-2">
-              {(['chair', 'table', 'other'] as ItemType[]).map(type => (
+            <div className="flex flex-wrap gap-2">
+              {(
+                ['chair', 'table', 'plate', 'bowl', 'cold_glass', 'hot_cup', 'other'] as ItemType[]
+              ).map(type => (
                 <button
                   key={type}
                   onClick={() => setItemType(type)}
-                  className={`flex-1 rounded-xl border px-3 py-2 text-sm font-medium transition ${
+                  className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
                     itemType === type
                       ? 'border-purple-400 bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400'
                       : 'border-gray-200 text-gray-500 hover:border-gray-300 dark:border-gray-600 dark:text-gray-400'
@@ -170,6 +172,15 @@ export default function EquipmentTab({ eventId, isOwner }: Props) {
     },
   })
 
+  const { data: hostInventory = [] } = useQuery<HostInventoryItem[]>({
+    queryKey: ['host-inventory'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('host_inventory').select('*')
+      if (error) throw error
+      return data
+    },
+  })
+
   const toggleArrangedMutation = useMutation({
     mutationFn: async ({ id, is_arranged }: { id: string; is_arranged: boolean }) => {
       const { error } = await supabase.from('event_equipment').update({ is_arranged }).eq('id', id)
@@ -189,6 +200,24 @@ export default function EquipmentTab({ eventId, isOwner }: Props) {
 
   const { arranged, byType } = equipmentSummary(items)
 
+  // Build host inventory map
+  const inventoryMap = Object.fromEntries(
+    hostInventory.map(item => [item.item_type, item.quantity_owned])
+  )
+
+  // Build per-type summary (needed - owned)
+  const typeSummary = items.reduce(
+    (acc, item) => {
+      const owned = inventoryMap[item.item_type] ?? 0
+      if (!acc[item.item_type]) {
+        acc[item.item_type] = { needed: 0, owned }
+      }
+      acc[item.item_type].needed += item.quantity_needed
+      return acc
+    },
+    {} as Record<string, { needed: number; owned: number }>
+  )
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-10">
@@ -199,6 +228,33 @@ export default function EquipmentTab({ eventId, isOwner }: Props) {
 
   return (
     <div className="space-y-3">
+      {/* Host inventory summary */}
+      {Object.entries(typeSummary).length > 0 && (
+        <div className="space-y-2 rounded-2xl bg-blue-50 p-3 dark:bg-blue-900/20">
+          <p className="text-xs font-medium text-blue-700 dark:text-blue-300">
+            {t('equipment.hostInventory')}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {Object.entries(typeSummary).map(([type, { needed, owned }]) => {
+              const stillNeed = Math.max(0, needed - owned)
+              return (
+                <span
+                  key={type}
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${
+                    stillNeed > 0
+                      ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                      : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                  }`}
+                >
+                  {t(`checklist.types.${type}`)}: need {needed} | have {owned}
+                  {stillNeed > 0 && ` | still need ${stillNeed}`}
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Header row */}
       <div className="flex items-center justify-between">
         {items.length > 0 ? (
@@ -274,6 +330,12 @@ export default function EquipmentTab({ eventId, isOwner }: Props) {
                   <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/20 dark:text-purple-400">
                     ×{item.quantity_needed}
                   </span>
+                  {inventoryMap[item.item_type] !== undefined &&
+                    inventoryMap[item.item_type]! > 0 && (
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                        {t('equipment.owned')} {inventoryMap[item.item_type]}
+                      </span>
+                    )}
                 </div>
                 {item.notes && (
                   <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{item.notes}</p>
