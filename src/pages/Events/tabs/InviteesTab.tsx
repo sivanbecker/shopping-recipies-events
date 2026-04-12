@@ -627,7 +627,14 @@ export default function InviteesTab({ eventId, isOwner }: Props) {
       {invitees.length > 0 && (
         <div className="space-y-2">
           {invitees.map(invitee => (
-            <div key={invitee.id} className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-900">
+            <div
+              key={invitee.id}
+              className={`rounded-2xl p-4 shadow-sm ${
+                invitee.needs_transport && !invitee.transport_by
+                  ? 'border border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950/30'
+                  : 'bg-white dark:bg-gray-900'
+              }`}
+            >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
                   {/* Name + party size */}
@@ -658,8 +665,19 @@ export default function InviteesTab({ eventId, isOwner }: Props) {
 
                   {/* Transport picker */}
                   {invitee.needs_transport && (
-                    <div className="mt-1 flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400">
-                      <Bus className="h-3 w-3 shrink-0" />
+                    <div className="mt-1 flex items-center gap-1.5 text-xs">
+                      <Bus
+                        className={`h-3 w-3 shrink-0 ${
+                          invitee.transport_by
+                            ? 'text-amber-500'
+                            : 'text-red-500'
+                        }`}
+                      />
+                      {!invitee.transport_by && (
+                        <span className="font-medium text-red-500">
+                          {t('invitees.noDriver')}
+                        </span>
+                      )}
                       <TransportPicker
                         invitees={invitees}
                         contacts={contacts}

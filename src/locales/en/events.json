@@ -72,7 +72,8 @@
     "emptyHint": "Tap \"Add Guest\" to start building your guest list",
     "addError": "Failed to add guest",
     "editError": "Failed to save changes",
-    "deleteError": "Failed to remove guest"
+    "deleteError": "Failed to remove guest",
+    "noDriver": "No driver assigned"
   },
   "equipment": {
     "add": "Add Item",
