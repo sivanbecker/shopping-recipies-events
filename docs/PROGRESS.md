@@ -195,19 +195,18 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 
 ---
 
-## Stage 5 — Recipes — COMPLETE (branch: feat/stage-5-recipes, pending merge)
+## Stage 5 — Recipes — COMPLETE (merged to `main` via PR #27)
 
 ### 5.1–5.5 — Full recipe management — COMPLETE
-- **RecipesPage** — list view with live search by title, filter by tool (oven, stovetop, pot, pan, baking tray, blender), and owner-only delete
+- **RecipesPage** — list view with live search by title, filter by tool, and owner-only delete
 - **RecipeFormPage** — create/edit recipes with:
   - Metadata: title, description, servings, prep time, tool checkboxes
-  - Ingredient builder: product search, quantity, unit, notes, substitute grouping
-  - Steps builder: add/remove/reorder preparation steps
+  - Ingredient builder: product search, quantity, unit (all DB units), notes, substitute grouping
+  - Steps builder: add/remove preparation steps
 - **RecipeDetailPage** — view recipes with:
   - **Servings scaling**: adjust servings spinner → all ingredient quantities scale reactively
   - Ingredient grouping with substitutes (indented, dimmed, `<1>` badge)
   - Preparation steps
-  - "Add all ingredients to shopping list" sheet with upsert logic (merges quantities if item already exists)
 - **i18n** — 25+ new keys for recipe UI in both `he` and `en`
 - **DB Migration 009** — creates `recipes`, `recipe_ingredients`, `recipe_steps` tables with RLS
 - **Shared/Personal badges** — recipes default to personal; can be shared
@@ -216,17 +215,34 @@ Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migr
 - **Ingredient scaling** — double/halve/identity/fractional/single-serving/arbitrary scaling factor
 - **"Add all to list" upsert** — merges qty for existing unchecked item; inserts for new product; inserts when matching item is checked; decimal qty handled correctly
 
-### Known Issues / Design Decisions (to address in future sessions)
-1. **Unit mismatch between shopping and recipes:**
-   - **Problem:** The same product (e.g., flour) has different units in different contexts:
-     - **Shopping context**: measured in packages/units (1, 2, 3 units) — reflects how items are bought
-     - **Recipe context**: measured in weight/volume (800g, 2 cups) — reflects culinary measurements
-   - **Current behavior:** Recipe ingredient units are independent from product default units. When adding recipe ingredients to a shopping list, the recipe's unit is used (e.g., 800g), not the product's shopping unit (packages).
-   - **Example:** 
-     - Product "Flour" has `default_unit: units (count)` for shopping
-     - Recipe "Cake" lists "Flour: 800g" (weight unit, not packages)
-     - When you add cake ingredients to shopping list → "Flour 800g" is added, not "Flour 1 package"
-   - **To fix:** Either (a) allow products to have context-aware unit overrides, or (b) add a conversion mapping (e.g., "1 package = 500g"), or (c) show recipe units separately from shopping units in the list
+### Recipe Feature Fixes & Improvements (PR #27, branch: fix/recipe-feature)
+
+#### Unit Selection
+- Removed "Shopping unit (optional)" section from ingredient form — was confusing and broken
+- Unit dropdown now shows **all units from DB** (no longer filtered by product type)
+- Fixed ambiguous double FK join on `unit_types` (`unit_id` + `shopping_unit_id` both pointing to same table) that caused Supabase PostgREST to return `SelectQueryError`, making every recipe detail/edit page show "Not Found"
+- Fix: query now fetches `unit_id` as a plain column; unit objects resolved client-side from a separate `unit_types` query
+
+#### Add to Shopping List — Redesigned
+- Removed the old "Add all to list" single button
+- **Per-ingredient checkboxes** on the recipe detail page — all unchecked by default
+- **Check all / Uncheck all** toggle next to the ingredients section header
+- **"Add marked to list (N)"** button — only enabled when at least one ingredient is checked; shows count
+- After selecting a list, confirm step shows each checked ingredient with **editable quantity and unit dropdown** before adding
+- Only the edited values are inserted; upsert logic unchanged (merges with existing unchecked items)
+
+#### Tools — DB-driven (Migration 018)
+- Replaced hardcoded `TOOLS` const with a `tools` DB table (`key`, `label_he`, `label_en`)
+- **DB Migration 018** — creates `tools` table, seeds all 7 tools, enables RLS (public read)
+- Added **Mixer** as a new tool (key: `mixer`)
+- All three recipe pages (`RecipesPage`, `RecipeDetailPage`, `RecipeFormPage`) now fetch tools from DB and display the correct label per language — no code change needed to add future tools
+- Removed `tools.*` i18n keys (labels now come from DB)
+
+#### Known Issues / Design Decisions
+1. **Unit mismatch between shopping and recipes** — not yet resolved:
+   - Shopping context uses count/packages; recipe context uses weight/volume
+   - When adding recipe ingredients to a list, the recipe unit is used as-is
+   - To fix later: (a) per-product unit overrides, (b) conversion mapping, or (c) show recipe units separately in the list
 
 ---
 
