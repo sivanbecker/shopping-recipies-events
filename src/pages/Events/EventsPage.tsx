@@ -121,7 +121,12 @@ export default function EventsPage() {
   const [showDialog, setShowDialog] = useState(false)
   const [showPast, setShowPast] = useState(false)
 
-  const { data: allEvents = [], isLoading } = useQuery<Event[]>({
+  const {
+    data: allEvents = [],
+    isLoading,
+    isError,
+    error,
+  } = useQuery<Event[]>({
     queryKey: ['events', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -148,6 +153,10 @@ export default function EventsPage() {
       {isLoading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
+        </div>
+      ) : isError ? (
+        <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+          {(error as Error)?.message ?? 'Failed to load events'}
         </div>
       ) : upcomingEvents.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
