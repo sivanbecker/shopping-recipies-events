@@ -668,15 +668,11 @@ export default function InviteesTab({ eventId, isOwner }: Props) {
                     <div className="mt-1 flex items-center gap-1.5 text-xs">
                       <Bus
                         className={`h-3 w-3 shrink-0 ${
-                          invitee.transport_by
-                            ? 'text-amber-500'
-                            : 'text-red-500'
+                          invitee.transport_by ? 'text-amber-500' : 'text-red-500'
                         }`}
                       />
                       {!invitee.transport_by && (
-                        <span className="font-medium text-red-500">
-                          {t('invitees.noDriver')}
-                        </span>
+                        <span className="font-medium text-red-500">{t('invitees.noDriver')}</span>
                       )}
                       <TransportPicker
                         invitees={invitees}
