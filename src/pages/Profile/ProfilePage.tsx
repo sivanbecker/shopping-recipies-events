@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
-import { LogOut, Pencil, Check, X, Loader2, Moon, Sun, Users, ChevronRight } from 'lucide-react'
+import { LogOut, Pencil, Check, X, Loader2, Users, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { UserAvatar } from '@/components/UserAvatar'
-import { useAppStore } from '@/store/useAppStore'
 import { supabase } from '@/lib/supabase'
 import type { HostInventoryItem } from '@/types'
 
@@ -22,7 +21,6 @@ const HOST_ITEMS = [
 export default function ProfilePage() {
   const { t, i18n } = useTranslation()
   const { user, profile, signOut, updateProfile } = useAuth()
-  const { isDarkMode, toggleDarkMode } = useAppStore()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -208,20 +206,6 @@ export default function ProfilePage() {
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Dark mode toggle */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
-        <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
-          {t('profile.darkMode')}
-        </p>
-        <button
-          onClick={toggleDarkMode}
-          className="flex w-full items-center justify-between rounded-xl bg-gray-100 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-        >
-          <span>{isDarkMode ? t('profile.lightMode') : t('profile.darkMode')}</span>
-          {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </button>
       </div>
 
       {/* Host Equipment */}
