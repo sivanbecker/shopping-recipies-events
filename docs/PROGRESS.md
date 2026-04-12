@@ -437,6 +437,57 @@ Run `supabase db push` — migrations 022 and 023 must be applied.
 
 ---
 
+## Stage 6.7 + 4.7 — Contacts Enhancements & Contact-Based Sharing — COMPLETE (branch: `feat/contacts-enhancements`, PR #34)
+
+### What was built
+
+#### Migration 024 — `supabase/migrations/024_contacts_label_email.sql`
+- `contacts.label text CHECK (label IN ('family', 'friend'))` — nullable, marks relationship type
+- `contacts.email text` — stores the contact's email for display and account-linking
+
+#### ContactsPage (`src/pages/Events/ContactsPage.tsx`)
+**Label toggle (6.7.1)**
+- Three-way pill row in ContactForm: None / Family / Friend
+- Colored badge on each ContactRow: amber for Family, teal for Friend
+
+**Filter bar (6.7.1)**
+- Pill row at top of page: All / Family / Friend — filters the visible list client-side
+- Hidden when the contacts list is empty
+
+**Email + account linking (6.7.2)**
+- New Email field in ContactForm (below Phone)
+- On save: calls `find_user_by_email` RPC (migration 005) with the entered email
+  - Found → writes `linked_user_id`, shows "Account linked ✓" inline
+  - Not found → clears `linked_user_id`, shows "No account with this email yet"
+- ContactRow: purple "Linked" chip when `linked_user_id` is set; email shown in grey below name when stored but no account found
+
+#### ContactPicker component (`src/components/ContactPicker.tsx`)
+- Reusable chip row rendered inside any share dialog
+- Own label filter pills (All / Family / Friend)
+- Each chip: name + chain-link icon if `linked_user_id` is set
+- Linked contacts use the stored email to resolve the share target; unlinked contacts use `contact.email`
+- Contacts without an email are dimmed and non-tappable (tooltip explains why)
+- Contacts whose `linked_user_id` is already a member appear dimmed
+- Returns `null` if the user has no contacts (no UI noise)
+
+#### ShareListDialog (`src/pages/Lists/ShareListDialog.tsx`) — 4.7 integration
+- ContactPicker inserted between the members list and the email input
+- Tapping a chip auto-fills the email field; user can then tap "Add" as usual
+- Already-added members are excluded from the picker
+
+#### Types & i18n
+- `database.ts`: `contacts` Row / Insert / Update updated with `label` and `email`
+- `en/events.json` + `he/events.json`: added `contacts.label`, `contacts.labelFamily`, `contacts.labelFriend`, `contacts.labelNone`, `contacts.filterAll`, `contacts.email`, `contacts.emailPlaceholder`, `contacts.linked`, `contacts.linkSuccess`, `contacts.linkNotFound`
+- `en/shopping.json` + `he/shopping.json`: added `sharing.contactsSection`
+
+### ⚠️ DB migration required
+Run `supabase db push` (or apply migration 024 via the Supabase dashboard) before using the new label and email fields.
+
+### Tests
+- 114 tests pass, lint clean, format clean
+
+---
+
 ## Dark Mode — COMPLETE (branch: `feat/dark-mode`, pending merge)
 
 ### Approach
