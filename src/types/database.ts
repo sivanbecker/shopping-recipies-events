@@ -381,6 +381,8 @@ export type Database = {
           party_size: number
           confirmed: boolean
           brings: string | null
+          needs_transport: boolean
+          transport_by: string | null
           created_at: string
         }
         Insert: {
@@ -392,6 +394,8 @@ export type Database = {
           party_size?: number
           confirmed?: boolean
           brings?: string | null
+          needs_transport?: boolean
+          transport_by?: string | null
           created_at?: string
         }
         Update: {
@@ -400,6 +404,8 @@ export type Database = {
           party_size?: number
           confirmed?: boolean
           brings?: string | null
+          needs_transport?: boolean
+          transport_by?: string | null
         }
         Relationships: []
       }
@@ -408,22 +414,28 @@ export type Database = {
           id: string
           event_id: string
           item_type: string
+          label: string | null
           quantity_needed: number
           is_default: boolean
+          is_arranged: boolean
           notes: string | null
         }
         Insert: {
           id?: string
           event_id: string
           item_type: string
+          label?: string | null
           quantity_needed?: number
           is_default?: boolean
+          is_arranged?: boolean
           notes?: string | null
         }
         Update: {
           item_type?: string
+          label?: string | null
           quantity_needed?: number
           is_default?: boolean
+          is_arranged?: boolean
           notes?: string | null
         }
         Relationships: []

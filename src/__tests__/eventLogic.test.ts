@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { countdownLabel, isUpcoming, sortEventsByDate } from '@/lib/eventHelpers'
-import type { Event } from '@/types'
+import {
+  countdownLabel,
+  isUpcoming,
+  sortEventsByDate,
+  inviteeSummary,
+  equipmentSummary,
+  scaleQty,
+} from '@/lib/eventHelpers'
+import type { Event, EventInvitee, EventEquipment } from '@/types'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -120,5 +127,130 @@ describe('sortEventsByDate', () => {
     const original = [...events]
     sortEventsByDate(events)
     expect(events.map(e => e.title)).toEqual(original.map(e => e.title))
+  })
+})
+
+// ─── inviteeSummary ───────────────────────────────────────────────────────────
+
+function makeInvitee(overrides: Partial<EventInvitee> & { name: string }): EventInvitee {
+  return {
+    id: crypto.randomUUID(),
+    event_id: 'event-1',
+    contact_id: null,
+    phone: null,
+    party_size: 1,
+    confirmed: false,
+    brings: null,
+    needs_transport: false,
+    transport_by: null,
+    created_at: new Date().toISOString(),
+    ...overrides,
+  }
+}
+
+describe('inviteeSummary', () => {
+  it('returns zeros for empty list', () => {
+    expect(inviteeSummary([])).toEqual({
+      confirmed: 0,
+      total: 0,
+      totalPeople: 0,
+      needsTransport: 0,
+    })
+  })
+
+  it('counts confirmed invitees', () => {
+    const invitees = [
+      makeInvitee({ name: 'A', confirmed: true }),
+      makeInvitee({ name: 'B', confirmed: false }),
+      makeInvitee({ name: 'C', confirmed: true }),
+    ]
+    const { confirmed, total } = inviteeSummary(invitees)
+    expect(confirmed).toBe(2)
+    expect(total).toBe(3)
+  })
+
+  it('sums party sizes for totalPeople', () => {
+    const invitees = [
+      makeInvitee({ name: 'Cohen family', party_size: 4 }),
+      makeInvitee({ name: 'Levi', party_size: 1 }),
+      makeInvitee({ name: 'Shapiro family', party_size: 3 }),
+    ]
+    expect(inviteeSummary(invitees).totalPeople).toBe(8)
+  })
+
+  it('counts invitees needing transport', () => {
+    const invitees = [
+      makeInvitee({ name: 'A', needs_transport: true }),
+      makeInvitee({ name: 'B', needs_transport: false }),
+      makeInvitee({ name: 'C', needs_transport: true }),
+    ]
+    expect(inviteeSummary(invitees).needsTransport).toBe(2)
+  })
+})
+
+// ─── equipmentSummary ─────────────────────────────────────────────────────────
+
+function makeEquipment(overrides: Partial<EventEquipment> & { item_type: string }): EventEquipment {
+  return {
+    id: crypto.randomUUID(),
+    event_id: 'event-1',
+    quantity_needed: 1,
+    is_default: false,
+    is_arranged: false,
+    label: null,
+    notes: null,
+    ...overrides,
+  }
+}
+
+describe('equipmentSummary', () => {
+  it('returns zeros for empty list', () => {
+    expect(equipmentSummary([])).toEqual({ arranged: 0, total: 0, byType: {} })
+  })
+
+  it('counts arranged items', () => {
+    const items = [
+      makeEquipment({ item_type: 'chair', is_arranged: true }),
+      makeEquipment({ item_type: 'table', is_arranged: false }),
+      makeEquipment({ item_type: 'chair', is_arranged: true }),
+    ]
+    const { arranged, total } = equipmentSummary(items)
+    expect(arranged).toBe(2)
+    expect(total).toBe(3)
+  })
+
+  it('sums quantity_needed by item_type in byType', () => {
+    const items = [
+      makeEquipment({ item_type: 'chair', quantity_needed: 8 }),
+      makeEquipment({ item_type: 'chair', quantity_needed: 4 }),
+      makeEquipment({ item_type: 'table', quantity_needed: 2 }),
+    ]
+    const { byType } = equipmentSummary(items)
+    expect(byType['chair']).toBe(12)
+    expect(byType['table']).toBe(2)
+  })
+})
+
+// ─── scaleQty ────────────────────────────────────────────────────────────────
+
+describe('scaleQty', () => {
+  it('scales up when override > base', () => {
+    expect(scaleQty(4, 4, 8)).toBe(8)
+  })
+
+  it('scales down when override < base', () => {
+    expect(scaleQty(8, 4, 2)).toBe(4)
+  })
+
+  it('returns identity when override === base', () => {
+    expect(scaleQty(3, 4, 4)).toBe(3)
+  })
+
+  it('rounds to 2 decimal places', () => {
+    expect(scaleQty(1, 3, 1)).toBe(0.33)
+  })
+
+  it('returns original quantity when baseServings is 0', () => {
+    expect(scaleQty(5, 0, 4)).toBe(5)
   })
 })

@@ -1,5 +1,5 @@
 import { daysUntil } from './utils'
-import type { Event } from '@/types'
+import type { Event, EventInvitee, EventEquipment } from '@/types'
 
 /**
  * Returns an i18n key + interpolation params for the countdown display.
@@ -19,6 +19,46 @@ export function countdownLabel(date: string | Date): {
 /** Returns true if the event date is today or in the future */
 export function isUpcoming(event: Pick<Event, 'date'>): boolean {
   return daysUntil(event.date) >= 0
+}
+
+/** Calculates summary stats for the invitees list of an event. */
+export function inviteeSummary(invitees: EventInvitee[]): {
+  confirmed: number
+  total: number
+  totalPeople: number
+  needsTransport: number
+} {
+  return {
+    confirmed: invitees.filter(i => i.confirmed).length,
+    total: invitees.length,
+    totalPeople: invitees.reduce((sum, i) => sum + i.party_size, 0),
+    needsTransport: invitees.filter(i => i.needs_transport).length,
+  }
+}
+
+/** Calculates summary stats for the equipment list of an event. */
+export function equipmentSummary(items: EventEquipment[]): {
+  arranged: number
+  total: number
+  byType: Record<string, number>
+} {
+  return {
+    arranged: items.filter(i => i.is_arranged).length,
+    total: items.length,
+    byType: items.reduce<Record<string, number>>((acc, item) => {
+      acc[item.item_type] = (acc[item.item_type] ?? 0) + item.quantity_needed
+      return acc
+    }, {}),
+  }
+}
+
+/**
+ * Scales an ingredient quantity from a recipe's base servings to an override.
+ * Returns result rounded to 2 decimal places.
+ */
+export function scaleQty(quantity: number, baseServings: number, overrideServings: number): number {
+  if (baseServings <= 0) return quantity
+  return Math.round(((quantity * overrideServings) / baseServings) * 100) / 100
 }
 
 /**
