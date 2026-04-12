@@ -716,6 +716,25 @@ Moved and expanded — see Stage 4.5 below.
 - [ ] Creates a named list: "Shopping — [Event Title]"
 - [ ] Links the new list back to the event
 
+#### 6.6 — Host Equipment Inventory (Profile)
+> Track the host's permanent equipment inventory once in the Profile, then automatically deduct it from event equipment needs.
+
+**Profile — Host Equipment card**
+- Fixed 6 item types: Chairs, Dining Tables, Plates, Bowls, Cold Drink Glasses, Hot Drink Cups
+- Stored in existing `host_inventory` table (migration 019): `owner_id`, `item_type`, `label`, `quantity_owned`; UNIQUE(owner_id, item_type)
+- Read-only display mode: 2-column grid showing each item and its current quantity
+- Edit mode (toggle via "Edit" button): steppers (+/−) per item, Save/Cancel, batch upsert all 6 rows on Save
+- No migration needed — table and RLS policies were created in migration 019
+
+**Equipment Tab — Inventory deduction**
+- Extended item type picker with the 4 new types: Plates, Bowls, Cold Drink Glasses, Hot Drink Cups (in addition to existing Chairs, Tables, Other)
+- Loads host inventory via `useQuery(['host-inventory'])` (RLS ensures only own rows returned)
+- **Host Inventory summary panel** (blue, top of tab) — visible when any event equipment items exist:
+  - Per item type: `{type}: need {needed} | have {owned}` + ` | still need {stillNeed}` when gap > 0
+  - Green badge when fully covered by inventory; amber badge when gap remains
+- **Inline "You have X" badge** on each item row when the host owns > 0 of that type
+- Deduction formula: `stillNeed = Math.max(0, quantity_needed - quantity_owned)`
+
 #### Stage 6 Manual Testing Checklist
 - [ ] Create an event set for next week → countdown shows correct number of days
 - [ ] Add 5 guests, mark 2 as needing transport, assign a driver to each
