@@ -2,11 +2,25 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Plus, Pencil, Trash2, Loader2, Users, Phone, UserPlus, Car } from 'lucide-react'
+import {
+  ArrowLeft,
+  Plus,
+  Pencil,
+  Trash2,
+  Loader2,
+  Users,
+  Phone,
+  UserPlus,
+  Car,
+  Link2,
+  Mail,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import type { Contact } from '@/types'
+
+type LabelFilter = 'all' | 'family' | 'friend'
 
 // ─── ContactForm ─────────────────────────────────────────────────────────────
 
@@ -23,46 +37,72 @@ function ContactForm({ onClose, contact }: ContactFormProps) {
 
   const [name, setName] = useState(contact?.name ?? '')
   const [phone, setPhone] = useState(contact?.phone ?? '')
+  const [email, setEmail] = useState(contact?.email ?? '')
   const [partySize, setPartySize] = useState(contact?.party_size ?? 1)
   const [canDrive, setCanDrive] = useState(contact?.can_drive ?? false)
+  const [label, setLabel] = useState<'family' | 'friend' | null>(contact?.label ?? null)
+  const [linkStatus, setLinkStatus] = useState<'idle' | 'linked' | 'not_found'>(
+    contact?.linked_user_id ? 'linked' : 'idle'
+  )
 
   const mutation = useMutation({
     mutationFn: async () => {
+      const trimmedEmail = email.trim() || null
+
+      // Attempt to resolve linked_user_id from email
+      let linkedUserId: string | null = contact?.linked_user_id ?? null
+
+      if (trimmedEmail) {
+        const { data: found } = await supabase.rpc('find_user_by_email', {
+          p_email: trimmedEmail,
+        })
+        if (found && found.length > 0) {
+          linkedUserId = found[0].user_id
+          setLinkStatus('linked')
+        } else {
+          linkedUserId = null
+          setLinkStatus('not_found')
+        }
+      } else {
+        linkedUserId = null
+        setLinkStatus('idle')
+      }
+
+      const payload = {
+        name: name.trim(),
+        phone: phone.trim() || null,
+        email: trimmedEmail,
+        party_size: partySize,
+        can_drive: canDrive,
+        label: label,
+        linked_user_id: linkedUserId,
+      }
+
       if (isEdit) {
-        const { error } = await supabase
-          .from('contacts')
-          .update({
-            name: name.trim(),
-            phone: phone.trim() || null,
-            party_size: partySize,
-            can_drive: canDrive,
-          })
-          .eq('id', contact!.id)
+        const { error } = await supabase.from('contacts').update(payload).eq('id', contact!.id)
         if (error) throw error
-        // Sync name, phone, party_size to any invitees created from this contact
         await supabase
           .from('event_invitees')
           .update({ name: name.trim(), phone: phone.trim() || null, party_size: partySize })
           .eq('contact_id', contact!.id)
       } else {
-        const { error } = await supabase.from('contacts').insert({
-          owner_id: user!.id,
-          name: name.trim(),
-          phone: phone.trim() || null,
-          party_size: partySize,
-          can_drive: canDrive,
-        })
+        const { error } = await supabase.from('contacts').insert({ owner_id: user!.id, ...payload })
         if (error) throw error
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] })
-      // Refresh all event-invitees caches so InviteesTab picks up changes
       queryClient.invalidateQueries({ queryKey: ['event-invitees'] })
       onClose()
     },
     onError: () => toast.error('Failed to save contact'),
   })
+
+  const labelOptions: { value: 'family' | 'friend' | null; key: string }[] = [
+    { value: null, key: 'contacts.labelNone' },
+    { value: 'family', key: 'contacts.labelFamily' },
+    { value: 'friend', key: 'contacts.labelFriend' },
+  ]
 
   return (
     <div
@@ -75,6 +115,7 @@ function ContactForm({ onClose, contact }: ContactFormProps) {
         </h2>
 
         <div className="space-y-3">
+          {/* Name */}
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
               {t('contacts.name')}
@@ -89,6 +130,34 @@ function ContactForm({ onClose, contact }: ContactFormProps) {
             />
           </div>
 
+          {/* Label */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+              {t('contacts.label')}
+            </label>
+            <div className="flex gap-2">
+              {labelOptions.map(opt => (
+                <button
+                  key={String(opt.value)}
+                  type="button"
+                  onClick={() => setLabel(opt.value)}
+                  className={`flex-1 rounded-xl border px-3 py-2 text-sm font-medium transition ${
+                    label === opt.value
+                      ? opt.value === 'family'
+                        ? 'border-amber-400 bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
+                        : opt.value === 'friend'
+                          ? 'border-teal-400 bg-teal-50 text-teal-700 dark:bg-teal-900/20 dark:text-teal-400'
+                          : 'border-purple-400 bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400'
+                      : 'border-gray-200 text-gray-500 dark:border-gray-600 dark:text-gray-400'
+                  }`}
+                >
+                  {t(opt.key)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Phone */}
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
               {t('contacts.phone')}
@@ -102,6 +171,35 @@ function ContactForm({ onClose, contact }: ContactFormProps) {
             />
           </div>
 
+          {/* Email + link status */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
+              {t('contacts.email')}
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => {
+                setEmail(e.target.value)
+                setLinkStatus('idle')
+              }}
+              placeholder={t('contacts.emailPlaceholder')}
+              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
+            />
+            {linkStatus === 'linked' && (
+              <p className="mt-1 flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400">
+                <Link2 className="h-3 w-3" />
+                {t('contacts.linkSuccess')}
+              </p>
+            )}
+            {linkStatus === 'not_found' && (
+              <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                {t('contacts.linkNotFound')}
+              </p>
+            )}
+          </div>
+
+          {/* Party size */}
           <div>
             <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-gray-400">
               {t('contacts.partySize')}
@@ -183,18 +281,34 @@ function ContactRow({ contact, onEdit }: { contact: Contact; onEdit: (c: Contact
     <>
       <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             <span className="truncate font-semibold text-gray-800 dark:text-gray-100">
               {contact.name}
             </span>
+            {contact.label === 'family' && (
+              <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/20 dark:text-amber-400">
+                {t('contacts.labelFamily')}
+              </span>
+            )}
+            {contact.label === 'friend' && (
+              <span className="shrink-0 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-700 dark:bg-teal-900/20 dark:text-teal-400">
+                {t('contacts.labelFriend')}
+              </span>
+            )}
             {contact.can_drive && (
               <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
                 <Car className="mr-0.5 inline h-3 w-3" />
                 {t('contacts.canDrive')}
               </span>
             )}
+            {contact.linked_user_id && (
+              <span className="shrink-0 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/20 dark:text-purple-400">
+                <Link2 className="mr-0.5 inline h-3 w-3" />
+                {t('contacts.linked')}
+              </span>
+            )}
           </div>
-          <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
             <span className="flex items-center gap-1">
               <Users className="h-3 w-3" />
               {contact.party_size === 1
@@ -205,6 +319,12 @@ function ContactRow({ contact, onEdit }: { contact: Contact; onEdit: (c: Contact
               <span className="flex items-center gap-1">
                 <Phone className="h-3 w-3" />
                 {contact.phone}
+              </span>
+            )}
+            {contact.email && !contact.linked_user_id && (
+              <span className="flex items-center gap-1">
+                <Mail className="h-3 w-3" />
+                {contact.email}
               </span>
             )}
           </div>
@@ -269,6 +389,7 @@ export default function ContactsPage() {
   const { user } = useAuth()
   const [showForm, setShowForm] = useState(false)
   const [editingContact, setEditingContact] = useState<Contact | undefined>()
+  const [filter, setFilter] = useState<LabelFilter>('all')
 
   const { data: contacts = [], isLoading } = useQuery<Contact[]>({
     queryKey: ['contacts', user?.id],
@@ -283,6 +404,8 @@ export default function ContactsPage() {
     enabled: !!user,
   })
 
+  const filtered = filter === 'all' ? contacts : contacts.filter(c => c.label === filter)
+
   function handleEdit(contact: Contact) {
     setEditingContact(contact)
     setShowForm(true)
@@ -292,6 +415,12 @@ export default function ContactsPage() {
     setShowForm(false)
     setEditingContact(undefined)
   }
+
+  const filterOptions: { value: LabelFilter; labelKey: string }[] = [
+    { value: 'all', labelKey: 'contacts.filterAll' },
+    { value: 'family', labelKey: 'contacts.labelFamily' },
+    { value: 'friend', labelKey: 'contacts.labelFriend' },
+  ]
 
   return (
     <div className="space-y-6">
@@ -310,6 +439,25 @@ export default function ContactsPage() {
         </div>
       </div>
 
+      {/* Filter bar */}
+      {contacts.length > 0 && (
+        <div className="flex gap-2">
+          {filterOptions.map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => setFilter(opt.value)}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                filter === opt.value
+                  ? 'bg-purple-500 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+              }`}
+            >
+              {t(opt.labelKey)}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Contact list */}
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -325,7 +473,7 @@ export default function ContactsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {contacts.map(contact => (
+          {filtered.map(contact => (
             <ContactRow key={contact.id} contact={contact} onEdit={handleEdit} />
           ))}
         </div>

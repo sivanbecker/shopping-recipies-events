@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import type { ListMemberWithProfile } from '@/types'
 import { UserAvatar } from '@/components/UserAvatar'
+import { ContactPicker } from '@/components/ContactPicker'
 
 interface Props {
   listId: string
@@ -182,6 +183,15 @@ export function ShareListDialog({ listId, onClose }: Props) {
         </div>
 
         <div className="my-4 border-t border-gray-100 dark:border-gray-700" />
+
+        {/* Contact picker */}
+        <ContactPicker
+          onSelect={email => {
+            setEmail(email)
+            setEmailError(null)
+          }}
+          excludedUserIds={members.map(m => m.user_id)}
+        />
 
         {/* Invite section */}
         <div>

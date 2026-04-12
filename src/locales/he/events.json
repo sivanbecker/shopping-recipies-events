@@ -57,7 +57,17 @@
     "people": "{{count}} אנשים",
     "confirmDelete": "להסיר איש קשר?",
     "confirmDeleteHint": "\"{{name}}\" יוסר מאנשי הקשר שלך.",
-    "canDrive": "יכול להסיע"
+    "canDrive": "יכול להסיע",
+    "label": "תיוג",
+    "labelFamily": "משפחה",
+    "labelFriend": "חבר/ה",
+    "labelNone": "ללא",
+    "filterAll": "הכל",
+    "email": "אימייל",
+    "emailPlaceholder": "email@example.com",
+    "linked": "מחובר",
+    "linkSuccess": "חשבון מקושר",
+    "linkNotFound": "אין חשבון עם האימייל הזה עדיין"
   },
   "invitees": {
     "add": "הוסף אורח",
