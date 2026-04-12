@@ -16,6 +16,7 @@ import RecipeDetailPage from './pages/Recipes/RecipeDetailPage'
 import RecipeFormPage from './pages/Recipes/RecipeFormPage'
 import EventsPage from './pages/Events/EventsPage'
 import EventDetailPage from './pages/Events/EventDetailPage'
+import ContactsPage from './pages/Events/ContactsPage'
 import ProfilePage from './pages/Profile/ProfilePage'
 
 export default function App() {
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="/recipes/:id" element={<RecipeDetailPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/events/:id" element={<EventDetailPage />} />
+        <Route path="/contacts" element={<ContactsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
       </Route>
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
-import { LogOut, Pencil, Check, X, Loader2, Moon, Sun } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { LogOut, Pencil, Check, X, Loader2, Moon, Sun, Users, ChevronRight } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
 import { UserAvatar } from '@/components/UserAvatar'
@@ -152,6 +152,20 @@ export default function ProfilePage() {
           {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
         </button>
       </div>
+
+      {/* Manage Contacts */}
+      <Link
+        to="/contacts"
+        className="flex items-center justify-between rounded-2xl bg-white p-5 shadow-sm transition hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800"
+      >
+        <div className="flex items-center gap-3">
+          <Users className="h-5 w-5 text-purple-500" />
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {t('events:contacts.manage')}
+          </span>
+        </div>
+        <ChevronRight className="h-4 w-4 text-gray-400" />
+      </Link>
 
       {/* Sign out */}
       <button
