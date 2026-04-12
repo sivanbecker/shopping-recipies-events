@@ -402,6 +402,41 @@ Run `supabase db push` — migrations 022 and 023 must be applied.
 
 ---
 
+### 6.3 — Host Equipment Inventory — COMPLETE (branch: `feat/host-inventory-profile`)
+
+#### No DB Migration
+- `host_inventory` table already existed from migration 019 (`item_type`, `label`, `quantity_owned`, UNIQUE(owner_id, item_type))
+- RLS policies already in place (owner-only)
+
+#### ProfilePage — Host Equipment card
+- New card in ProfilePage between Dark Mode and Manage Contacts
+- 6 fixed item types: Chairs, Dining Tables, Plates, Bowls, Cold Drink Glasses, Hot Drink Cups
+- Read mode: 2-column grid showing current quantities (fetched via `useQuery(['host-inventory', user.id])`)
+- Edit mode: toggled via "Edit" button — steppers (+/−, min 0) per item; Save/Cancel buttons
+- Save: batch upserts all 6 rows at once via `onConflict: 'owner_id,item_type'`
+- First use of TanStack Query in ProfilePage
+
+#### EquipmentTab — Host Inventory Deduction
+- Extended item type picker: added Plates, Bowls, Cold Drink Glasses, Hot Drink Cups (was chair/table/other only)
+- Loads host inventory via `useQuery(['host-inventory'])` (RLS returns only own rows)
+- **Host Inventory summary panel** (blue box, top of tab) — appears when event has any equipment items:
+  - Per type: `{type}: need X | have Y` + ` | still need Z` when gap > 0
+  - Green badge when fully covered; amber when gap remains
+- **Inline "You have X" badge** on each item row when host owns > 0 of that type
+- Deduction: `stillNeed = Math.max(0, quantity_needed - quantity_owned)`
+
+#### i18n
+- `common.json`: added `profile.hostInventory.*` (title, description, 6 item labels, saved) — both `he` + `en`
+- `events.json`: added `checklist.types.plate/bowl/cold_glass/hot_cup` and `equipment.hostInventory/owned/stillNeed` — both `he` + `en`
+
+#### Tests
+- 114 existing tests all pass; no regressions
+
+### ⚠️ No migration needed for 6.3
+`host_inventory` table was created in migration 019. Just pull and run the app.
+
+---
+
 ## Dark Mode — COMPLETE (branch: `feat/dark-mode`, pending merge)
 
 ### Approach
