@@ -24,6 +24,10 @@ import { useAuth } from '@/hooks/useAuth'
 import { countdownLabel } from '@/lib/eventHelpers'
 import type { Event } from '@/types'
 import NewEventDialog from './NewEventDialog'
+import InviteesTab from './tabs/InviteesTab'
+import EquipmentTab from './tabs/EquipmentTab'
+import RecipesTab from './tabs/RecipesTab'
+import ShoppingTab from './tabs/ShoppingTab'
 
 // ─── Tab definitions ─────────────────────────────────────────────────────────
 
@@ -196,9 +200,16 @@ export default function EventDetailPage() {
         ))}
       </div>
 
-      {/* Tab content placeholder */}
-      <div className="flex flex-col items-center justify-center rounded-2xl bg-white py-12 text-center shadow-sm dark:bg-gray-900">
-        <p className="text-sm text-gray-400 dark:text-gray-500">{t('detail.comingSoon')}</p>
+      {/* Tab content */}
+      <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-900">
+        {activeTab === 'invitees' && <InviteesTab eventId={id!} isOwner={isOwner} />}
+        {activeTab === 'equipment' && <EquipmentTab eventId={id!} isOwner={isOwner} />}
+        {activeTab === 'recipes' && (
+          <RecipesTab eventId={id!} eventTitle={event.title} isOwner={isOwner} totalPeople={0} />
+        )}
+        {activeTab === 'shopping' && (
+          <ShoppingTab eventId={id!} eventTitle={event.title} isOwner={isOwner} />
+        )}
       </div>
 
       {/* Edit dialog */}

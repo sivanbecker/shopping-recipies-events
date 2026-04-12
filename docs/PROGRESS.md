@@ -317,24 +317,88 @@ Added keys to both `he` and `en` under `events.*`:
 - `isUpcoming()`: today, future, past
 - `sortEventsByDate()`: empty input, upcoming nearest-first, past most-recent-first, upcoming before past, immutability
 
-### ⚠️ Required before testing
+### ⚠️ Required before testing 6.1
 Run `supabase db push` (or apply migration 019 via the Supabase dashboard) — the new tables and RLS policies must exist in the DB before the app can read/write events or contacts.
 
-### Manual Testing Checklist — Stage 6.1
-- [ ] **Apply migration**: `supabase db push` → confirm 019 shows as applied
-- [ ] **Events page** → shows "No upcoming events" empty state
-- [ ] **Create event** → tap FAB → fill title + date/time → Create → card appears with correct countdown
-- [ ] **Countdown** → set date = today → shows "Today!"; date = tomorrow → "Tomorrow"; date = in 5 days → "5 days to go"; past date → "X days ago"
-- [ ] **Location + notes** → fill all fields → appear on detail page
-- [ ] **Photo album URL** → paste a URL → detail page shows "Open album" link that opens in new tab
-- [ ] **Edit event** → pencil icon → change title/date → Save → card and detail update
-- [ ] **Delete event** → trash icon → confirm → event removed from list
-- [ ] **Past events** → create event with past date → does NOT appear in upcoming; tap "Past Events" toggle → shows in collapsed section
-- [ ] **Contacts** → Profile → "Manage Contacts" → empty state
-- [ ] **Add contact** → tap FAB → name "Cohen Family", party size 4, phone → Create → card shows name, "4 people", phone
-- [ ] **Edit contact** → pencil → change party size to 3 → Save → card updates
-- [ ] **Delete contact** → trash → confirm → removed
-- [ ] **Party size stepper** → − button can't go below 1
+---
+
+### 6.2 — Event Detail Tabs — COMPLETE (branch: `feat/stage-6.2-event-tabs`)
+
+#### DB Migrations
+- **Migration 022** — adds fields needed for event detail tabs:
+  - `event_invitees`: `needs_transport boolean DEFAULT false`, `transport_by uuid REFERENCES event_invitees(id)`
+  - `event_equipment`: `label text`, `is_arranged boolean DEFAULT false`
+- **Migration 023** — `contacts.can_drive boolean DEFAULT false` — marks contacts who can help with transport; used to populate the "Who is driving?" picker
+
+#### New tab components (`src/pages/Events/tabs/`)
+- **`InviteesTab`** — full guest list management:
+  - Add guests from contacts (two-step confirm with brings + transport toggles) or free-form (all fields)
+  - Edit button on each row — pre-fills all fields; name locked for contact-linked invitees
+  - Confirmed toggle (green checkmark) and needs-transport toggle (bus icon) per row
+  - "Who is driving?" dropdown — shows only contacts marked `can_drive = true` who are also invitees
+  - Red card border + "No driver assigned" label when transport is needed but no driver selected
+  - Summary badges: confirmed count, total people, needs-transport count
+  - Sheets: bottom-sheet on mobile, centered modal on desktop (`sm:items-center`)
+- **`EquipmentTab`** — equipment checklist:
+  - Add items with type (Chairs / Tables / Other), optional custom label, quantity, notes
+  - Arranged checkbox per item (strikethrough when arranged)
+  - Summary: arranged count + per-type quantity totals
+- **`RecipesTab`** — recipe attachment:
+  - Search and attach recipes; servings override per recipe (defaults to total people)
+  - Inline servings stepper on each attached recipe card
+  - Dessert / main course split sections; dessert toggle per recipe
+  - **"Generate Shopping List"** button — scales all recipe ingredients to their overridden servings, merges same product+unit pairs, creates a new shopping list, and links it to the event
+- **`ShoppingTab`** — shopping list linking:
+  - Link existing active lists or create a new list (auto-named "Shopping — [Event]")
+  - Item count per linked list; direct navigation link to list detail
+  - Unlink button
+
+#### EventsPage updates
+- Query now fetches `event_invitees(party_size)` — event cards show a people count badge when guests have been added
+
+#### ContactsPage updates
+- Add/edit form has a **"Can drive"** Car toggle — stored as `contacts.can_drive`
+- Contact cards show a blue "Can drive" badge when set
+- On edit save, syncs `name`, `phone`, `party_size` to all `event_invitees` rows linked via `contact_id` — editing a contact propagates to all events they've been invited to
+
+#### New helpers (`src/lib/eventHelpers.ts`)
+- `inviteeSummary(invitees)` — `{ confirmed, total, totalPeople, needsTransport }`
+- `equipmentSummary(items)` — `{ arranged, total, byType }`
+- `scaleQty(qty, baseServings, overrideServings)` — scales ingredient quantity, rounds to 2dp
+
+#### i18n
+Added keys in both `he` and `en` under `events.*`:
+- `invitees.*` — add, edit, fromContacts, newGuest, bringsPlaceholder, confirmedCount, peopleCount, transportCount, noDriver, addError, editError, deleteError, emptyHint
+- `equipment.*` — add, addItem, type, label, labelPlaceholder, quantity, notes, arrangedCount, empty, emptyHint, addError, deleteError
+- `recipes.*` — attach, attachRecipe, searchPlaceholder, noResults, defaultServings, changeRecipe, servings, markDessert, mainCourses, desserts, recipeCount, empty, listGenerated, listGenerateError, addError, removeError
+- `shoppingTab.*` — linkList, newList, noListsAvailable, unnamedList, listCount, itemCount, empty, listCreated, linkError, unlinkError, createError
+- `contacts.canDrive`
+
+#### Tests (`src/__tests__/eventLogic.test.ts`) — 25 tests (12 new)
+- `inviteeSummary()`: empty list, confirmed count, party size sum, transport count
+- `equipmentSummary()`: empty list, arranged count, byType quantity sum
+- `scaleQty()`: scale up, scale down, identity, rounding, zero base guard
+
+### ⚠️ Required before testing 6.2
+Run `supabase db push` — migrations 022 and 023 must be applied.
+
+### Manual Testing Checklist — Stage 6.2
+- [ ] **Apply migrations**: `supabase db push` → confirm 022 and 023 show as applied
+- [ ] **Invitees tab** → empty state shown; tap "Add Guest"
+- [ ] **Add from contacts** → select contact → confirm step shows brings field + confirmed/transport toggles → Add → invitee appears with correct name/party size
+- [ ] **Add new guest** → fill all fields including brings → Add → appears with brings shown
+- [ ] **Edit invitee** → pencil → change brings/confirmed → Save → card updates
+- [ ] **Transport: no driver** → toggle bus icon on an invitee → card turns red with "No driver assigned"
+- [ ] **Transport: assign driver** → mark a contact as "can drive" → add them as invitee → red invitee now shows driver dropdown with that contact → select driver → red clears
+- [ ] **Confirmed toggle** → green checkmark appears; summary badge updates
+- [ ] **People count on event card** → add invitees → return to Events list → card shows people badge
+- [ ] **Equipment tab** → add a chair item (qty 4) and a table item → summary shows type counts
+- [ ] **Arrange equipment** → tap checkbox → item gets strikethrough; arranged count updates
+- [ ] **Recipes tab** → attach a recipe → servings stepper works → mark one as dessert → splits into sections
+- [ ] **Generate shopping list** → attach 2 recipes → tap "Generate Shopping List" → new list created in Shopping tab → open list → ingredients present with scaled quantities
+- [ ] **Shopping tab** → link an existing list → item count shown → navigate to list via arrow
+- [ ] **Contacts: can drive** → edit a contact → toggle "Can drive" → save → blue badge appears on contact card
+- [ ] **Contact sync** → edit contact name/party size → open an event where they're invited → invitee row reflects the updated name/party size
 
 ---
 
