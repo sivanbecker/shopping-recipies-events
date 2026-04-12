@@ -205,7 +205,6 @@ function AddRecipeSheet({ eventId, totalPeople, attachedIds, onClose }: AddSheet
 
 async function generateShoppingList(
   eventId: string,
-  eventTitle: string,
   eventRecipes: EventRecipeWithTitle[],
   userId: string,
   listNameTemplate: string
@@ -345,7 +344,7 @@ export default function RecipesTab({ eventId, eventTitle, isOwner, totalPeople }
     setGeneratingList(true)
     try {
       const listName = t('shopping.listName', { eventName: eventTitle })
-      await generateShoppingList(eventId, eventTitle, eventRecipes, user.id, listName)
+      await generateShoppingList(eventId, eventRecipes, user.id, listName)
       queryClient.invalidateQueries({ queryKey: ['event-shopping-lists', eventId] })
       toast.success(t('recipes.listGenerated'))
     } catch {

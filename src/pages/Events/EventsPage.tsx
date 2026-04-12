@@ -153,7 +153,7 @@ export default function EventsPage() {
         .select('*, event_invitees(party_size)')
         .order('date', { ascending: true })
       if (error) throw error
-      return data as EventWithInvitees[]
+      return data as unknown as EventWithInvitees[]
     },
     enabled: !!user,
   })
