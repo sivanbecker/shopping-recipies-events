@@ -271,6 +271,8 @@ Creates all event-related tables in one migration (matches the recipes precedent
 - `event_recipes` — recipes attached to event with `servings_override` and `is_dessert` flag
 - `event_shopping_lists` — shopping lists linked to the event
 - Full RLS on all tables (owner + event_members access); indexes on all FK columns
+- **Migration 020** — rewrote `events_select` to use `IN (SELECT event_id FROM event_members)` instead of unqualified EXISTS
+- **Migration 021** — fixed infinite RLS recursion between `events` and `event_members`: `events_select` is now owner-only (no cross-table reference); `event_members_select` allows self-access + owner access. Same class of bug as migration 006 for shopping_items.
 
 #### TypeScript types (`src/types/database.ts`, `src/types/index.ts`)
 - Replaced old `events` / `event_guests` types with the full new schema
