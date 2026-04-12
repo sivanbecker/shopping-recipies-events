@@ -57,7 +57,17 @@
     "people": "{{count}} people",
     "confirmDelete": "Remove contact?",
     "confirmDeleteHint": "\"{{name}}\" will be removed from your contacts.",
-    "canDrive": "Can drive"
+    "canDrive": "Can drive",
+    "label": "Label",
+    "labelFamily": "Family",
+    "labelFriend": "Friend",
+    "labelNone": "None",
+    "filterAll": "All",
+    "email": "Email",
+    "emailPlaceholder": "email@example.com",
+    "linked": "Linked",
+    "linkSuccess": "Account linked",
+    "linkNotFound": "No account with this email yet"
   },
   "invitees": {
     "add": "Add Guest",

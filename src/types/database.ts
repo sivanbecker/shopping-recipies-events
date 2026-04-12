@@ -269,6 +269,8 @@ export type Database = {
           party_size: number
           linked_user_id: string | null
           can_drive: boolean
+          label: 'family' | 'friend' | null
+          email: string | null
           created_at: string
         }
         Insert: {
@@ -279,6 +281,8 @@ export type Database = {
           party_size?: number
           linked_user_id?: string | null
           can_drive?: boolean
+          label?: 'family' | 'friend' | null
+          email?: string | null
           created_at?: string
         }
         Update: {
@@ -287,6 +291,8 @@ export type Database = {
           party_size?: number
           linked_user_id?: string | null
           can_drive?: boolean
+          label?: 'family' | 'friend' | null
+          email?: string | null
         }
         Relationships: []
       }
