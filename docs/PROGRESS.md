@@ -3,6 +3,11 @@
 ## Stage 0 — Scaffold — COMPLETE (committed to `main`)
 Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migrations, CI, Vercel.
 
+### CI improvements (PR #28)
+- Added `build` job to `.github/workflows/ci.yml` — runs `npm run build` (`tsc -b && vite build`) on every PR and push to `main`
+- Blocks merge if TypeScript or bundler errors are present, preventing broken deploys from reaching Vercel
+- Also fixed 9 TypeScript errors that had been silently slipping through (missing prop pass, wrong property access, undefined not narrowed, Supabase FK type gaps)
+
 ---
 
 ## Stage 1 — Authentication & User Profiles — COMPLETE (committed to `main`)
