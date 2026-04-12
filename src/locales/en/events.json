@@ -1,18 +1,62 @@
 {
   "title": "Events",
   "new": "New Event",
+  "edit": "Edit Event",
+  "save": "Save",
+  "cancel": "Cancel",
+  "create": "Create",
+  "delete": "Delete",
+  "confirmDelete": "Delete event?",
+  "confirmDeleteHint": "This will permanently delete \"{{name}}\" and all its data.",
+  "pastEvents": "Past Events",
   "countdown": {
     "today": "Today!",
     "tomorrow": "Tomorrow",
     "daysLeft": "{{count}} days to go",
     "daysAgo": "{{count}} days ago"
   },
+  "form": {
+    "title": "Event name",
+    "titlePlaceholder": "e.g. Friday dinner, Birthday party",
+    "date": "Date & time",
+    "location": "Location",
+    "locationPlaceholder": "e.g. Home, Park, Restaurant",
+    "notes": "Notes",
+    "notesPlaceholder": "Any additional notes...",
+    "photoAlbum": "Photo album link",
+    "photoAlbumPlaceholder": "Paste Google Photos / iCloud link"
+  },
   "sections": {
     "overview": "Overview",
-    "guests": "Guests",
-    "checklist": "Checklist",
+    "invitees": "Invitees",
+    "equipment": "Equipment",
     "recipes": "Recipes",
     "shopping": "Shopping"
+  },
+  "detail": {
+    "location": "Location",
+    "notes": "Notes",
+    "photoAlbum": "Photo Album",
+    "openAlbum": "Open album",
+    "comingSoon": "Coming soon in next update"
+  },
+  "contacts": {
+    "title": "Contacts",
+    "add": "Add Contact",
+    "edit": "Edit Contact",
+    "name": "Name",
+    "namePlaceholder": "e.g. The Cohen family",
+    "phone": "Phone",
+    "phonePlaceholder": "Phone number",
+    "partySize": "Group size",
+    "partySizeHint": "How many people this contact represents",
+    "empty": "No contacts yet",
+    "emptyHint": "Add your family & friends to quickly invite them to events",
+    "manage": "Manage Contacts",
+    "person": "{{count}} person",
+    "people": "{{count}} people",
+    "confirmDelete": "Remove contact?",
+    "confirmDeleteHint": "\"{{name}}\" will be removed from your contacts."
   },
   "guests": {
     "add": "Add guest",

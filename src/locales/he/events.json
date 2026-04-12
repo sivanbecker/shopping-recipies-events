@@ -1,18 +1,62 @@
 {
   "title": "אירועים",
   "new": "אירוע חדש",
+  "edit": "עריכת אירוע",
+  "save": "שמור",
+  "cancel": "ביטול",
+  "create": "צור",
+  "delete": "מחק",
+  "confirmDelete": "למחוק את האירוע?",
+  "confirmDeleteHint": "פעולה זו תמחק לצמיתות את \"{{name}}\" וכל המידע שלו.",
+  "pastEvents": "אירועים שעברו",
   "countdown": {
     "today": "היום!",
     "tomorrow": "מחר",
     "daysLeft": "עוד {{count}} ימים",
     "daysAgo": "לפני {{count}} ימים"
   },
+  "form": {
+    "title": "שם האירוע",
+    "titlePlaceholder": "למשל ארוחת שישי, מסיבת יום הולדת",
+    "date": "תאריך ושעה",
+    "location": "מיקום",
+    "locationPlaceholder": "למשל בית, פארק, מסעדה",
+    "notes": "הערות",
+    "notesPlaceholder": "הערות נוספות...",
+    "photoAlbum": "קישור לאלבום תמונות",
+    "photoAlbumPlaceholder": "הדביקו קישור Google Photos / iCloud"
+  },
   "sections": {
     "overview": "סקירה",
-    "guests": "אורחים",
-    "checklist": "צ'קליסט",
+    "invitees": "מוזמנים",
+    "equipment": "ציוד",
     "recipes": "מתכונים",
     "shopping": "קניות"
+  },
+  "detail": {
+    "location": "מיקום",
+    "notes": "הערות",
+    "photoAlbum": "אלבום תמונות",
+    "openAlbum": "פתח אלבום",
+    "comingSoon": "בקרוב בעדכון הבא"
+  },
+  "contacts": {
+    "title": "אנשי קשר",
+    "add": "הוסף איש קשר",
+    "edit": "ערוך איש קשר",
+    "name": "שם",
+    "namePlaceholder": "למשל משפחת כהן",
+    "phone": "טלפון",
+    "phonePlaceholder": "מספר טלפון",
+    "partySize": "גודל קבוצה",
+    "partySizeHint": "כמה אנשים איש הקשר מייצג",
+    "empty": "אין אנשי קשר",
+    "emptyHint": "הוסיפו משפחה וחברים כדי להזמין אותם בקלות לאירועים",
+    "manage": "ניהול אנשי קשר",
+    "person": "אדם {{count}}",
+    "people": "{{count}} אנשים",
+    "confirmDelete": "להסיר איש קשר?",
+    "confirmDeleteHint": "\"{{name}}\" יוסר מאנשי הקשר שלך."
   },
   "guests": {
     "add": "הוסף אורח",
@@ -40,5 +84,5 @@
     "listName": "קניות — {{eventName}}"
   },
   "empty": "אין אירועים מתוכננים",
-  "emptyHint": "לחץ על + כדי לתכנן אירוע"
+  "emptyHint": "לחצו על + כדי לתכנן אירוע"
 }

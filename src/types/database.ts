@@ -260,6 +260,57 @@ export type Database = {
         }
         Relationships: []
       }
+      contacts: {
+        Row: {
+          id: string
+          owner_id: string
+          name: string
+          phone: string | null
+          party_size: number
+          linked_user_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          name: string
+          phone?: string | null
+          party_size?: number
+          linked_user_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          name?: string
+          phone?: string | null
+          party_size?: number
+          linked_user_id?: string | null
+        }
+        Relationships: []
+      }
+      host_inventory: {
+        Row: {
+          id: string
+          owner_id: string
+          item_type: string
+          label: string
+          quantity_owned: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          item_type: string
+          label: string
+          quantity_owned?: number
+          created_at?: string
+        }
+        Update: {
+          item_type?: string
+          label?: string
+          quantity_owned?: number
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           id: string
@@ -268,6 +319,11 @@ export type Database = {
           location: string | null
           owner_id: string
           notes: string | null
+          photo_album_url: string | null
+          retro_enough_food: string | null
+          retro_what_went_wrong: string | null
+          retro_what_went_well: string | null
+          retro_remember_next_time: string | null
           created_at: string
         }
         Insert: {
@@ -277,6 +333,11 @@ export type Database = {
           location?: string | null
           owner_id: string
           notes?: string | null
+          photo_album_url?: string | null
+          retro_enough_food?: string | null
+          retro_what_went_wrong?: string | null
+          retro_what_went_well?: string | null
+          retro_remember_next_time?: string | null
           created_at?: string
         }
         Update: {
@@ -284,38 +345,122 @@ export type Database = {
           date?: string
           location?: string | null
           notes?: string | null
+          photo_album_url?: string | null
+          retro_enough_food?: string | null
+          retro_what_went_wrong?: string | null
+          retro_what_went_well?: string | null
+          retro_remember_next_time?: string | null
         }
         Relationships: []
       }
-      event_guests: {
+      event_members: {
         Row: {
           id: string
           event_id: string
-          name: string
-          phone: string | null
-          needs_transport: boolean
-          transport_by_guest_id: string | null
-          confirmed: boolean
-          brings: string | null
+          user_id: string
+          role: 'owner' | 'editor' | 'viewer'
         }
         Insert: {
           id?: string
           event_id: string
+          user_id: string
+          role?: 'owner' | 'editor' | 'viewer'
+        }
+        Update: {
+          role?: 'owner' | 'editor' | 'viewer'
+        }
+        Relationships: []
+      }
+      event_invitees: {
+        Row: {
+          id: string
+          event_id: string
+          contact_id: string | null
+          name: string
+          phone: string | null
+          party_size: number
+          confirmed: boolean
+          brings: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          contact_id?: string | null
           name: string
           phone?: string | null
-          needs_transport?: boolean
-          transport_by_guest_id?: string | null
+          party_size?: number
           confirmed?: boolean
           brings?: string | null
+          created_at?: string
         }
         Update: {
           name?: string
           phone?: string | null
-          needs_transport?: boolean
-          transport_by_guest_id?: string | null
+          party_size?: number
           confirmed?: boolean
           brings?: string | null
         }
+        Relationships: []
+      }
+      event_equipment: {
+        Row: {
+          id: string
+          event_id: string
+          item_type: string
+          quantity_needed: number
+          is_default: boolean
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          item_type: string
+          quantity_needed?: number
+          is_default?: boolean
+          notes?: string | null
+        }
+        Update: {
+          item_type?: string
+          quantity_needed?: number
+          is_default?: boolean
+          notes?: string | null
+        }
+        Relationships: []
+      }
+      event_recipes: {
+        Row: {
+          id: string
+          event_id: string
+          recipe_id: string
+          servings_override: number | null
+          is_dessert: boolean
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          recipe_id: string
+          servings_override?: number | null
+          is_dessert?: boolean
+        }
+        Update: {
+          servings_override?: number | null
+          is_dessert?: boolean
+        }
+        Relationships: []
+      }
+      event_shopping_lists: {
+        Row: {
+          id: string
+          event_id: string
+          list_id: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          list_id: string
+        }
+        Update: Record<string, never>
         Relationships: []
       }
       list_members: {
