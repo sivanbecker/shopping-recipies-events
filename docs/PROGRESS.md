@@ -256,6 +256,86 @@ See [PROJECT_PLAN.md](PROJECT_PLAN.md) for the full plan.
 
 ---
 
+## Stage 6 — Events
+
+### 6.1 — Events CRUD + Contacts — COMPLETE (branch: `feat/stage-6.1-events-crud`)
+
+#### DB Migration (`supabase/migrations/019_events_schema.sql`)
+Creates all event-related tables in one migration (matches the recipes precedent):
+- `contacts` — per-user reusable guest contact list with `name`, `phone`, `party_size` (how many people this contact represents), `linked_user_id` (optional app account)
+- `host_inventory` — global per-user equipment inventory (`item_type`, `label`, `quantity_owned`) — feeds the equipment calculator in 6.3
+- `events` — core event record: `title`, `date`, `location`, `owner_id`, `notes`, `photo_album_url`, plus 4 post-event retrospective fields (`retro_enough_food`, `retro_what_went_wrong`, `retro_what_went_well`, `retro_remember_next_time`)
+- `event_members` — app users invited to collaborate on the event (role: editor/viewer)
+- `event_invitees` — per-event guest list: can reference a `contact` (via `contact_id`) or be a one-time guest; includes `party_size`, `confirmed`, `brings`
+- `event_equipment` — per-event equipment needs with `quantity_needed`, `is_default` flag (napkins, foldable table always added)
+- `event_recipes` — recipes attached to event with `servings_override` and `is_dessert` flag
+- `event_shopping_lists` — shopping lists linked to the event
+- Full RLS on all tables (owner + event_members access); indexes on all FK columns
+
+#### TypeScript types (`src/types/database.ts`, `src/types/index.ts`)
+- Replaced old `events` / `event_guests` types with the full new schema
+- Added convenience types: `Contact`, `HostInventoryItem`, `EventMember`, `EventInvitee`, `EventEquipment`, `EventRecipe`, `EventShoppingList`
+- Added enriched types: `EventWithCounts`, `EventRole`
+
+#### UI
+- **`EventsPage`** — replaces the "Stage 6 — Coming soon" stub:
+  - Upcoming event cards showing title, countdown badge (Today! / Tomorrow / N days to go), date, location
+  - Collapsible "Past events" section with count badge
+  - Owner-only delete with inline confirmation dialog
+  - "New Event" FAB (purple)
+- **`NewEventDialog`** — create/edit bottom sheet:
+  - Fields: title (required), date+time (required), location, notes, photo album URL
+  - Reused for edit mode from the EventDetailPage header
+- **`EventDetailPage`** — replaces the placeholder:
+  - Overview card: title, countdown badge, date, location, notes, photo album link (opens in new tab)
+  - Edit (pencil) + Delete (trash) owner-only buttons in header
+  - Tab bar: Invitees / Equipment / Recipes / Shopping (stubs showing "coming soon" — filled in subtasks 6.2–6.4)
+- **`ContactsPage`** (`/contacts` route) — full CRUD for reusable guest contacts:
+  - Contact cards: name, party size, phone
+  - Add/edit bottom sheet with name, phone, party size stepper
+  - Delete with inline confirmation
+  - Accessible from Profile page via "Manage Contacts" card (with Users icon)
+- **`ProfilePage`** — added "Manage Contacts" link card above Sign Out
+
+#### Event helpers (`src/lib/eventHelpers.ts`)
+- `countdownLabel(date)` — returns `{ key, params }` for i18n interpolation (wraps existing `daysUntil`)
+- `isUpcoming(event)` — true when event date is today or in the future
+- `sortEventsByDate(events)` — upcoming sorted ascending (nearest first), past sorted descending (most recent first)
+
+#### i18n
+Added keys to both `he` and `en` under `events.*`:
+- Form fields: `form.title`, `form.date`, `form.location`, `form.notes`, `form.photoAlbum`
+- Detail: `detail.location`, `detail.openAlbum`, `detail.comingSoon`
+- Actions: `edit`, `save`, `cancel`, `create`, `delete`, `confirmDelete`, `confirmDeleteHint`
+- Contacts: `contacts.title`, `contacts.add`, `contacts.edit`, `contacts.name`, `contacts.phone`, `contacts.partySize`, `contacts.partySizeHint`, `contacts.empty`, `contacts.emptyHint`, `contacts.manage`, `contacts.person`, `contacts.people`, `contacts.confirmDelete`, `contacts.confirmDeleteHint`
+- `pastEvents` section label
+
+#### Tests (`src/__tests__/eventLogic.test.ts`) — 13 tests
+- `countdownLabel()`: today, tomorrow, N days left, N days ago, far-future
+- `isUpcoming()`: today, future, past
+- `sortEventsByDate()`: empty input, upcoming nearest-first, past most-recent-first, upcoming before past, immutability
+
+### ⚠️ Required before testing
+Run `supabase db push` (or apply migration 019 via the Supabase dashboard) — the new tables and RLS policies must exist in the DB before the app can read/write events or contacts.
+
+### Manual Testing Checklist — Stage 6.1
+- [ ] **Apply migration**: `supabase db push` → confirm 019 shows as applied
+- [ ] **Events page** → shows "No upcoming events" empty state
+- [ ] **Create event** → tap FAB → fill title + date/time → Create → card appears with correct countdown
+- [ ] **Countdown** → set date = today → shows "Today!"; date = tomorrow → "Tomorrow"; date = in 5 days → "5 days to go"; past date → "X days ago"
+- [ ] **Location + notes** → fill all fields → appear on detail page
+- [ ] **Photo album URL** → paste a URL → detail page shows "Open album" link that opens in new tab
+- [ ] **Edit event** → pencil icon → change title/date → Save → card and detail update
+- [ ] **Delete event** → trash icon → confirm → event removed from list
+- [ ] **Past events** → create event with past date → does NOT appear in upcoming; tap "Past Events" toggle → shows in collapsed section
+- [ ] **Contacts** → Profile → "Manage Contacts" → empty state
+- [ ] **Add contact** → tap FAB → name "Cohen Family", party size 4, phone → Create → card shows name, "4 people", phone
+- [ ] **Edit contact** → pencil → change party size to 3 → Save → card updates
+- [ ] **Delete contact** → trash → confirm → removed
+- [ ] **Party size stepper** → − button can't go below 1
+
+---
+
 ## Dark Mode — COMPLETE (branch: `feat/dark-mode`, pending merge)
 
 ### Approach
