@@ -433,6 +433,7 @@ Skipped rows are downloadable as a CSV for correction and re-import.
 - [ ] Insert row into `list_members` with role `editor`
 - [ ] Display current members with role badges
 - [ ] Remove member option (owner only)
+- [ ] Contact picker in share dialog — see **4.7** below
 
 #### 4.2 — Supabase Realtime Subscriptions ✅ COMPLETE
 - [x] Subscribe to `shopping_items` changes (INSERT / UPDATE / DELETE) when a list is opened
@@ -524,6 +525,34 @@ Moved and expanded — see Stage 4.5 below.
 
 **DB changes**
 - None. `added_by` is already on `shopping_items` and `members` data is already fetched.
+
+#### 4.7 — Contact-Based Sharing Suggestions
+
+> **Goal:** When sharing any entity (list, event), the user can pick from their named contacts instead of typing raw emails. Contacts with a linked system account are shared directly; others show their stored email as a fallback.
+
+**UX flow — share dialog**
+- Above the manual email input, render a scrollable chip-row (or inline typeahead) of the user's contacts
+- Each chip shows: name, label badge (`Family` / `Friend`), and a "linked" icon if `linked_user_id` is set
+- Tapping a chip:
+  - If the contact has `linked_user_id` → use that user ID / their profile email directly
+  - Else if the contact has a stored `email` → auto-fill the email input field
+  - Else → auto-fill with nothing (user must type manually)
+- The manual email input remains fully functional as a fallback for ad-hoc shares
+- Filter chips in real-time as the user types in the email field (fuzzy match on name)
+
+**Entities where contact suggestions apply**
+| Entity | Where |
+|---|---|
+| Shopping list | `ShareListDialog` (Stage 4.1) |
+| Event | Event members invite dialog (Stage 6.3) |
+
+**DB changes**
+- None beyond what is added in Stage 6.7
+
+**Implementation notes**
+- Load contacts via `useQuery(['contacts', user.id])` — already used in ContactsPage; reuse the same query key
+- Component: `<ContactPicker onSelect={(contact) => …} />` — shared between list and event share dialogs
+- If a contact's `linked_user_id` is set, skip email lookup and call the share mutation directly with `user_id`
 
 #### Stage 4 Manual Testing Checklist
 - [x] Open the same list on two browser tabs → add item in one → appears in the other within 1 second
@@ -735,6 +764,73 @@ Moved and expanded — see Stage 4.5 below.
 - **Inline "You have X" badge** on each item row when the host owns > 0 of that type
 - Deduction formula: `stillNeed = Math.max(0, quantity_needed - quantity_owned)`
 
+#### 6.7 — Contacts Enhancements
+
+> **Goal:** Make contacts richer and smarter — label them by relationship, optionally link them to an existing app account, and let the sharing flow use names instead of bare emails.
+
+##### 6.7.1 — Contact Labels (Family / Friend)
+
+**DB change — migration 024**
+```sql
+ALTER TABLE contacts
+  ADD COLUMN label text CHECK (label IN ('family', 'friend'));
+```
+- Nullable — no label means "unclassified"
+
+**UI changes**
+- `ContactForm`: add a three-way pill toggle below the Name field — **None / Family / Friend**
+- `ContactRow`: show a colored badge next to the name
+  - `Family` → warm amber/orange
+  - `Friend` → teal/green
+- `ContactsPage`: add a filter bar at the top — **All / Family / Friend** — filters the visible list client-side
+
+**Type changes**
+- `Contact` type: add `label: 'family' | 'friend' | null`
+- `database.ts`: update `contacts` Row / Insert / Update to include `label`
+
+---
+
+##### 6.7.2 — Link Contact to System Account
+
+> When the user provides an email address for a contact, the app checks if an account with that email exists and stores the link. This enables one-tap sharing later.
+
+**DB change — migration 024 (same migration as label)**
+```sql
+ALTER TABLE contacts
+  ADD COLUMN email text;
+```
+- Stored locally on the contact even if no account is found (for future use or display)
+- `linked_user_id` column already exists on the `contacts` table (added in migration 019)
+
+**UI changes — ContactForm**
+- Add an optional **Email** field below the Phone field
+- On save (not on blur, to avoid noisy requests):
+  1. If email is non-empty, call `find_user_by_email(email)` (RPC from migration 005)
+  2. If a user is found → set `linked_user_id` to that user's ID
+  3. If not found → set `linked_user_id` to `null`, still save the email
+- Show inline feedback: "Account linked ✓" or "No account with this email yet"
+
+**ContactRow display**
+- If `linked_user_id` is set: show a small "Linked" chip (purple, with a chain-link icon)
+- If `email` is set but no `linked_user_id`: show the email in small grey text below the name (similar to phone)
+
+**Type changes**
+- `Contact` type: add `email: string | null`
+- `database.ts`: update `contacts` Row / Insert / Update to include `email`
+
+---
+
+##### 6.7.3 — Share by Contact Name (wired up in 4.7)
+
+The `ContactPicker` component required for list/event sharing is specified in **Stage 4.7**. This sub-section only notes what the contacts data model must expose for it to work:
+
+- `contacts.linked_user_id` — used to share directly without an email lookup
+- `contacts.email` — fallback when no account is linked
+- `contacts.label` — used for filter chips in the picker (`All / Family / Friend`)
+- `contacts.name` — primary display text in the picker
+
+---
+
 #### Stage 6 Manual Testing Checklist
 - [ ] Create an event set for next week → countdown shows correct number of days
 - [ ] Add 5 guests, mark 2 as needing transport, assign a driver to each
@@ -744,11 +840,19 @@ Moved and expanded — see Stage 4.5 below.
 - [ ] Link an existing shopping list to the event → it shows in the Shopping section
 - [ ] Past events appear in the past section
 - [ ] Countdown updates correctly relative to today
+- [ ] Add a contact with label "Family" → amber badge appears on the contact row
+- [ ] Add a contact with label "Friend" → teal badge appears
+- [ ] Filter contacts by "Family" → only family contacts shown; "All" restores full list
+- [ ] Add a contact with a valid registered email → "Account linked ✓" appears and linked chip shows on the row
+- [ ] Add a contact with an unknown email → "No account with this email yet" feedback; email still saved
+- [ ] Open share dialog for a list → contact chips appear; tapping a linked contact shares without typing an email
+- [ ] Tapping an unlinked contact with an email auto-fills the email field
 
 #### Automated Tests
 - [ ] Unit: countdown calculation (days until a given date)
 - [ ] Unit: shopping list merge/deduplication logic for the combined list generator
 - [ ] Unit: transport assignment options only include available people
+- [ ] Unit: ContactPicker — filters by label correctly, linked contacts skip email lookup
 - [ ] E2E: Create event → add guests → attach recipe → generate shopping list → verify
 
 ---
