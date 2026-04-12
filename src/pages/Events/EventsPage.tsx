@@ -2,18 +2,29 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Plus, Calendar, ChevronDown, ChevronUp, Loader2, MapPin, Trash2 } from 'lucide-react'
+import {
+  Plus,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  MapPin,
+  Trash2,
+  Users,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { countdownLabel, isUpcoming } from '@/lib/eventHelpers'
-import type { Event } from '@/types'
+import type { Event, EventInvitee } from '@/types'
+
+type EventWithInvitees = Event & { event_invitees: Pick<EventInvitee, 'party_size'>[] }
 import NewEventDialog from './NewEventDialog'
 
 // ─── EventCard ───────────────────────────────────────────────────────────────
 
-function EventCard({ event }: { event: Event }) {
+function EventCard({ event }: { event: EventWithInvitees }) {
   const { t, i18n } = useTranslation('events')
   const { user } = useAuth()
   const queryClient = useQueryClient()
@@ -61,6 +72,14 @@ function EventCard({ event }: { event: Event }) {
             <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
               <MapPin className="h-3 w-3" />
               {event.location}
+            </span>
+          )}
+          {event.event_invitees.length > 0 && (
+            <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+              <Users className="h-3 w-3" />
+              {t('invitees.peopleCount', {
+                count: event.event_invitees.reduce((s, i) => s + i.party_size, 0),
+              })}
             </span>
           )}
         </Link>
@@ -126,15 +145,15 @@ export default function EventsPage() {
     isLoading,
     isError,
     error,
-  } = useQuery<Event[]>({
+  } = useQuery<EventWithInvitees[]>({
     queryKey: ['events', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('events')
-        .select('*')
+        .select('*, event_invitees(party_size)')
         .order('date', { ascending: true })
       if (error) throw error
-      return data as Event[]
+      return data as EventWithInvitees[]
     },
     enabled: !!user,
   })

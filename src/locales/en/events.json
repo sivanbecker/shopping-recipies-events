@@ -56,10 +56,12 @@
     "person": "{{count}} person",
     "people": "{{count}} people",
     "confirmDelete": "Remove contact?",
-    "confirmDeleteHint": "\"{{name}}\" will be removed from your contacts."
+    "confirmDeleteHint": "\"{{name}}\" will be removed from your contacts.",
+    "canDrive": "Can drive"
   },
   "invitees": {
     "add": "Add Guest",
+    "edit": "Edit Guest",
     "fromContacts": "From Contacts",
     "newGuest": "New Guest",
     "bringsPlaceholder": "e.g. Dessert, drinks…",
@@ -69,6 +71,7 @@
     "empty": "No guests added yet",
     "emptyHint": "Tap \"Add Guest\" to start building your guest list",
     "addError": "Failed to add guest",
+    "editError": "Failed to save changes",
     "deleteError": "Failed to remove guest"
   },
   "equipment": {

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Plus, Pencil, Trash2, Loader2, Users, Phone, UserPlus } from 'lucide-react'
+import { ArrowLeft, Plus, Pencil, Trash2, Loader2, Users, Phone, UserPlus, Car } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
@@ -24,6 +24,7 @@ function ContactForm({ onClose, contact }: ContactFormProps) {
   const [name, setName] = useState(contact?.name ?? '')
   const [phone, setPhone] = useState(contact?.phone ?? '')
   const [partySize, setPartySize] = useState(contact?.party_size ?? 1)
+  const [canDrive, setCanDrive] = useState(contact?.can_drive ?? false)
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -34,21 +35,30 @@ function ContactForm({ onClose, contact }: ContactFormProps) {
             name: name.trim(),
             phone: phone.trim() || null,
             party_size: partySize,
+            can_drive: canDrive,
           })
           .eq('id', contact!.id)
         if (error) throw error
+        // Sync name, phone, party_size to any invitees created from this contact
+        await supabase
+          .from('event_invitees')
+          .update({ name: name.trim(), phone: phone.trim() || null, party_size: partySize })
+          .eq('contact_id', contact!.id)
       } else {
         const { error } = await supabase.from('contacts').insert({
           owner_id: user!.id,
           name: name.trim(),
           phone: phone.trim() || null,
           party_size: partySize,
+          can_drive: canDrive,
         })
         if (error) throw error
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contacts'] })
+      // Refresh all event-invitees caches so InviteesTab picks up changes
+      queryClient.invalidateQueries({ queryKey: ['event-invitees'] })
       onClose()
     },
     onError: () => toast.error('Failed to save contact'),
@@ -117,6 +127,20 @@ function ContactForm({ onClose, contact }: ContactFormProps) {
               </span>
             </div>
           </div>
+
+          {/* Can drive toggle */}
+          <button
+            type="button"
+            onClick={() => setCanDrive(v => !v)}
+            className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition ${
+              canDrive
+                ? 'border-blue-400 bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                : 'border-gray-200 text-gray-500 dark:border-gray-600 dark:text-gray-400'
+            }`}
+          >
+            <Car className="h-4 w-4" />
+            {t('contacts.canDrive')}
+          </button>
         </div>
 
         <div className="mt-5 flex justify-end gap-2">
@@ -159,9 +183,17 @@ function ContactRow({ contact, onEdit }: { contact: Contact; onEdit: (c: Contact
     <>
       <div className="flex items-center justify-between rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
         <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="truncate font-semibold text-gray-800 dark:text-gray-100">
-            {contact.name}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="truncate font-semibold text-gray-800 dark:text-gray-100">
+              {contact.name}
+            </span>
+            {contact.can_drive && (
+              <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+                <Car className="mr-0.5 inline h-3 w-3" />
+                {t('contacts.canDrive')}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
             <span className="flex items-center gap-1">
               <Users className="h-3 w-3" />

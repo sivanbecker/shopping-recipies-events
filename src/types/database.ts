@@ -268,6 +268,7 @@ export type Database = {
           phone: string | null
           party_size: number
           linked_user_id: string | null
+          can_drive: boolean
           created_at: string
         }
         Insert: {
@@ -277,6 +278,7 @@ export type Database = {
           phone?: string | null
           party_size?: number
           linked_user_id?: string | null
+          can_drive?: boolean
           created_at?: string
         }
         Update: {
@@ -284,6 +286,7 @@ export type Database = {
           phone?: string | null
           party_size?: number
           linked_user_id?: string | null
+          can_drive?: boolean
         }
         Relationships: []
       }

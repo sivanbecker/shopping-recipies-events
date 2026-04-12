@@ -56,10 +56,12 @@
     "person": "אדם {{count}}",
     "people": "{{count}} אנשים",
     "confirmDelete": "להסיר איש קשר?",
-    "confirmDeleteHint": "\"{{name}}\" יוסר מאנשי הקשר שלך."
+    "confirmDeleteHint": "\"{{name}}\" יוסר מאנשי הקשר שלך.",
+    "canDrive": "יכול להסיע"
   },
   "invitees": {
     "add": "הוסף אורח",
+    "edit": "עריכת אורח",
     "fromContacts": "מאנשי קשר",
     "newGuest": "אורח חדש",
     "bringsPlaceholder": "למשל קינוח, שתייה...",
@@ -69,6 +71,7 @@
     "empty": "אין מוזמנים עדיין",
     "emptyHint": "לחצו \"הוסף אורח\" כדי להתחיל לבנות את רשימת המוזמנים",
     "addError": "הוספת האורח נכשלה",
+    "editError": "שמירת השינויים נכשלה",
     "deleteError": "הסרת האורח נכשלה"
   },
   "equipment": {
