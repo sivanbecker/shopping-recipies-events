@@ -79,6 +79,13 @@
       "saved": "ציוד הבית עודכן"
     }
   },
+  "header": {
+    "myProfile": "הפרופיל שלי",
+    "faq": "שאלות נפוצות",
+    "contactSupport": "צור קשר עם תמיכה",
+    "reportBug": "דווח על תקלה",
+    "giveFeedback": "שלח משוב"
+  },
   "validation": {
     "required": "שדה חובה",
     "invalidEmail": "כתובת אימייל לא תקינה",
