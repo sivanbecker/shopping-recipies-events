@@ -1,6 +1,6 @@
 # Project Progress
 
-## Stage 1.5 — Social Login (Google OAuth) — COMPLETE (committed to `main`)
+## Stage 1.5 — Social Login (Google OAuth) + Google Profile Picture — COMPLETE (committed to `main`)
 
 - **Google sign-in button** — added to `AuthPage` above the login/register tabs with an "or" divider; visible in both Login and Register views, hidden on Forgot Password view.
 - **`GoogleIcon`** — inline SVG component (`src/components/icons/GoogleIcon.tsx`) using the official Google "G" four-colour logo; no external image dependency.
@@ -8,6 +8,7 @@
 - **Session pickup** — `useEffect` in `AuthPage` watches `user` from `useAuth()` and navigates to `/lists` once the OAuth session is established.
 - **i18n** — added `auth.continueWithGoogle` and `auth.orDivider` to both `he/common.json` and `en/common.json`.
 - **Test fix** — `App.test.tsx` smoke test now wraps `AuthPage` in `AuthProvider` (required because `AuthPage` now calls `useAuth()`).
+- **Google profile picture** — `UserAvatar` now accepts an optional `avatarUrl` prop; renders a real `<img>` when the URL is present, falls back to the boring-avatar on load error or when absent. Migration 025 adds `avatar_url` to the `profiles` table and updates the `handle_new_user` trigger to capture Google's photo on sign-up; `get_list_members` RPC updated to return `avatar_url` so all member avatars (AvatarStack, ShareListDialog, ListDetailPage) also show real photos.
 - **PROJECT_PLAN.md** — added Stage 1.5 section with tasks and manual testing checklist; updated tech stack row and stage summary table.
 
 ---

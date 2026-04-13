@@ -146,7 +146,12 @@ export function ShareListDialog({ listId, onClose }: Props) {
             <ul className="space-y-2">
               {members.map(member => (
                 <li key={member.id} className="flex items-center gap-2">
-                  <UserAvatar userId={member.user_id} displayName={member.display_name} size={32} />
+                  <UserAvatar
+                    userId={member.user_id}
+                    displayName={member.display_name}
+                    avatarUrl={member.avatar_url}
+                    size={32}
+                  />
                   <span className="min-w-0 flex-1 truncate text-sm font-medium text-gray-800 dark:text-gray-100">
                     {member.display_name ?? member.user_id.slice(0, 8)}
                   </span>

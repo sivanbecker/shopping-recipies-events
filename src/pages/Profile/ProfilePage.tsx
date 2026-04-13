@@ -130,7 +130,12 @@ export default function ProfilePage() {
       {/* Profile card */}
       <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
         <div className="flex items-center gap-4">
-          <UserAvatar userId={user?.id ?? ''} displayName={profile?.display_name} size={56} />
+          <UserAvatar
+            userId={user?.id ?? ''}
+            displayName={profile?.display_name}
+            avatarUrl={profile?.avatar_url}
+            size={56}
+          />
           <div className="min-w-0 flex-1">
             {editingName ? (
               <div className="flex items-center gap-2">
