@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { ShoppingCart, Moon, Sun } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAppStore } from '@/store/useAppStore'
+import { ProfileDropdown } from './ProfileDropdown'
 
 const pageTitles: Record<string, { he: string; en: string }> = {
   '/lists': { he: 'רשימות קניות', en: 'Shopping Lists' },
@@ -58,6 +59,8 @@ export function Header() {
           >
             {isHebrew ? 'EN' : 'עב'}
           </button>
+
+          <ProfileDropdown />
         </div>
       </div>
     </header>

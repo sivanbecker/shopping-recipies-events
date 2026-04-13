@@ -79,6 +79,13 @@
       "saved": "Host equipment updated"
     }
   },
+  "header": {
+    "myProfile": "My Profile",
+    "faq": "FAQ",
+    "contactSupport": "Contact Support",
+    "reportBug": "Report a Bug",
+    "giveFeedback": "Give Feedback"
+  },
   "validation": {
     "required": "This field is required",
     "invalidEmail": "Invalid email address",
