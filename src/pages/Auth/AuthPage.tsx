@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { loginSchema, registerSchema, type LoginData, type RegisterData } from '@/lib/schemas'
 import { GoogleIcon } from '@/components/icons/GoogleIcon'
+import { useAuth } from '@/hooks/useAuth'
 
 type View = 'login' | 'register' | 'forgot'
 
@@ -22,6 +23,14 @@ export default function AuthPage() {
   const [forgotEmail, setForgotEmail] = useState('')
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const { user } = useAuth()
+
+  // Redirect to app once session is established (handles OAuth callback)
+  useEffect(() => {
+    if (user) {
+      navigate('/lists', { replace: true })
+    }
+  }, [user, navigate])
 
   const loginForm = useForm<LoginData>({ resolver: zodResolver(loginSchema) })
   const registerForm = useForm<RegisterData>({ resolver: zodResolver(registerSchema) })
@@ -60,7 +69,7 @@ export default function AuthPage() {
     setLoading(true)
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/lists' },
+      options: { redirectTo: window.location.origin + '/auth' },
     })
     if (error) {
       toast.error(error.message)

@@ -238,7 +238,7 @@ event_shopping_lists (id, event_id FK, list_id FK)
 - [ ] Enable Google OAuth provider in Supabase Dashboard (Authentication → Providers → Google)
 - [ ] Create OAuth credentials in Google Cloud Console (OAuth 2.0 Client ID)
 - [ ] Add Google Client ID and Client Secret to Supabase provider settings
-- [ ] Configure the authorized redirect URI from Supabase in Google Cloud Console
+- [ ] Configure the authorized redirect URI from Supabase in Google Cloud Console (should be `{your-app-url}/auth`)
 
 #### 1.5.2 — Google Sign-In Button
 - [ ] Add `GoogleIcon` SVG component (`src/components/icons/GoogleIcon.tsx`)
