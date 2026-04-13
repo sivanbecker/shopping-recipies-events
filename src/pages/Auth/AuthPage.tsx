@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
@@ -7,6 +7,8 @@ import { ShoppingCart, Loader2, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase, isSupabaseConfigured } from '@/lib/supabase'
 import { loginSchema, registerSchema, type LoginData, type RegisterData } from '@/lib/schemas'
+import { GoogleIcon } from '@/components/icons/GoogleIcon'
+import { useAuth } from '@/hooks/useAuth'
 
 type View = 'login' | 'register' | 'forgot'
 
@@ -21,6 +23,14 @@ export default function AuthPage() {
   const [forgotEmail, setForgotEmail] = useState('')
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const { user } = useAuth()
+
+  // Redirect to app once session is established (handles OAuth callback)
+  useEffect(() => {
+    if (user) {
+      navigate('/lists', { replace: true })
+    }
+  }, [user, navigate])
 
   const loginForm = useForm<LoginData>({ resolver: zodResolver(loginSchema) })
   const registerForm = useForm<RegisterData>({ resolver: zodResolver(registerSchema) })
@@ -52,6 +62,18 @@ export default function AuthPage() {
     } else {
       toast.success(t('auth.registerSuccess'))
       navigate('/lists', { replace: true })
+    }
+  }
+
+  async function handleGoogleLogin() {
+    setLoading(true)
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin + '/auth' },
+    })
+    if (error) {
+      toast.error(error.message)
+      setLoading(false)
     }
   }
 
@@ -97,6 +119,33 @@ export default function AuthPage() {
       )}
 
       <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-900">
+        {/* Google OAuth */}
+        {view !== 'forgot' && (
+          <>
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading || !isSupabaseConfigured}
+              className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+            >
+              {loading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <GoogleIcon className="h-5 w-5" />
+              )}
+              {t('auth.continueWithGoogle')}
+            </button>
+
+            <div className="my-5 flex items-center gap-3">
+              <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+              <span className="text-xs text-gray-400 dark:text-gray-500">
+                {t('auth.orDivider')}
+              </span>
+              <div className="h-px flex-1 bg-gray-200 dark:bg-gray-700" />
+            </div>
+          </>
+        )}
+
         {/* Forgot password view */}
         {view === 'forgot' && (
           <form onSubmit={handleForgotPassword} className="space-y-4">

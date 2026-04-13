@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { QueryClient } from '@tanstack/react-query'
+import { AuthProvider } from '@/hooks/AuthProvider'
 import '../i18n' // initialise i18n
 
 // Minimal wrapper for tests
@@ -10,7 +11,9 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return (
     <QueryClientProvider client={qc}>
-      <MemoryRouter initialEntries={['/auth']}>{children}</MemoryRouter>
+      <AuthProvider>
+        <MemoryRouter initialEntries={['/auth']}>{children}</MemoryRouter>
+      </AuthProvider>
     </QueryClientProvider>
   )
 }

@@ -56,7 +56,9 @@
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
     "loginError": "Invalid email or password",
-    "registerError": "Registration failed"
+    "registerError": "Registration failed",
+    "continueWithGoogle": "Continue with Google",
+    "orDivider": "or"
   },
   "profile": {
     "language": "Language",
