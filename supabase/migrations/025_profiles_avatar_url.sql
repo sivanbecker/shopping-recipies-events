@@ -21,7 +21,10 @@ $$;
 
 -- Update get_list_members RPC to include avatar_url so AvatarStack and ShareListDialog
 -- can display real profile photos for all members.
-create or replace function public.get_list_members(p_list_id uuid)
+-- Must drop first because PostgreSQL does not allow OR REPLACE to change the return type.
+drop function if exists public.get_list_members(uuid);
+
+create function public.get_list_members(p_list_id uuid)
 returns table (id uuid, list_id uuid, user_id uuid, role text, display_name text, avatar_url text)
 language sql
 security definer
