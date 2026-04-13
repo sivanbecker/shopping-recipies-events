@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -20,6 +20,7 @@ import {
   Download,
   ListPlus,
   ShoppingCart,
+  Sparkles,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -159,10 +160,13 @@ function ProductDialog({
   onSubmit,
 }: ProductDialogProps) {
   const { t } = useTranslation()
+  const [isSuggesting, setIsSuggesting] = useState(false)
 
   const {
     register,
     handleSubmit,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -173,6 +177,37 @@ function ProductDialog({
       default_unit_id: product?.default_unit_id ?? '',
     },
   })
+
+  const handleSuggest = useCallback(async () => {
+    const nameHe = getValues('name_he')?.trim()
+    if (!nameHe || isSuggesting) return
+
+    setIsSuggesting(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('suggest-product', {
+        body: {
+          name_he: nameHe,
+          categories: categories.map(c => ({ id: c.id, name_he: c.name_he, name_en: c.name_en })),
+          unit_types: unitTypes.map(u => ({
+            id: u.id,
+            code: u.code,
+            label_he: u.label_he,
+            label_en: u.label_en,
+            type: u.type,
+          })),
+        },
+      })
+      if (!error && data && !data.error) {
+        if (data.name_en) setValue('name_en', data.name_en)
+        if (data.category_id) setValue('category_id', data.category_id)
+        if (data.default_unit_id) setValue('default_unit_id', data.default_unit_id)
+      }
+    } catch {
+      // Silent failure — user can fill fields manually
+    } finally {
+      setIsSuggesting(false)
+    }
+  }, [getValues, isSuggesting, categories, unitTypes, setValue])
 
   const unitGroups = (['count', 'weight', 'volume', 'cooking'] as const).map(type => ({
     type,
@@ -207,13 +242,30 @@ function ProductDialog({
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               {t('products.nameHe')}
             </label>
-            <input
-              {...register('name_he')}
-              type="text"
-              placeholder={t('products.namePlaceholder')}
-              dir="rtl"
-              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            />
+            <div className="flex gap-2">
+              <input
+                {...register('name_he')}
+                type="text"
+                placeholder={t('products.namePlaceholder')}
+                dir="rtl"
+                className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              />
+              {mode === 'add' && (
+                <button
+                  type="button"
+                  onClick={handleSuggest}
+                  disabled={isSuggesting}
+                  title={t('products.suggest')}
+                  className="shrink-0 rounded-xl border border-gray-200 px-3 py-2.5 text-gray-500 transition hover:bg-brand-50 hover:text-brand-600 disabled:opacity-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-brand-900 dark:hover:text-brand-400"
+                >
+                  {isSuggesting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+                </button>
+              )}
+            </div>
             {errors.name_he && (
               <p className="mt-1 text-xs text-red-500">{t('validation.required')}</p>
             )}
