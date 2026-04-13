@@ -56,7 +56,9 @@
     "noAccount": "אין לך חשבון?",
     "hasAccount": "כבר יש לך חשבון?",
     "loginError": "פרטי הכניסה שגויים",
-    "registerError": "ההרשמה נכשלה"
+    "registerError": "ההרשמה נכשלה",
+    "continueWithGoogle": "המשך עם Google",
+    "orDivider": "או"
   },
   "profile": {
     "language": "שפה",

@@ -26,7 +26,7 @@ The app supports real-time collaboration between a small group of users (family/
 | **Forms** | React Hook Form + Zod | Type-safe validation |
 | **Internationalization** | i18next + react-i18next | Hebrew (RTL) + English (LTR) |
 | **Backend** | Supabase | PostgreSQL + Auth + Realtime + Edge Functions |
-| **Authentication** | Supabase Auth | Email + password, JWT sessions |
+| **Authentication** | Supabase Auth | Email + password, Google OAuth, JWT sessions |
 | **Realtime** | Supabase Realtime Channels | Live collaborative list updates |
 | **Hosting — Frontend** | Vercel | Auto-deploy from GitHub |
 | **Hosting — Backend/DB** | Supabase Cloud | Free tier sufficient for small group |
@@ -225,6 +225,40 @@ event_shopping_lists (id, event_id FK, list_id FK)
 - [ ] Unit: `useAuth` hook returns correct user state
 - [ ] Unit: Zod schemas reject invalid email or weak password
 - [ ] E2E: Full register → login → sign out flow
+
+---
+
+## STAGE 1.5 — Social Login (Google OAuth)
+> **Goal:** Allow users to sign in with their Google account for frictionless onboarding.
+> **Estimated time:** 1 day
+
+### Tasks
+
+#### 1.5.1 — Supabase Google Provider Setup
+- [ ] Enable Google OAuth provider in Supabase Dashboard (Authentication → Providers → Google)
+- [ ] Create OAuth credentials in Google Cloud Console (OAuth 2.0 Client ID)
+- [ ] Add Google Client ID and Client Secret to Supabase provider settings
+- [ ] Configure the authorized redirect URI from Supabase in Google Cloud Console
+
+#### 1.5.2 — Google Sign-In Button
+- [ ] Add `GoogleIcon` SVG component (`src/components/icons/GoogleIcon.tsx`)
+- [ ] Add "Continue with Google" button to AuthPage above login/register tabs
+- [ ] Call `supabase.auth.signInWithOAuth({ provider: 'google' })` with redirect to `/lists`
+- [ ] Add "or" divider between Google button and email/password forms
+- [ ] Style with standard Google branding (white bg, Google "G" icon, dark text)
+
+#### 1.5.3 — i18n
+- [ ] Add `auth.continueWithGoogle` and `auth.orDivider` keys in Hebrew and English
+
+#### Stage 1.5 Manual Testing Checklist
+- [ ] "Continue with Google" button is visible on both Login and Register views
+- [ ] Button is hidden on the Forgot Password view
+- [ ] Clicking the button redirects to Google's OAuth consent screen
+- [ ] After Google consent, user is redirected back to `/lists` with an active session
+- [ ] A `profiles` row is auto-created for the new Google user
+- [ ] RTL layout (Hebrew) renders the button and divider correctly
+- [ ] Dark mode renders the button correctly
+- [ ] Button is disabled when Supabase is not configured
 
 ---
 
@@ -961,6 +995,7 @@ The `ContactPicker` component required for list/event sharing is specified in **
 |---|---|---|
 | 0 | Scaffolding & Infrastructure | 2–3 |
 | 1 | Authentication & Profiles | 2–3 |
+| 1.5 | Social Login (Google OAuth) | 1 |
 | 2 | Products Catalog | 3–4 |
 | 3 | Shopping Lists Core | 5–7 |
 | 4 | Real-time Sharing | 3–4 |
