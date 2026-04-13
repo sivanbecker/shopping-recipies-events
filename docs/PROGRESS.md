@@ -1,5 +1,17 @@
 # Project Progress
 
+## Stage 1.5 — Social Login (Google OAuth) — COMPLETE (committed to `main`)
+
+- **Google sign-in button** — added to `AuthPage` above the login/register tabs with an "or" divider; visible in both Login and Register views, hidden on Forgot Password view.
+- **`GoogleIcon`** — inline SVG component (`src/components/icons/GoogleIcon.tsx`) using the official Google "G" four-colour logo; no external image dependency.
+- **OAuth flow** — calls `supabase.auth.signInWithOAuth({ provider: 'google' })` with `redirectTo: origin + '/auth'`. Redirecting back to `/auth` (public) instead of `/lists` (protected) avoids a race condition where `ProtectedRoute` would strip the `?code=` query param before Supabase could exchange it for a session.
+- **Session pickup** — `useEffect` in `AuthPage` watches `user` from `useAuth()` and navigates to `/lists` once the OAuth session is established.
+- **i18n** — added `auth.continueWithGoogle` and `auth.orDivider` to both `he/common.json` and `en/common.json`.
+- **Test fix** — `App.test.tsx` smoke test now wraps `AuthPage` in `AuthProvider` (required because `AuthPage` now calls `useAuth()`).
+- **PROJECT_PLAN.md** — added Stage 1.5 section with tasks and manual testing checklist; updated tech stack row and stage summary table.
+
+---
+
 ## Stage 0 — Scaffold — COMPLETE (committed to `main`)
 Full project scaffold, all routes, AuthPage, ProfilePage (basic), DB types, migrations, CI, Vercel.
 
