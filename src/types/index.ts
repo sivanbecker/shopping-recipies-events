@@ -43,7 +43,10 @@ export type RecipeWithDetails = Recipe & {
   steps: RecipeStep[]
 }
 
-export type ListMemberWithProfile = ListMember & { display_name: string | null }
+export type ListMemberWithProfile = ListMember & {
+  display_name: string | null
+  avatar_url: string | null
+}
 
 export type Language = 'he' | 'en'
 export type UnitCategory = 'weight' | 'volume' | 'count' | 'cooking'

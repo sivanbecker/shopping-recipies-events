@@ -157,7 +157,12 @@ function ItemRow({
         {item.note && <span className="block text-xs italic text-gray-400">{item.note}</span>}
       </div>
 
-      <UserAvatar userId={item.added_by} displayName={addedBy?.display_name} size={20} />
+      <UserAvatar
+        userId={item.added_by}
+        displayName={addedBy?.display_name}
+        avatarUrl={addedBy?.avatar_url}
+        size={20}
+      />
 
       {!shoppingMode && (
         <button

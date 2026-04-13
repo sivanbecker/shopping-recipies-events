@@ -3,6 +3,7 @@ import { UserAvatar } from './UserAvatar'
 interface Member {
   user_id: string
   display_name: string | null
+  avatar_url?: string | null
   role: string
 }
 
@@ -42,6 +43,7 @@ export function AvatarStack({ members, size = 28, max = 3, className }: AvatarSt
             <UserAvatar
               userId={member.user_id}
               displayName={member.display_name}
+              avatarUrl={member.avatar_url}
               size={size}
               ring={member.role === 'owner'}
             />

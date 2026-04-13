@@ -16,6 +16,7 @@ export type Database = {
           user_id: string
           display_name: string | null
           preferred_language: 'he' | 'en'
+          avatar_url: string | null
           created_at: string
         }
         Insert: {
@@ -23,11 +24,13 @@ export type Database = {
           user_id: string
           display_name?: string | null
           preferred_language?: 'he' | 'en'
+          avatar_url?: string | null
           created_at?: string
         }
         Update: {
           display_name?: string | null
           preferred_language?: 'he' | 'en'
+          avatar_url?: string | null
         }
         Relationships: []
       }

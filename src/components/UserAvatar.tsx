@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import Avatar from 'boring-avatars'
 import { cn } from '@/lib/utils'
 
 interface UserAvatarProps {
   userId: string
   displayName?: string | null
+  avatarUrl?: string | null
   size?: number
   ring?: boolean
   className?: string
@@ -12,10 +14,14 @@ interface UserAvatarProps {
 export function UserAvatar({
   userId,
   displayName,
+  avatarUrl,
   size = 40,
   ring = false,
   className,
 }: UserAvatarProps) {
+  const [imgFailed, setImgFailed] = useState(false)
+  const showImage = Boolean(avatarUrl) && !imgFailed
+
   return (
     <div
       className={cn(
@@ -29,7 +35,18 @@ export function UserAvatar({
       }}
       title={displayName ?? userId}
     >
-      <Avatar name={userId} variant="beam" size={size} />
+      {showImage ? (
+        <img
+          src={avatarUrl!}
+          alt={displayName ?? ''}
+          width={size}
+          height={size}
+          className="h-full w-full object-cover"
+          onError={() => setImgFailed(true)}
+        />
+      ) : (
+        <Avatar name={userId} variant="beam" size={size} />
+      )}
     </div>
   )
 }
