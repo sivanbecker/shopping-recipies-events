@@ -18,7 +18,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchProfile(session.user.id)
+        fetchProfile(session.user.id, session.user.user_metadata?.avatar_url ?? null)
       } else {
         setLoading(false)
       }
@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchProfile(session.user.id)
+        fetchProfile(session.user.id, session.user.user_metadata?.avatar_url ?? null)
       } else {
         setProfile(null)
         setLoading(false)
@@ -40,10 +40,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function fetchProfile(userId: string) {
+  async function fetchProfile(userId: string, metaAvatarUrl: string | null = null) {
     try {
       const { data } = await supabase.from('profiles').select('*').eq('user_id', userId).single()
-      setProfile(data)
+      // Backfill avatar_url for existing Google users whose profile row pre-dates migration 025
+      if (data && !data.avatar_url && metaAvatarUrl) {
+        await supabase.from('profiles').update({ avatar_url: metaAvatarUrl }).eq('user_id', userId)
+        setProfile({ ...data, avatar_url: metaAvatarUrl })
+      } else {
+        setProfile(data)
+      }
     } catch {
       setProfile(null)
     } finally {
