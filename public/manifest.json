@@ -1,6 +1,6 @@
 {
   "name": "Shopping · Recipes · Events",
-  "short_name": "Family App",
+  "short_name": "Shop Cook Host",
   "description": "Shopping lists, recipes, and family event management",
   "start_url": "/",
   "display": "standalone",
