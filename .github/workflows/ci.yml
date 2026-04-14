@@ -32,6 +32,19 @@ jobs:
       - name: Unit tests
         run: npm run test
 
+  security:
+    runs-on: ubuntu-latest
+    name: Security Scan
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          scan-type: 'fs'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
+
   build:
     runs-on: ubuntu-latest
     name: Build
