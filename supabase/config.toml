@@ -1,0 +1,2 @@
+[functions.suggest-product]
+verify_jwt = false

@@ -72,7 +72,7 @@ ${categoriesList}
 Available units:
 ${unitsList}`
 
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`
 
     const geminiRes = await fetch(geminiUrl, {
       method: 'POST',
@@ -81,13 +81,18 @@ ${unitsList}`
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           temperature: 0.1,
-          maxOutputTokens: 200,
+          maxOutputTokens: 1024,
+          responseMimeType: 'application/json',
+          thinkingConfig: {
+            thinkingBudget: 0,
+          },
         },
       }),
     })
 
     if (!geminiRes.ok) {
       const errText = await geminiRes.text()
+      console.error('Gemini API error:', geminiRes.status, errText)
       return new Response(JSON.stringify({ error: `Gemini API error: ${errText}` }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 502,
@@ -95,10 +100,15 @@ ${unitsList}`
     }
 
     const geminiData = await geminiRes.json()
+    console.log('Gemini raw response:', JSON.stringify(geminiData))
+
     const rawText = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+    console.log('Raw text from Gemini:', rawText)
 
     // Strip markdown code fences if present
     const jsonStr = rawText.replace(/```json?\s*/g, '').replace(/```\s*/g, '').trim()
+    console.log('JSON string to parse:', jsonStr)
+
     const suggestion = JSON.parse(jsonStr)
 
     return new Response(
@@ -110,6 +120,7 @@ ${unitsList}`
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (err) {
+    console.error('Caught error:', (err as Error).message, (err as Error).stack)
     return new Response(JSON.stringify({ error: (err as Error).message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
