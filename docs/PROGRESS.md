@@ -1,5 +1,36 @@
 # Project Progress
 
+## Stage 2.8 — AI Auto-Suggest for Product Fields — IN PROGRESS (branch: `feat/ai-product-suggest`)
+
+### What's implemented
+- **`supabase/functions/suggest-product/index.ts`** — Deno edge function that receives a Hebrew product name + the app's categories and unit_types arrays, calls Google Gemini, and returns `{ name_en, category_id, default_unit_id }` using the app's real DB IDs
+- **`supabase/config.toml`** — sets `verify_jwt = false` for this function (it only proxies to Gemini, no DB access, safe to leave open)
+- **ProductDialog (add mode)** — sparkle ✨ button next to the Hebrew name field; click triggers the edge function, pre-fills English name + category + unit; spinner while loading; silent on failure
+- **i18n** — `products.suggest` / `products.suggesting` in both `he` and `en`
+- **`docs/PROJECT_PLAN.md`** — Stage 2.8 added
+
+### Debugging history (issues hit and fixed)
+1. **401** — Edge function was requiring JWT by default. Fixed by deploying with `--no-verify-jwt` and adding `supabase/config.toml`
+2. **502 / 404 from Google** — Wrong API key used initially; then wrong model name (`gemini-2.0-flash`, `gemini-1.5-flash`, `gemini-1.5-flash-latest` all returned 404). Fixed by listing available models via `curl ".../v1beta/models?key=..."` — correct name is `gemini-flash-latest`
+3. **502 / JSON parse error** — `maxOutputTokens: 200` was too low, truncating the JSON mid-string. Fixed by raising to `512` and adding `responseMimeType: 'application/json'` to force Gemini to output raw JSON (no markdown fences)
+
+### Current state
+Last fix (`maxOutputTokens: 512` + `responseMimeType: 'application/json'`) was deployed but **not yet verified working end-to-end**. Need to test the sparkle button in the UI and confirm suggestions come through correctly.
+
+### To do before merging
+- [ ] Verify the feature works end-to-end in the UI (Hebrew name → sparkle click → fields auto-fill)
+- [ ] Remove debug `console.log` lines from the edge function (`index.ts` lines ~98–104)
+- [ ] Commit `supabase/config.toml` to the branch
+- [ ] Run quality gates: `npm test`, `npm run lint`, `npm run format`
+- [ ] Open PR and merge to `main`
+
+### Deploy command
+```bash
+supabase functions deploy suggest-product --no-verify-jwt
+```
+
+---
+
 ## Stage 1.5 — Social Login (Google OAuth) + Google Profile Picture — COMPLETE (committed to `main`)
 
 - **Google sign-in button** — added to `AuthPage` above the login/register tabs with an "or" divider; visible in both Login and Register views, hidden on Forgot Password view.

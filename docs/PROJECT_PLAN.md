@@ -349,6 +349,26 @@ Skipped rows are downloadable as a CSV for correction and re-import.
 - [ ] Selecting a list upserts: bumps quantity if the product is already in that list (unchecked), otherwise inserts it
 - [ ] Toast confirms "Added to [list name]" with a tappable link to navigate to that list
 
+#### 2.8 — AI Auto-Suggest for Product Fields (Gemini Flash)
+- [ ] Supabase Edge Function `suggest-product` — receives Hebrew product name + categories + unit_types lists, calls Gemini Flash API, returns `{ name_en, category_id, default_unit_id }`
+- [ ] `GEMINI_API_KEY` stored as Supabase secret (free tier from [Google AI Studio](https://aistudio.google.com/apikey))
+- [ ] ProductDialog (add mode): sparkle/wand button next to Hebrew name field triggers AI suggestion
+- [ ] On success: pre-fills English name, category, and default unit (user can override before saving)
+- [ ] On failure: silent — fields stay empty, manual entry as before
+- [ ] i18n: `products.suggest`, `products.suggesting` in both `he` and `en`
+
+**Architecture:**
+- Frontend sends Hebrew name + cached categories/units arrays to the edge function (no extra DB call)
+- Edge function calls `generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`
+- Prompt includes the exact category IDs and unit IDs so the AI picks from the app's real options
+- AddItemSheet (quick-add) is unchanged — AI suggest is only in the full ProductDialog
+
+**Key files:**
+- `supabase/functions/suggest-product/index.ts` — Edge Function
+- `src/pages/Products/ProductsPage.tsx` — ProductDialog suggest button + logic
+
+**Setup:** `supabase secrets set GEMINI_API_KEY=...` then `supabase functions deploy suggest-product`
+
 #### Stage 2 Manual Testing Checklist
 - [ ] Add a product → it appears in the list immediately
 - [ ] Search bar filters results correctly in real time
