@@ -4,21 +4,26 @@ import { loginSchema, registerSchema } from '@/lib/schemas'
 import { AuthProvider } from '@/hooks/AuthProvider'
 import { useAuth } from '@/hooks/useAuth'
 
+const TEST_EMAIL = 'test@example.com'
+const TEST_PASSWORD = crypto.randomUUID()
+const MISMATCHED_PASSWORD = crypto.randomUUID()
+const TEST_NAME = 'Test User'
+
 // ─── Zod schema tests ──────────────────────────────────────────────────────
 
 describe('loginSchema', () => {
   it('accepts valid credentials', () => {
-    const result = loginSchema.safeParse({ email: 'test@example.com', password: 'password123' })
+    const result = loginSchema.safeParse({ email: TEST_EMAIL, password: TEST_PASSWORD })
     expect(result.success).toBe(true)
   })
 
   it('rejects invalid email', () => {
-    const result = loginSchema.safeParse({ email: 'not-an-email', password: 'password123' })
+    const result = loginSchema.safeParse({ email: 'not-an-email', password: TEST_PASSWORD })
     expect(result.success).toBe(false)
   })
 
   it('rejects password shorter than 8 characters', () => {
-    const result = loginSchema.safeParse({ email: 'test@example.com', password: 'short' })
+    const result = loginSchema.safeParse({ email: TEST_EMAIL, password: 'short' })
     expect(result.success).toBe(false)
   })
 
@@ -29,10 +34,10 @@ describe('loginSchema', () => {
 
 describe('registerSchema', () => {
   const valid = {
-    email: 'test@example.com',
-    password: 'password123',
-    name: 'Test User',
-    confirmPassword: 'password123',
+    email: TEST_EMAIL,
+    password: TEST_PASSWORD,
+    name: TEST_NAME,
+    confirmPassword: TEST_PASSWORD,
   }
 
   it('accepts valid registration data', () => {
@@ -40,7 +45,7 @@ describe('registerSchema', () => {
   })
 
   it('rejects mismatched passwords', () => {
-    const result = registerSchema.safeParse({ ...valid, confirmPassword: 'different123' })
+    const result = registerSchema.safeParse({ ...valid, confirmPassword: MISMATCHED_PASSWORD })
     expect(result.success).toBe(false)
     expect(result.error?.issues[0].path).toContain('confirmPassword')
   })

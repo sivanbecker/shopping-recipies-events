@@ -166,7 +166,7 @@ export default function EventDetailPage() {
         )}
 
         {/* Photo album link */}
-        {event.photo_album_url && (
+        {event.photo_album_url && /^https?:\/\//i.test(event.photo_album_url) && (
           <div className="mt-3 flex items-center gap-2">
             <Image className="h-4 w-4 text-purple-500" />
             <a
