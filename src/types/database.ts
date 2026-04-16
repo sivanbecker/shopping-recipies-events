@@ -121,6 +121,8 @@ export type Database = {
           is_missing_list: boolean
           created_at: string
           updated_at: string
+          deleted_at: string | null
+          deleted_by: string | null
         }
         Insert: {
           id?: string
@@ -131,11 +133,15 @@ export type Database = {
           is_missing_list?: boolean
           created_at?: string
           updated_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
         }
         Update: {
           name?: string | null
           is_active?: boolean
           is_archived?: boolean
+          deleted_at?: string | null
+          deleted_by?: string | null
         }
         Relationships: []
       }
@@ -152,6 +158,11 @@ export type Database = {
           note: string | null
           sort_order: number
           created_at: string
+          updated_at: string
+          last_edited_by: string | null
+          last_edited_at: string | null
+          completed_by: string | null
+          completed_at: string | null
         }
         Insert: {
           id?: string
@@ -165,6 +176,11 @@ export type Database = {
           note?: string | null
           sort_order?: number
           created_at?: string
+          updated_at?: string
+          last_edited_by?: string | null
+          last_edited_at?: string | null
+          completed_by?: string | null
+          completed_at?: string | null
         }
         Update: {
           quantity?: number
@@ -505,11 +521,41 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          id: string
+          recipient_user_id: string
+          actor_user_id: string | null
+          list_id: string | null
+          entity_type: 'shopping_item' | 'shopping_list' | 'list_member'
+          entity_id: string | null
+          notification_type:
+            | 'item_added'
+            | 'item_completed'
+            | 'item_uncompleted'
+            | 'item_quantity_changed'
+            | 'list_renamed'
+            | 'list_deleted'
+            | 'list_restored'
+            | 'member_added'
+            | 'member_removed'
+            | 'member_left'
+            | 'role_changed'
+          payload: Record<string, unknown>
+          created_at: string
+          read_at: string | null
+        }
+        Insert: never
+        Update: {
+          read_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: {
       find_user_by_email: {
-        Args: { p_email: string }
+        Args: { p_email: string; p_list_id: string }
         Returns: { user_id: string; display_name: string | null }[]
       }
       get_list_members: {
@@ -520,7 +566,16 @@ export type Database = {
           user_id: string
           role: 'owner' | 'editor' | 'viewer'
           display_name: string | null
+          avatar_url: string | null
         }[]
+      }
+      list_member_role: {
+        Args: { p_list_id: string }
+        Returns: 'owner' | 'editor' | 'viewer' | null
+      }
+      purge_trashed_lists: {
+        Args: Record<string, never>
+        Returns: number
       }
     }
     Enums: Record<string, never>

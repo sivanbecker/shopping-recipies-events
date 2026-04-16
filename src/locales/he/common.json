@@ -86,6 +86,25 @@
     "reportBug": "דווח על תקלה",
     "giveFeedback": "שלח משוב"
   },
+  "notifications": {
+    "title": "התראות",
+    "empty": "אין התראות חדשות",
+    "markAllRead": "סמן הכל כנקרא",
+    "someone": "מישהו",
+    "types": {
+      "item_added": "{{actor}} הוסיף פריט",
+      "item_completed": "{{actor}} סימן פריט כבוצע",
+      "item_uncompleted": "{{actor}} ביטל סימון פריט",
+      "item_quantity_changed": "{{actor}} שינה כמות",
+      "list_renamed": "{{actor}} שינה את שם הרשימה",
+      "list_deleted": "{{actor}} מחק את הרשימה",
+      "list_restored": "{{actor}} שחזר את הרשימה",
+      "member_added": "{{actor}} הוסיף אותך לרשימה",
+      "member_removed": "{{actor}} הסיר אותך מרשימה",
+      "role_changed": "{{actor}} שינה את ההרשאות שלך",
+      "member_left": "{{actor}} עזב את הרשימה"
+    }
+  },
   "validation": {
     "required": "שדה חובה",
     "invalidEmail": "כתובת אימייל לא תקינה",

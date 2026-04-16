@@ -18,14 +18,20 @@ import {
   ListPlus,
   ChevronDown,
   UserPlus,
+  Users,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { useListRole, canEdit, canOwn } from '@/hooks/useListRole'
+import { showUndoToast } from '@/lib/undo'
+import type { ShoppingItemSnapshot } from '@/lib/undo'
 import { filterProducts } from '@/lib/filterProducts'
 import { ShareListDialog } from './ShareListDialog'
+import { CollaboratorsDialog } from '@/components/CollaboratorsDialog'
+import { DeleteListDialog } from '@/components/DeleteListDialog'
 import { AvatarStack } from '@/components/AvatarStack'
 import { UserAvatar } from '@/components/UserAvatar'
 import type {
@@ -92,6 +98,7 @@ interface ItemRowProps {
   isToggling: boolean
   shoppingMode?: boolean
   members?: ListMemberWithProfile[]
+  editable?: boolean
 }
 
 function ItemRow({
@@ -102,8 +109,11 @@ function ItemRow({
   isToggling,
   shoppingMode,
   members,
+  editable = true,
 }: ItemRowProps) {
-  const addedBy = members?.find(m => m.user_id === item.added_by)
+  // Prefer last_edited_by for attribution, fall back to added_by for pre-migration rows
+  const attributionUserId = item.last_edited_by ?? item.added_by
+  const attributionMember = members?.find(m => m.user_id === attributionUserId)
   const name = item.product
     ? lang === 'he'
       ? item.product.name_he
@@ -158,13 +168,13 @@ function ItemRow({
       </div>
 
       <UserAvatar
-        userId={item.added_by}
-        displayName={addedBy?.display_name}
-        avatarUrl={addedBy?.avatar_url}
+        userId={attributionUserId}
+        displayName={attributionMember?.display_name}
+        avatarUrl={attributionMember?.avatar_url}
         size={20}
       />
 
-      {!shoppingMode && (
+      {!shoppingMode && editable && (
         <button
           onClick={onRemove}
           className="rounded-lg p-1.5 text-gray-300 transition hover:bg-red-50 hover:text-red-400"
@@ -226,7 +236,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
   // Upsert: bump existing unchecked item's quantity, or insert new
   const upsertMutation = useMutation({
     mutationFn: async () => {
-      if (!configuring) return
+      if (!configuring) return null
       const existing = items.find(i => i.product_id === configuring.id && !i.is_checked)
       if (existing) {
         const { error } = await supabase
@@ -234,20 +244,40 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
           .update({ quantity: Number(existing.quantity) + quantity, unit_id: unitId })
           .eq('id', existing.id)
         if (error) throw error
+        return null // quantity bump — no undo (too complex; existing item still there)
       } else {
-        const { error } = await supabase.from('shopping_items').insert({
-          list_id: listId,
-          product_id: configuring.id,
-          quantity,
-          unit_id: unitId,
-          added_by: user!.id,
-        })
+        const { data, error } = await supabase
+          .from('shopping_items')
+          .insert({
+            list_id: listId,
+            product_id: configuring.id,
+            quantity,
+            unit_id: unitId,
+            added_by: user!.id,
+          })
+          .select('id, updated_at')
+          .single()
         if (error) throw error
+        return data as { id: string; updated_at: string }
       }
     },
-    onSuccess: () => {
+    onSuccess: newItem => {
       queryClient.invalidateQueries({ queryKey: ['shopping_items', listId] })
       broadcastChange(listId, 'items-changed')
+      if (newItem) {
+        showUndoToast(
+          { type: 'item_add', listId, itemId: newItem.id, at: newItem.updated_at },
+          {
+            label: t('undo.itemAdded'),
+            undoLabel: t('undo.undoButton'),
+            staleMessage: t('undo.staleMessage'),
+            onUndone: () => {
+              queryClient.invalidateQueries({ queryKey: ['shopping_items', listId] })
+              broadcastChange(listId, 'items-changed')
+            },
+          }
+        )
+      }
       setConfiguring(null)
       setSearch('')
     },
@@ -512,6 +542,12 @@ export default function ListDetailPage() {
   const [showDoneDialog, setShowDoneDialog] = useState(false)
   const [showInCart, setShowInCart] = useState(false)
   const [showShareDialog, setShowShareDialog] = useState(false)
+  const [showCollaboratorsDialog, setShowCollaboratorsDialog] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+
+  const { data: role } = useListRole(id)
+  const isEditor = canEdit(role)
+  const isOwner = canOwn(role)
 
   // ── Queries ──────────────────────────────────────────────────────────────
 
@@ -645,15 +681,40 @@ export default function ListDetailPage() {
   // ── Mutations ────────────────────────────────────────────────────────────
 
   const toggleMutation = useMutation({
-    mutationFn: async ({ itemId, checked }: { itemId: string; checked: boolean }) => {
-      const { error } = await supabase
+    mutationFn: async ({
+      itemId,
+      checked,
+      updatedAt: _updatedAt,
+    }: {
+      itemId: string
+      checked: boolean
+      updatedAt: string
+    }) => {
+      const { data, error } = await supabase
         .from('shopping_items')
         .update({ is_checked: checked })
         .eq('id', itemId)
+        .select('updated_at')
+        .single()
       if (error) throw error
+      return data
     },
     onMutate: ({ itemId }) => {
       setTogglingIds(s => new Set(s).add(itemId))
+    },
+    onSuccess: (data, { itemId, checked, updatedAt }) => {
+      showUndoToast(
+        { type: 'item_toggle', itemId, before: !checked, updatedAt: data?.updated_at ?? updatedAt },
+        {
+          label: checked ? t('undo.itemChecked') : t('undo.itemUnchecked'),
+          undoLabel: t('undo.undoButton'),
+          staleMessage: t('undo.staleMessage'),
+          onUndone: () => {
+            queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+            broadcastChange(id!, 'items-changed')
+          },
+        }
+      )
     },
     onSettled: (_, __, { itemId }) => {
       setTogglingIds(s => {
@@ -669,13 +730,41 @@ export default function ListDetailPage() {
 
   const removeMutation = useMutation({
     mutationFn: async (itemId: string) => {
+      // Capture snapshot before deleting so we can re-insert on undo
+      const snapshot = items.find(i => i.id === itemId)
       const { error } = await supabase.from('shopping_items').delete().eq('id', itemId)
       if (error) throw error
+      return snapshot
     },
-    onSuccess: () => {
+    onSuccess: snapshot => {
       queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
       queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
       broadcastChange(id!, 'items-changed')
+      if (snapshot) {
+        const snap: ShoppingItemSnapshot = {
+          list_id: snapshot.list_id,
+          product_id: snapshot.product_id,
+          quantity: snapshot.quantity,
+          unit_id: snapshot.unit_id,
+          is_checked: snapshot.is_checked,
+          added_by: snapshot.added_by,
+          note: snapshot.note,
+          sort_order: snapshot.sort_order,
+          recipe_id: snapshot.recipe_id,
+        }
+        showUndoToast(
+          { type: 'item_remove', listId: id!, snapshot: snap },
+          {
+            label: t('undo.itemRemoved'),
+            undoLabel: t('undo.undoButton'),
+            staleMessage: t('undo.staleMessage'),
+            onUndone: () => {
+              queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+              broadcastChange(id!, 'items-changed')
+            },
+          }
+        )
+      }
     },
     onError: () => toast.error('Failed to remove item'),
   })
@@ -791,6 +880,13 @@ export default function ListDetailPage() {
     )
   }
 
+  if (!list && !listLoading) {
+    // RLS filtered the list — either deleted or we lost access
+    toast.error(t('sharing.noAccess'), { id: 'no-access' })
+    navigate('/lists', { replace: true })
+    return null
+  }
+
   if (!list) {
     return (
       <div className="space-y-4">
@@ -841,24 +937,25 @@ export default function ListDetailPage() {
             {t('shopping.exitMode')}
           </button>
         ) : (
-          list.owner_id === user?.id && (
-            <div className="flex shrink-0 items-center gap-2">
-              {/* Convert to Shopping List — only on missing-items lists */}
-              {list.is_missing_list && (
-                <button
-                  onClick={() => convertToListMutation.mutate()}
-                  disabled={convertToListMutation.isPending || items.length === 0}
-                  className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
-                >
-                  {convertToListMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <ListPlus className="h-4 w-4" />
-                  )}
-                  {t('missing.convertToList')}
-                </button>
-              )}
+          <div className="flex shrink-0 items-center gap-2">
+            {/* Convert to Shopping List — only on missing-items lists, owners only */}
+            {isOwner && list.is_missing_list && (
+              <button
+                onClick={() => convertToListMutation.mutate()}
+                disabled={convertToListMutation.isPending || items.length === 0}
+                className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
+              >
+                {convertToListMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ListPlus className="h-4 w-4" />
+                )}
+                {t('missing.convertToList')}
+              </button>
+            )}
 
+            {/* Share button (owner) or View collaborators (editor/viewer) */}
+            {isOwner ? (
               <button
                 onClick={() => setShowShareDialog(true)}
                 aria-label={t('sharing.shareButton')}
@@ -866,7 +963,18 @@ export default function ListDetailPage() {
               >
                 <UserPlus className="h-4 w-4" />
               </button>
+            ) : role ? (
+              <button
+                onClick={() => setShowCollaboratorsDialog(true)}
+                aria-label={t('sharing.viewCollaborators')}
+                className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                <Users className="h-4 w-4" />
+              </button>
+            ) : null}
 
+            {/* Clone — owner only */}
+            {isOwner && (
               <button
                 onClick={() => cloneMutation.mutate()}
                 disabled={cloneMutation.isPending}
@@ -880,7 +988,10 @@ export default function ListDetailPage() {
                 )}
                 {t('lists.clone')}
               </button>
+            )}
 
+            {/* Archive — owner only */}
+            {isOwner && (
               <button
                 onClick={() => archiveMutation.mutate(!list.is_archived)}
                 disabled={archiveMutation.isPending}
@@ -899,8 +1010,19 @@ export default function ListDetailPage() {
                 )}
                 {list.is_archived ? t('lists.reactivate') : t('lists.markDone')}
               </button>
-            </div>
-          )
+            )}
+
+            {/* Delete — owner only */}
+            {isOwner && !list.is_missing_list && (
+              <button
+                onClick={() => setShowDeleteDialog(true)}
+                aria-label={t('deleteList.button')}
+                className="flex items-center gap-1.5 rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100 dark:bg-red-950 dark:text-red-300"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -942,8 +1064,16 @@ export default function ListDetailPage() {
               lang={lang}
               shoppingMode
               members={members}
+              editable={isEditor}
               isToggling={togglingIds.has(item.id)}
-              onToggle={() => toggleMutation.mutate({ itemId: item.id, checked: !item.is_checked })}
+              onToggle={() =>
+                isEditor &&
+                toggleMutation.mutate({
+                  itemId: item.id,
+                  checked: !item.is_checked,
+                  updatedAt: item.updated_at,
+                })
+              }
               onRemove={() => removeMutation.mutate(item.id)}
             />
           ))}
@@ -969,9 +1099,15 @@ export default function ListDetailPage() {
                       item={item}
                       lang={lang}
                       shoppingMode
+                      editable={isEditor}
                       isToggling={togglingIds.has(item.id)}
                       onToggle={() =>
-                        toggleMutation.mutate({ itemId: item.id, checked: !item.is_checked })
+                        isEditor &&
+                        toggleMutation.mutate({
+                          itemId: item.id,
+                          checked: !item.is_checked,
+                          updatedAt: item.updated_at,
+                        })
                       }
                       onRemove={() => removeMutation.mutate(item.id)}
                     />
@@ -990,16 +1126,24 @@ export default function ListDetailPage() {
               item={item}
               lang={lang}
               members={members}
+              editable={isEditor}
               isToggling={togglingIds.has(item.id)}
-              onToggle={() => toggleMutation.mutate({ itemId: item.id, checked: !item.is_checked })}
+              onToggle={() =>
+                isEditor &&
+                toggleMutation.mutate({
+                  itemId: item.id,
+                  checked: !item.is_checked,
+                  updatedAt: item.updated_at,
+                })
+              }
               onRemove={() => removeMutation.mutate(item.id)}
             />
           ))}
         </div>
       )}
 
-      {/* FAB — only for active lists; raised higher in shopping mode */}
-      {!list.is_archived && (
+      {/* FAB — only for active lists with edit permission */}
+      {!list.is_archived && isEditor && (
         <button
           onClick={() => setShowAddSheet(true)}
           aria-label={t('items.add')}
@@ -1072,6 +1216,24 @@ export default function ListDetailPage() {
 
       {showShareDialog && (
         <ShareListDialog listId={id!} onClose={() => setShowShareDialog(false)} />
+      )}
+
+      {showCollaboratorsDialog && (
+        <CollaboratorsDialog
+          listId={id!}
+          ownerId={list.owner_id}
+          currentUserRole={role ?? null}
+          onClose={() => setShowCollaboratorsDialog(false)}
+        />
+      )}
+
+      {showDeleteDialog && (
+        <DeleteListDialog
+          listId={id!}
+          listName={displayName}
+          onClose={() => setShowDeleteDialog(false)}
+          onDeleted={() => navigate('/lists')}
+        />
       )}
     </div>
   )

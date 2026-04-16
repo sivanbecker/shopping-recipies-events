@@ -86,6 +86,25 @@
     "reportBug": "Report a Bug",
     "giveFeedback": "Give Feedback"
   },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet",
+    "markAllRead": "Mark all as read",
+    "someone": "Someone",
+    "types": {
+      "item_added": "{{actor}} added an item",
+      "item_completed": "{{actor}} marked an item done",
+      "item_uncompleted": "{{actor}} marked an item not done",
+      "item_quantity_changed": "{{actor}} changed a quantity",
+      "list_renamed": "{{actor}} renamed the list",
+      "list_deleted": "{{actor}} deleted the list",
+      "list_restored": "{{actor}} restored the list",
+      "member_added": "{{actor}} added you to a list",
+      "member_removed": "{{actor}} removed you from a list",
+      "role_changed": "{{actor}} changed your role",
+      "member_left": "{{actor}} left the list"
+    }
+  },
   "validation": {
     "required": "This field is required",
     "invalidEmail": "Invalid email address",

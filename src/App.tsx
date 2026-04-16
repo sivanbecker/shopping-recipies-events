@@ -18,6 +18,7 @@ import EventsPage from './pages/Events/EventsPage'
 import EventDetailPage from './pages/Events/EventDetailPage'
 import ContactsPage from './pages/Events/ContactsPage'
 import ProfilePage from './pages/Profile/ProfilePage'
+import TrashPage from './pages/Lists/TrashPage'
 
 export default function App() {
   const { i18n } = useTranslation()
@@ -50,6 +51,7 @@ export default function App() {
         }
       >
         <Route path="/lists" element={<ListsPage />} />
+        <Route path="/lists/trash" element={<TrashPage />} />
         <Route path="/lists/:id" element={<ListDetailPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/recipes" element={<RecipesPage />} />

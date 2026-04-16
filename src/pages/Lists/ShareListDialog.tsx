@@ -39,6 +39,7 @@ export function ShareListDialog({ listId, onClose }: Props) {
     }) => {
       const { data: found, error: lookupError } = await supabase.rpc('find_user_by_email', {
         p_email: inviteEmail,
+        p_list_id: listId,
       })
       if (lookupError) throw lookupError
       if (!found || found.length === 0) {

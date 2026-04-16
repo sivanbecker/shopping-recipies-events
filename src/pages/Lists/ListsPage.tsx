@@ -2,7 +2,15 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
-import { Plus, ShoppingCart, ChevronDown, ChevronUp, Loader2, AlertCircle } from 'lucide-react'
+import {
+  Plus,
+  ShoppingCart,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  AlertCircle,
+  Trash2,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabase'
@@ -173,6 +181,7 @@ export default function ListsPage() {
         .from('shopping_lists')
         .select('*, shopping_items(id)')
         .eq('is_archived', false)
+        .is('deleted_at', null)
         .order('is_missing_list', { ascending: false }) // pin missing list first
         .order('created_at', { ascending: false })
       if (error) throw error
@@ -216,6 +225,7 @@ export default function ListsPage() {
         .from('shopping_lists')
         .select('*, shopping_items(id)')
         .eq('is_archived', true)
+        .is('deleted_at', null)
         .order('updated_at', { ascending: false })
       if (error) throw error
       return (data ?? []) as unknown as ListWithCount[]
@@ -281,6 +291,15 @@ export default function ListsPage() {
           )}
         </div>
       )}
+
+      {/* Trash link */}
+      <Link
+        to="/lists/trash"
+        className="flex w-full items-center gap-1.5 rounded-xl px-2 py-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+      >
+        <Trash2 className="h-4 w-4" />
+        {t('lists.trashLink')}
+      </Link>
 
       {/* "Something missing?" FAB */}
       <button
