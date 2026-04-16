@@ -16,7 +16,13 @@ interface Props {
   markAllRead: () => void
 }
 
-export function NotificationsPanel({ onClose, notifications, isLoading, markRead, markAllRead }: Props) {
+export function NotificationsPanel({
+  onClose,
+  notifications,
+  isLoading,
+  markRead,
+  markAllRead,
+}: Props) {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
 

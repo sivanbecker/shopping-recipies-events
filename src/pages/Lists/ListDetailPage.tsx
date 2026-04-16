@@ -130,7 +130,11 @@ function ItemRow({
     : '—'
 
   const currentUnit = item.unit ?? item.product?.default_unit
-  const unitLabel = currentUnit ? (lang === 'he' ? currentUnit.label_he : currentUnit.label_en) : null
+  const unitLabel = currentUnit
+    ? lang === 'he'
+      ? currentUnit.label_he
+      : currentUnit.label_en
+    : null
 
   // Filter unit options to the same type as the product's default unit
   const relevantUnits = (() => {

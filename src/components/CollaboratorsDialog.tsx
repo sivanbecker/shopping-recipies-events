@@ -46,7 +46,8 @@ export function CollaboratorsDialog({ listId, ownerId, currentUserRole, onClose 
     onError: () => toast.error(t('sharing.leaveError')),
   })
 
-  const canLeave = currentUserRole !== null && currentUserRole !== 'owner' && !!user && user.id !== ownerId
+  const canLeave =
+    currentUserRole !== null && currentUserRole !== 'owner' && !!user && user.id !== ownerId
 
   return (
     <div
