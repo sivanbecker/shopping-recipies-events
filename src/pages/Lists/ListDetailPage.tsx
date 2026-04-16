@@ -1072,6 +1072,15 @@ export default function ListDetailPage() {
     onError: () => toast.error(t('items.editError')),
   })
 
+  // ── RLS / access-lost redirect ────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!listLoading && !list) {
+      toast.error(t('sharing.noAccess'), { id: 'no-access' })
+      navigate('/lists', { replace: true })
+    }
+  }, [list, listLoading, navigate, t])
+
   // ── Derived state ─────────────────────────────────────────────────────────
 
   const uncheckedItems = items.filter(i => !i.is_checked)
@@ -1090,9 +1099,7 @@ export default function ListDetailPage() {
   }
 
   if (!list && !listLoading) {
-    // RLS filtered the list — either deleted or we lost access
-    toast.error(t('sharing.noAccess'), { id: 'no-access' })
-    navigate('/lists', { replace: true })
+    // RLS filtered the list — effect above handles redirect/toast
     return null
   }
 
