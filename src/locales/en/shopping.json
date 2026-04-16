@@ -22,7 +22,8 @@
     "create": "Create",
     "cancel": "Cancel",
     "deleteConfirm": "Delete list \"{{name}}\"?",
-    "notFound": "List not found"
+    "notFound": "List not found",
+    "renameError": "Failed to rename list"
   },
   "items": {
     "add": "Add item",

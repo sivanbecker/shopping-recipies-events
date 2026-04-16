@@ -19,6 +19,7 @@ import {
   ChevronDown,
   UserPlus,
   Users,
+  Pencil,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -544,6 +545,8 @@ export default function ListDetailPage() {
   const [showShareDialog, setShowShareDialog] = useState(false)
   const [showCollaboratorsDialog, setShowCollaboratorsDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [nameInput, setNameInput] = useState('')
 
   const { data: role } = useListRole(id)
   const isEditor = canEdit(role)
@@ -863,6 +866,36 @@ export default function ListDetailPage() {
     onError: () => toast.error('Failed to clone list'),
   })
 
+  const renameMutation = useMutation({
+    mutationFn: async (newName: string) => {
+      const { error } = await supabase
+        .from('shopping_lists')
+        .update({ name: newName.trim() || null })
+        .eq('id', id!)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shopping_list', id] })
+      queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
+      broadcastChange(id!, 'list-changed')
+      setIsEditingName(false)
+    },
+    onError: () => toast.error(t('lists.renameError')),
+  })
+
+  function startEditingName() {
+    setNameInput(list?.name ?? '')
+    setIsEditingName(true)
+  }
+
+  function commitRename() {
+    if (nameInput === (list?.name ?? '')) {
+      setIsEditingName(false)
+      return
+    }
+    renameMutation.mutate(nameInput)
+  }
+
   // ── Derived state ─────────────────────────────────────────────────────────
 
   const uncheckedItems = items.filter(i => !i.is_checked)
@@ -920,9 +953,37 @@ export default function ListDetailPage() {
             <ArrowLeft className="h-4 w-4 shrink-0" />
             {t('lists.title')}
           </Link>
-          <h1 className="truncate text-xl font-bold text-gray-800 dark:text-gray-100">
-            {displayName}
-          </h1>
+          {isEditor && !shoppingMode && !list.is_missing_list ? (
+            isEditingName ? (
+              <input
+                type="text"
+                value={nameInput}
+                onChange={e => setNameInput(e.target.value)}
+                placeholder={t('lists.namePlaceholder')}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') commitRename()
+                  if (e.key === 'Escape') setIsEditingName(false)
+                }}
+                onBlur={commitRename}
+                autoFocus
+                className="w-full rounded-lg border border-brand-300 bg-white px-2 py-0.5 text-xl font-bold text-gray-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              />
+            ) : (
+              <button
+                onClick={startEditingName}
+                className="group flex items-center gap-1.5 text-start"
+              >
+                <h1 className="truncate text-xl font-bold text-gray-800 dark:text-gray-100">
+                  {displayName}
+                </h1>
+                <Pencil className="h-4 w-4 shrink-0 text-gray-300 opacity-0 transition group-hover:opacity-100 dark:text-gray-600" />
+              </button>
+            )
+          ) : (
+            <h1 className="truncate text-xl font-bold text-gray-800 dark:text-gray-100">
+              {displayName}
+            </h1>
+          )}
           <AvatarStack members={members} size={28} />
         </div>
 

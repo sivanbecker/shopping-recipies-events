@@ -22,7 +22,8 @@
     "create": "צור",
     "cancel": "ביטול",
     "deleteConfirm": "למחוק את הרשימה \"{{name}}\"?",
-    "notFound": "רשימה לא נמצאה"
+    "notFound": "רשימה לא נמצאה",
+    "renameError": "שגיאה בשינוי שם הרשימה"
   },
   "items": {
     "add": "הוסף מוצר",

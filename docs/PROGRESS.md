@@ -532,6 +532,60 @@ Run `supabase db push` (or apply migration 024 via the Supabase dashboard) befor
 
 ---
 
+## Collaboration & Permissions Upgrade — COMPLETE (branch: `feat/collab-permissions-upgrade`, PR #45)
+
+### What was built
+
+#### Migration 026 — `supabase/migrations/026_collab_upgrade.sql`
+- **Attribution + concurrency on `shopping_items`** — added `updated_at`, `last_edited_by`, `last_edited_at`, `completed_by`, `completed_at` columns; trigger stamps `updated_at` on every update; backfill sets pre-existing rows to `updated_at = created_at`, `last_edited_by = added_by`
+- **Soft delete on `shopping_lists`** — added `deleted_at` and `deleted_by` columns; index on `(owner_id, deleted_at) WHERE deleted_at IS NOT NULL`; keeps `is_archived` separate (archive = hide, trash = terminal)
+- **`list_member_role(p_list_id)` helper** — `SECURITY DEFINER` RPC returning `'owner'|'editor'|'viewer'|null` for the calling user; used by RLS policies and client hook
+- **RLS hardening** — `shopping_items` INSERT/UPDATE/DELETE now require `list_member_role(list_id) IN ('owner','editor')` (viewers read-only); `shopping_lists` SELECT excludes soft-deleted rows for non-owners
+- **Column-level write guard** — `aa_shopping_lists_column_guard` BEFORE UPDATE trigger blocks editor writes to owner-only columns (`is_archived`, `deleted_at`, `deleted_by`, `owner_id`, `is_missing_list`)
+- **`find_user_by_email` hardened** — new 2-arg signature `(p_email, p_list_id)` requiring caller to be list owner; eliminates user-enumeration vector
+
+#### Migration 027 — `supabase/migrations/027_notifications.sql`
+- **`notifications` table** — `recipient_user_id`, `actor_user_id`, `list_id`, `entity_type`, `entity_id`, `notification_type` (11 types), `payload jsonb`, `created_at`, `read_at`; RLS: recipient can read/update/delete; INSERT only via SECURITY DEFINER triggers
+- **Fan-out triggers** — AFTER INSERT/UPDATE on `shopping_items`, AFTER UPDATE on `shopping_lists`, AFTER INSERT/UPDATE/DELETE on `list_members` — each calls `notify_list_recipients()` which fans out to all members excluding the actor
+- **`purge_trashed_lists()` RPC** — fallback for `pg_cron` if not enabled; purges lists where `deleted_at < now() - interval '30 days'`
+
+#### New hooks and libs
+- **`src/hooks/useListRole.ts`** — wraps `list_member_role` RPC with `staleTime: 30_000`; exports `canEdit(role)` (owner|editor) and `canOwn(role)` (owner only)
+- **`src/hooks/useNotifications.ts`** — last-20 notifications query, unread count query, `markReadMutation`, `markAllReadMutation`, `deleteNotificationMutation`; Realtime subscription on `notifications` filtered by `recipient_user_id`
+- **`src/lib/lists.ts`** — `softDeleteList`, `restoreList`, `purgeList`, `leaveList`, `countCollaborators`
+- **`src/lib/undo.ts`** — `UndoableAction` discriminated union (`item_add`, `item_remove`, `item_quantity`, `item_toggle`); `showUndoToast(action, label)` with 10s window, staleness guard (skips reverse if `updated_at` advanced), sonner action button
+
+#### New components and pages
+- **`src/components/DeleteListDialog.tsx`** — shows collaborator count from `countCollaborators`; "Move to Trash" calls `softDeleteList`; disabled "Transfer ownership (coming soon)" chip
+- **`src/components/CollaboratorsDialog.tsx`** — read-only member list with role badges; "Leave list" button for non-owners; two-step confirm calls `leaveList`; navigates to `/lists` on success
+- **`src/components/NotificationBell.tsx`** — bell icon with unread badge (capped at "9+"); click-outside detection; renders `NotificationsPanel` when open
+- **`src/components/NotificationsPanel.tsx`** — last-20 notifications, `notificationText()` using i18n type key, unread dot, mark-all-read button, click navigates to list
+- **`src/pages/Lists/TrashPage.tsx`** — owner's soft-deleted lists with `formatDistanceToNow(deleted_at)`; restore via `restoreList`; purge via `purgeList` with confirm dialog
+
+#### Updated files
+- **`src/pages/Lists/ListDetailPage.tsx`** — role gating (`isEditor`, `isOwner`); stale-state redirect (list returns 0 rows after access revoked → navigate to `/lists` with toast); last-edited attribution (`last_edited_by ?? added_by`); FAB gated to editors; delete button (owner only) → `DeleteListDialog`; collaborators button for non-owners → `CollaboratorsDialog`; undo toasts on toggle, remove, and add-item mutations
+- **`src/pages/Lists/ListsPage.tsx`** — active and archived queries filter `deleted_at IS NULL`; Trash nav link added
+- **`src/pages/Lists/ShareListDialog.tsx`** — `find_user_by_email` call now passes `p_list_id` (security hardening)
+- **`src/components/layout/Header.tsx`** — `NotificationBell` mounted in right-side button group
+- **`src/App.tsx`** — `/lists/trash` route added before `/lists/:id`
+
+#### i18n
+- `shopping.json` (both `he` and `en`): `sharing.viewCollaborators`, `sharing.collaboratorsTitle`, `sharing.roleOwner/Editor/Viewer`, `sharing.leaveList`, `sharing.leaveConfirm*`, `sharing.noAccess`, `sharing.lastEditedBy`; `trash.*` section; `deleteList.*` section; `undo.*` section; `lists.trashLink`
+- `common.json` (both `he` and `en`): `notifications.*` section (title, empty, markAllRead, 11 notification type strings)
+
+#### Tests — `src/__tests__/collabLogic.test.ts` (26 tests)
+- `canEdit` / `canOwn` for all role values including null/undefined
+- `UndoableAction` discrimination switch
+- Undo staleness guard (equal timestamps → not stale; different → stale)
+- Soft-delete and restore payload shapes
+- Notification fan-out exclusion (actor excluded, all others included, solo-actor → empty)
+- `canLeave` (owner cannot, editor/viewer can, null role cannot)
+
+### ⚠️ Required before testing
+Run `supabase db push` — migrations 026 and 027 must be applied before the new role gating, notifications, trash, and undo flows will work.
+
+---
+
 ## Dark Mode — COMPLETE (branch: `feat/dark-mode`, pending merge)
 
 ### Approach
