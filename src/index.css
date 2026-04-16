@@ -51,6 +51,11 @@
   }
 }
 
+@keyframes undo-countdown {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
 @layer utilities {
   /* Safe area for mobile bottom nav */
   .pb-safe {

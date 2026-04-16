@@ -18,10 +18,12 @@
     "missingList": "חוסרים",
     "showArchived": "הצג ארכיון",
     "hideArchived": "הסתר ארכיון",
+    "trashLink": "פח",
     "create": "צור",
     "cancel": "ביטול",
     "deleteConfirm": "למחוק את הרשימה \"{{name}}\"?",
-    "notFound": "רשימה לא נמצאה"
+    "notFound": "רשימה לא נמצאה",
+    "renameError": "שגיאה בשינוי שם הרשימה"
   },
   "items": {
     "add": "הוסף מוצר",
@@ -35,7 +37,8 @@
     "emptyHint": "לחץ על + להוסיף פריט ראשון",
     "confirm": "הוסף לרשימה",
     "noUnit": "ללא יחידה",
-    "inList": "ברשימה: {{qty}}"
+    "inList": "ברשימה: {{qty}}",
+    "editError": "שגיאה בעדכון הפריט"
   },
   "shopping": {
     "startShopping": "התחל קנייה",
@@ -57,11 +60,14 @@
   "sharing": {
     "shareButton": "שתף רשימה",
     "title": "שתף רשימה",
+    "viewCollaborators": "הצג שותפים",
+    "collaboratorsTitle": "שותפים",
     "membersSection": "חברים",
     "noMembers": "לא משותפת עם אף אחד עדיין",
     "contactsSection": "אנשי הקשר שלך",
     "inviteSection": "הזמן מישהו",
     "emailPlaceholder": "כתובת אימייל",
+    "roleOwner": "בעלים",
     "roleEditor": "יכול לערוך",
     "roleViewer": "יכול לצפות",
     "addButton": "הוסף",
@@ -71,7 +77,50 @@
     "updateRoleError": "עדכון ההרשאה נכשל",
     "notFound": "לא נמצא חשבון עם האימייל הזה",
     "alreadyMember": "האדם הזה כבר חבר ברשימה",
-    "removeMember": "הסר חבר"
+    "removeMember": "הסר חבר",
+    "leaveList": "עזוב רשימה",
+    "leaveConfirmTitle": "לעזוב את הרשימה?",
+    "leaveConfirmBody": "תאבד גישה לרשימה זו. אפשר להוסיף אותך שוב בהמשך.",
+    "leaveConfirm": "עזוב",
+    "leaveSuccess": "עזבת את הרשימה",
+    "leaveError": "עזיבת הרשימה נכשלה",
+    "noAccess": "אין לך יותר גישה לרשימה הזו",
+    "lastEditedBy": "נערך לאחרונה על ידי {{name}}"
+  },
+  "trash": {
+    "title": "פח",
+    "empty": "הפח ריק",
+    "deletedAgo": "נמחק {{when}}",
+    "restore": "שחזר",
+    "restoreSuccess": "הרשימה שוחזרה",
+    "restoreError": "שחזור הרשימה נכשל",
+    "purge": "מחק לצמיתות",
+    "purgeConfirmTitle": "למחוק לצמיתות?",
+    "purgeConfirmBody": "הרשימה וכל הפריטים יימחקו. לא ניתן לבטל פעולה זו.",
+    "purgeSuccess": "הרשימה נמחקה לצמיתות",
+    "purgeError": "מחיקה לצמיתות נכשלה",
+    "retentionNote": "פריטים בפח נמחקים אוטומטית לאחר 30 יום."
+  },
+  "deleteList": {
+    "button": "מחק רשימה",
+    "title": "למחוק את הרשימה עבור כל השותפים?",
+    "bodyWithCollaborators": "הרשימה תועבר לפח. {{count}} שותפים יאבדו גישה. ניתן לשחזר תוך 30 יום.",
+    "bodyWithCollaborators_one": "הרשימה תועבר לפח. שותף אחד יאבד גישה. ניתן לשחזר תוך 30 יום.",
+    "bodySolo": "הרשימה תועבר לפח. ניתן לשחזר תוך 30 יום.",
+    "confirm": "העבר לפח",
+    "transferComingSoon": "העבר בעלות (בקרוב)",
+    "success": "הרשימה הועברה לפח",
+    "error": "מחיקת הרשימה נכשלה"
+  },
+  "undo": {
+    "itemAdded": "הפריט נוסף",
+    "itemRemoved": "הפריט הוסר",
+    "quantityUpdated": "הכמות עודכנה",
+    "itemChecked": "הפריט סומן כבוצע",
+    "itemUnchecked": "הפריט סומן כלא בוצע",
+    "itemEdited": "הפריט עודכן",
+    "undoButton": "בטל",
+    "staleMessage": "בוצעו שינויים על ידי אחרים — הביטול דולג"
   },
   "units": {
     "units": "יחידות",

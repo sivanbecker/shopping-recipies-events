@@ -18,14 +18,21 @@ import {
   ListPlus,
   ChevronDown,
   UserPlus,
+  Users,
+  Pencil,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { useListRole, canEdit, canOwn } from '@/hooks/useListRole'
+import { showUndoToast } from '@/lib/undo'
+import type { ShoppingItemSnapshot } from '@/lib/undo'
 import { filterProducts } from '@/lib/filterProducts'
 import { ShareListDialog } from './ShareListDialog'
+import { CollaboratorsDialog } from '@/components/CollaboratorsDialog'
+import { DeleteListDialog } from '@/components/DeleteListDialog'
 import { AvatarStack } from '@/components/AvatarStack'
 import { UserAvatar } from '@/components/UserAvatar'
 import type {
@@ -89,9 +96,12 @@ interface ItemRowProps {
   lang: string
   onToggle: () => void
   onRemove: () => void
+  onEditCommit?: (quantity: number, unitId: string | null) => void
   isToggling: boolean
   shoppingMode?: boolean
   members?: ListMemberWithProfile[]
+  unitTypes?: UnitType[]
+  editable?: boolean
 }
 
 function ItemRow({
@@ -99,22 +109,57 @@ function ItemRow({
   lang,
   onToggle,
   onRemove,
+  onEditCommit,
   isToggling,
   shoppingMode,
   members,
+  unitTypes = [],
+  editable = true,
 }: ItemRowProps) {
-  const addedBy = members?.find(m => m.user_id === item.added_by)
+  const [editing, setEditing] = useState(false)
+  const [draftQty, setDraftQty] = useState(1)
+  const [draftUnitId, setDraftUnitId] = useState<string | null>(null)
+
+  // Prefer last_edited_by for attribution, fall back to added_by for pre-migration rows
+  const attributionUserId = item.last_edited_by ?? item.added_by
+  const attributionMember = members?.find(m => m.user_id === attributionUserId)
   const name = item.product
     ? lang === 'he'
       ? item.product.name_he
       : (item.product.name_en ?? item.product.name_he)
     : '—'
 
-  const unitLabel = (() => {
-    const u = item.unit ?? item.product?.default_unit
-    if (!u) return null
-    return lang === 'he' ? u.label_he : u.label_en
+  const currentUnit = item.unit ?? item.product?.default_unit
+  const unitLabel = currentUnit
+    ? lang === 'he'
+      ? currentUnit.label_he
+      : currentUnit.label_en
+    : null
+
+  // Filter unit options to the same type as the product's default unit
+  const relevantUnits = (() => {
+    const type = item.product?.default_unit?.type
+    return type ? unitTypes.filter(u => u.type === type) : unitTypes
   })()
+  const isCount = !currentUnit || currentUnit.type === 'count'
+
+  function startEdit() {
+    setDraftQty(Number(item.quantity))
+    setDraftUnitId(item.unit_id ?? item.product?.default_unit?.id ?? null)
+    setEditing(true)
+  }
+
+  function commitEdit() {
+    const qty = Math.max(isCount ? 1 : 0.01, draftQty)
+    onEditCommit?.(qty, draftUnitId)
+    setEditing(false)
+  }
+
+  function cancelEdit() {
+    setEditing(false)
+  }
+
+  const canEdit = editable && !shoppingMode && !item.is_checked
 
   return (
     <div
@@ -122,6 +167,7 @@ function ItemRow({
         shoppingMode ? 'p-4' : 'p-3.5'
       } ${item.is_checked ? 'border-green-100 dark:border-green-900 opacity-60' : 'border-gray-100 dark:border-gray-700'}`}
     >
+      {/* Check button */}
       <button
         onClick={onToggle}
         disabled={isToggling}
@@ -140,6 +186,7 @@ function ItemRow({
         ) : null}
       </button>
 
+      {/* Name + qty/unit (or inline edit) */}
       <div className="min-w-0 flex-1">
         <span
           className={`block truncate font-medium ${shoppingMode ? 'text-base' : 'text-sm'} ${
@@ -148,23 +195,108 @@ function ItemRow({
         >
           {name}
         </span>
-        {(item.quantity !== 1 || unitLabel) && (
-          <span className="text-xs text-gray-400 dark:text-gray-500">
-            {item.quantity}
-            {unitLabel ? ` ${unitLabel}` : ''}
-          </span>
+
+        {editing ? (
+          <div className="mt-1.5 flex items-center gap-1.5">
+            {/* Quantity control */}
+            {isCount ? (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setDraftQty(q => Math.max(1, q - 1))}
+                  className="flex h-6 w-6 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+                >
+                  <Minus className="h-3 w-3" />
+                </button>
+                <span className="w-6 text-center text-sm font-semibold text-gray-800 dark:text-gray-100">
+                  {draftQty}
+                </span>
+                <button
+                  onClick={() => setDraftQty(q => q + 1)}
+                  className="flex h-6 w-6 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+                >
+                  <Plus className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <input
+                type="number"
+                min="0.01"
+                step="any"
+                value={draftQty}
+                onChange={e => setDraftQty(Math.max(0.01, parseFloat(e.target.value) || 0.01))}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') commitEdit()
+                  if (e.key === 'Escape') cancelEdit()
+                }}
+                className="w-16 rounded-lg border border-gray-200 bg-white px-2 py-0.5 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                autoFocus
+              />
+            )}
+
+            {/* Unit select */}
+            {relevantUnits.length > 0 && (
+              <select
+                value={draftUnitId ?? ''}
+                onChange={e => setDraftUnitId(e.target.value || null)}
+                className="rounded-lg border border-gray-200 bg-white px-1.5 py-0.5 text-xs text-gray-600 focus:border-brand-400 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+              >
+                <option value="">—</option>
+                {relevantUnits.map(u => (
+                  <option key={u.id} value={u.id}>
+                    {lang === 'he' ? u.label_he : u.label_en}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Save */}
+            <button
+              onClick={commitEdit}
+              className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-500 text-white hover:bg-brand-600"
+            >
+              <Check className="h-3.5 w-3.5" />
+            </button>
+
+            {/* Cancel */}
+            <button
+              onClick={cancelEdit}
+              className="flex h-6 w-6 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ) : (
+          <>
+            {(item.quantity !== 1 || unitLabel) && (
+              <span
+                onClick={canEdit ? startEdit : undefined}
+                className={`inline-block text-xs text-gray-400 dark:text-gray-500 ${canEdit ? 'cursor-pointer rounded px-0.5 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300' : ''}`}
+              >
+                {item.quantity}
+                {unitLabel ? ` ${unitLabel}` : ''}
+              </span>
+            )}
+            {item.quantity === 1 && !unitLabel && canEdit && (
+              <span
+                onClick={startEdit}
+                className="inline-block cursor-pointer rounded px-0.5 text-xs text-gray-300 hover:bg-gray-100 hover:text-gray-500 dark:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-400"
+              >
+                1
+              </span>
+            )}
+            {item.note && <span className="block text-xs italic text-gray-400">{item.note}</span>}
+          </>
         )}
-        {item.note && <span className="block text-xs italic text-gray-400">{item.note}</span>}
       </div>
 
       <UserAvatar
-        userId={item.added_by}
-        displayName={addedBy?.display_name}
-        avatarUrl={addedBy?.avatar_url}
+        userId={attributionUserId}
+        displayName={attributionMember?.display_name}
+        avatarUrl={attributionMember?.avatar_url}
         size={20}
       />
 
-      {!shoppingMode && (
+      {!shoppingMode && editable && !editing && (
         <button
           onClick={onRemove}
           className="rounded-lg p-1.5 text-gray-300 transition hover:bg-red-50 hover:text-red-400"
@@ -226,7 +358,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
   // Upsert: bump existing unchecked item's quantity, or insert new
   const upsertMutation = useMutation({
     mutationFn: async () => {
-      if (!configuring) return
+      if (!configuring) return null
       const existing = items.find(i => i.product_id === configuring.id && !i.is_checked)
       if (existing) {
         const { error } = await supabase
@@ -234,20 +366,40 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
           .update({ quantity: Number(existing.quantity) + quantity, unit_id: unitId })
           .eq('id', existing.id)
         if (error) throw error
+        return null // quantity bump — no undo (too complex; existing item still there)
       } else {
-        const { error } = await supabase.from('shopping_items').insert({
-          list_id: listId,
-          product_id: configuring.id,
-          quantity,
-          unit_id: unitId,
-          added_by: user!.id,
-        })
+        const { data, error } = await supabase
+          .from('shopping_items')
+          .insert({
+            list_id: listId,
+            product_id: configuring.id,
+            quantity,
+            unit_id: unitId,
+            added_by: user!.id,
+          })
+          .select('id, updated_at')
+          .single()
         if (error) throw error
+        return data as { id: string; updated_at: string }
       }
     },
-    onSuccess: () => {
+    onSuccess: newItem => {
       queryClient.invalidateQueries({ queryKey: ['shopping_items', listId] })
       broadcastChange(listId, 'items-changed')
+      if (newItem) {
+        showUndoToast(
+          { type: 'item_add', listId, itemId: newItem.id, at: newItem.updated_at },
+          {
+            label: t('undo.itemAdded'),
+            undoLabel: t('undo.undoButton'),
+            staleMessage: t('undo.staleMessage'),
+            onUndone: () => {
+              queryClient.invalidateQueries({ queryKey: ['shopping_items', listId] })
+              broadcastChange(listId, 'items-changed')
+            },
+          }
+        )
+      }
       setConfiguring(null)
       setSearch('')
     },
@@ -512,6 +664,14 @@ export default function ListDetailPage() {
   const [showDoneDialog, setShowDoneDialog] = useState(false)
   const [showInCart, setShowInCart] = useState(false)
   const [showShareDialog, setShowShareDialog] = useState(false)
+  const [showCollaboratorsDialog, setShowCollaboratorsDialog] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [nameInput, setNameInput] = useState('')
+
+  const { data: role } = useListRole(id)
+  const isEditor = canEdit(role)
+  const isOwner = canOwn(role)
 
   // ── Queries ──────────────────────────────────────────────────────────────
 
@@ -645,15 +805,40 @@ export default function ListDetailPage() {
   // ── Mutations ────────────────────────────────────────────────────────────
 
   const toggleMutation = useMutation({
-    mutationFn: async ({ itemId, checked }: { itemId: string; checked: boolean }) => {
-      const { error } = await supabase
+    mutationFn: async ({
+      itemId,
+      checked,
+      updatedAt: _updatedAt,
+    }: {
+      itemId: string
+      checked: boolean
+      updatedAt: string
+    }) => {
+      const { data, error } = await supabase
         .from('shopping_items')
         .update({ is_checked: checked })
         .eq('id', itemId)
+        .select('updated_at')
+        .single()
       if (error) throw error
+      return data
     },
     onMutate: ({ itemId }) => {
       setTogglingIds(s => new Set(s).add(itemId))
+    },
+    onSuccess: (data, { itemId, checked, updatedAt }) => {
+      showUndoToast(
+        { type: 'item_toggle', itemId, before: !checked, updatedAt: data?.updated_at ?? updatedAt },
+        {
+          label: checked ? t('undo.itemChecked') : t('undo.itemUnchecked'),
+          undoLabel: t('undo.undoButton'),
+          staleMessage: t('undo.staleMessage'),
+          onUndone: () => {
+            queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+            broadcastChange(id!, 'items-changed')
+          },
+        }
+      )
     },
     onSettled: (_, __, { itemId }) => {
       setTogglingIds(s => {
@@ -669,13 +854,41 @@ export default function ListDetailPage() {
 
   const removeMutation = useMutation({
     mutationFn: async (itemId: string) => {
+      // Capture snapshot before deleting so we can re-insert on undo
+      const snapshot = items.find(i => i.id === itemId)
       const { error } = await supabase.from('shopping_items').delete().eq('id', itemId)
       if (error) throw error
+      return snapshot
     },
-    onSuccess: () => {
+    onSuccess: snapshot => {
       queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
       queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
       broadcastChange(id!, 'items-changed')
+      if (snapshot) {
+        const snap: ShoppingItemSnapshot = {
+          list_id: snapshot.list_id,
+          product_id: snapshot.product_id,
+          quantity: snapshot.quantity,
+          unit_id: snapshot.unit_id,
+          is_checked: snapshot.is_checked,
+          added_by: snapshot.added_by,
+          note: snapshot.note,
+          sort_order: snapshot.sort_order,
+          recipe_id: snapshot.recipe_id,
+        }
+        showUndoToast(
+          { type: 'item_remove', listId: id!, snapshot: snap },
+          {
+            label: t('undo.itemRemoved'),
+            undoLabel: t('undo.undoButton'),
+            staleMessage: t('undo.staleMessage'),
+            onUndone: () => {
+              queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+              broadcastChange(id!, 'items-changed')
+            },
+          }
+        )
+      }
     },
     onError: () => toast.error('Failed to remove item'),
   })
@@ -774,6 +987,104 @@ export default function ListDetailPage() {
     onError: () => toast.error('Failed to clone list'),
   })
 
+  const renameMutation = useMutation({
+    mutationFn: async (newName: string) => {
+      const { error } = await supabase
+        .from('shopping_lists')
+        .update({ name: newName.trim() || null })
+        .eq('id', id!)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shopping_list', id] })
+      queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
+      broadcastChange(id!, 'list-changed')
+      setIsEditingName(false)
+    },
+    onError: () => toast.error(t('lists.renameError')),
+  })
+
+  function startEditingName() {
+    setNameInput(list?.name ?? '')
+    setIsEditingName(true)
+  }
+
+  function commitRename() {
+    if (nameInput === (list?.name ?? '')) {
+      setIsEditingName(false)
+      return
+    }
+    renameMutation.mutate(nameInput)
+  }
+
+  const { data: unitTypes = [] } = useQuery<UnitType[]>({
+    queryKey: ['unit_types'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('unit_types').select('*').order('type')
+      if (error) throw error
+      return data as UnitType[]
+    },
+    staleTime: 60 * 60 * 1000,
+  })
+
+  const updateItemMutation = useMutation({
+    mutationFn: async ({
+      itemId,
+      quantity,
+      unitId,
+      prevQuantity,
+      prevUnitId,
+      updatedAt,
+    }: {
+      itemId: string
+      quantity: number
+      unitId: string | null
+      prevQuantity: number
+      prevUnitId: string | null
+      updatedAt: string
+    }) => {
+      const { data, error } = await supabase
+        .from('shopping_items')
+        .update({ quantity, unit_id: unitId })
+        .eq('id', itemId)
+        .select('updated_at')
+        .single()
+      if (error) throw error
+      return { newUpdatedAt: data.updated_at, prevQuantity, prevUnitId, updatedAt }
+    },
+    onSuccess: ({ newUpdatedAt, prevQuantity, prevUnitId, updatedAt }, { itemId }) => {
+      queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+      broadcastChange(id!, 'items-changed')
+      showUndoToast(
+        {
+          type: 'item_edit',
+          itemId,
+          before: { quantity: prevQuantity, unitId: prevUnitId },
+          updatedAt: newUpdatedAt ?? updatedAt,
+        },
+        {
+          label: t('undo.itemEdited'),
+          undoLabel: t('undo.undoButton'),
+          staleMessage: t('undo.staleMessage'),
+          onUndone: () => {
+            queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+            broadcastChange(id!, 'items-changed')
+          },
+        }
+      )
+    },
+    onError: () => toast.error(t('items.editError')),
+  })
+
+  // ── RLS / access-lost redirect ────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!listLoading && !list) {
+      toast.error(t('sharing.noAccess'), { id: 'no-access' })
+      navigate('/lists', { replace: true })
+    }
+  }, [list, listLoading, navigate, t])
+
   // ── Derived state ─────────────────────────────────────────────────────────
 
   const uncheckedItems = items.filter(i => !i.is_checked)
@@ -789,6 +1100,11 @@ export default function ListDetailPage() {
         <Loader2 className="h-6 w-6 animate-spin text-brand-400" />
       </div>
     )
+  }
+
+  if (!list && !listLoading) {
+    // RLS filtered the list — effect above handles redirect/toast
+    return null
   }
 
   if (!list) {
@@ -824,9 +1140,37 @@ export default function ListDetailPage() {
             <ArrowLeft className="h-4 w-4 shrink-0" />
             {t('lists.title')}
           </Link>
-          <h1 className="truncate text-xl font-bold text-gray-800 dark:text-gray-100">
-            {displayName}
-          </h1>
+          {isEditor && !shoppingMode && !list.is_missing_list ? (
+            isEditingName ? (
+              <input
+                type="text"
+                value={nameInput}
+                onChange={e => setNameInput(e.target.value)}
+                placeholder={t('lists.namePlaceholder')}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') commitRename()
+                  if (e.key === 'Escape') setIsEditingName(false)
+                }}
+                onBlur={commitRename}
+                autoFocus
+                className="w-full rounded-lg border border-brand-300 bg-white px-2 py-0.5 text-xl font-bold text-gray-800 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              />
+            ) : (
+              <button
+                onClick={startEditingName}
+                className="group flex items-center gap-1.5 text-start"
+              >
+                <h1 className="truncate text-xl font-bold text-gray-800 dark:text-gray-100">
+                  {displayName}
+                </h1>
+                <Pencil className="h-4 w-4 shrink-0 text-gray-300 opacity-0 transition group-hover:opacity-100 dark:text-gray-600" />
+              </button>
+            )
+          ) : (
+            <h1 className="truncate text-xl font-bold text-gray-800 dark:text-gray-100">
+              {displayName}
+            </h1>
+          )}
           <AvatarStack members={members} size={28} />
         </div>
 
@@ -841,24 +1185,25 @@ export default function ListDetailPage() {
             {t('shopping.exitMode')}
           </button>
         ) : (
-          list.owner_id === user?.id && (
-            <div className="flex shrink-0 items-center gap-2">
-              {/* Convert to Shopping List — only on missing-items lists */}
-              {list.is_missing_list && (
-                <button
-                  onClick={() => convertToListMutation.mutate()}
-                  disabled={convertToListMutation.isPending || items.length === 0}
-                  className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
-                >
-                  {convertToListMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <ListPlus className="h-4 w-4" />
-                  )}
-                  {t('missing.convertToList')}
-                </button>
-              )}
+          <div className="flex shrink-0 items-center gap-2">
+            {/* Convert to Shopping List — only on missing-items lists, owners only */}
+            {isOwner && list.is_missing_list && (
+              <button
+                onClick={() => convertToListMutation.mutate()}
+                disabled={convertToListMutation.isPending || items.length === 0}
+                className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 transition hover:bg-amber-100 disabled:opacity-50"
+              >
+                {convertToListMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ListPlus className="h-4 w-4" />
+                )}
+                {t('missing.convertToList')}
+              </button>
+            )}
 
+            {/* Share button (owner) or View collaborators (editor/viewer) */}
+            {isOwner ? (
               <button
                 onClick={() => setShowShareDialog(true)}
                 aria-label={t('sharing.shareButton')}
@@ -866,7 +1211,18 @@ export default function ListDetailPage() {
               >
                 <UserPlus className="h-4 w-4" />
               </button>
+            ) : role ? (
+              <button
+                onClick={() => setShowCollaboratorsDialog(true)}
+                aria-label={t('sharing.viewCollaborators')}
+                className="flex items-center gap-1.5 rounded-xl bg-gray-100 px-3 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                <Users className="h-4 w-4" />
+              </button>
+            ) : null}
 
+            {/* Clone — owner only */}
+            {isOwner && (
               <button
                 onClick={() => cloneMutation.mutate()}
                 disabled={cloneMutation.isPending}
@@ -880,7 +1236,10 @@ export default function ListDetailPage() {
                 )}
                 {t('lists.clone')}
               </button>
+            )}
 
+            {/* Archive — owner only */}
+            {isOwner && (
               <button
                 onClick={() => archiveMutation.mutate(!list.is_archived)}
                 disabled={archiveMutation.isPending}
@@ -899,8 +1258,19 @@ export default function ListDetailPage() {
                 )}
                 {list.is_archived ? t('lists.reactivate') : t('lists.markDone')}
               </button>
-            </div>
-          )
+            )}
+
+            {/* Delete — owner only */}
+            {isOwner && !list.is_missing_list && (
+              <button
+                onClick={() => setShowDeleteDialog(true)}
+                aria-label={t('deleteList.button')}
+                className="flex items-center gap-1.5 rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100 dark:bg-red-950 dark:text-red-300"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         )}
       </div>
 
@@ -942,9 +1312,28 @@ export default function ListDetailPage() {
               lang={lang}
               shoppingMode
               members={members}
+              editable={isEditor}
               isToggling={togglingIds.has(item.id)}
-              onToggle={() => toggleMutation.mutate({ itemId: item.id, checked: !item.is_checked })}
+              onToggle={() =>
+                isEditor &&
+                toggleMutation.mutate({
+                  itemId: item.id,
+                  checked: !item.is_checked,
+                  updatedAt: item.updated_at,
+                })
+              }
               onRemove={() => removeMutation.mutate(item.id)}
+              onEditCommit={(qty, unitId) =>
+                updateItemMutation.mutate({
+                  itemId: item.id,
+                  quantity: qty,
+                  unitId,
+                  prevQuantity: Number(item.quantity),
+                  prevUnitId: item.unit_id,
+                  updatedAt: item.updated_at,
+                })
+              }
+              unitTypes={unitTypes}
             />
           ))}
 
@@ -969,9 +1358,15 @@ export default function ListDetailPage() {
                       item={item}
                       lang={lang}
                       shoppingMode
+                      editable={isEditor}
                       isToggling={togglingIds.has(item.id)}
                       onToggle={() =>
-                        toggleMutation.mutate({ itemId: item.id, checked: !item.is_checked })
+                        isEditor &&
+                        toggleMutation.mutate({
+                          itemId: item.id,
+                          checked: !item.is_checked,
+                          updatedAt: item.updated_at,
+                        })
                       }
                       onRemove={() => removeMutation.mutate(item.id)}
                     />
@@ -990,16 +1385,35 @@ export default function ListDetailPage() {
               item={item}
               lang={lang}
               members={members}
+              unitTypes={unitTypes}
+              editable={isEditor}
               isToggling={togglingIds.has(item.id)}
-              onToggle={() => toggleMutation.mutate({ itemId: item.id, checked: !item.is_checked })}
+              onToggle={() =>
+                isEditor &&
+                toggleMutation.mutate({
+                  itemId: item.id,
+                  checked: !item.is_checked,
+                  updatedAt: item.updated_at,
+                })
+              }
               onRemove={() => removeMutation.mutate(item.id)}
+              onEditCommit={(qty, unitId) =>
+                updateItemMutation.mutate({
+                  itemId: item.id,
+                  quantity: qty,
+                  unitId,
+                  prevQuantity: Number(item.quantity),
+                  prevUnitId: item.unit_id,
+                  updatedAt: item.updated_at,
+                })
+              }
             />
           ))}
         </div>
       )}
 
-      {/* FAB — only for active lists; raised higher in shopping mode */}
-      {!list.is_archived && (
+      {/* FAB — only for active lists with edit permission */}
+      {!list.is_archived && isEditor && (
         <button
           onClick={() => setShowAddSheet(true)}
           aria-label={t('items.add')}
@@ -1072,6 +1486,24 @@ export default function ListDetailPage() {
 
       {showShareDialog && (
         <ShareListDialog listId={id!} onClose={() => setShowShareDialog(false)} />
+      )}
+
+      {showCollaboratorsDialog && (
+        <CollaboratorsDialog
+          listId={id!}
+          ownerId={list.owner_id}
+          currentUserRole={role ?? null}
+          onClose={() => setShowCollaboratorsDialog(false)}
+        />
+      )}
+
+      {showDeleteDialog && (
+        <DeleteListDialog
+          listId={id!}
+          listName={displayName}
+          onClose={() => setShowDeleteDialog(false)}
+          onDeleted={() => navigate('/lists')}
+        />
       )}
     </div>
   )

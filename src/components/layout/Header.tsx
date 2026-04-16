@@ -3,6 +3,7 @@ import { ShoppingCart, Moon, Sun } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAppStore } from '@/store/useAppStore'
 import { ProfileDropdown } from './ProfileDropdown'
+import { NotificationBell } from '@/components/NotificationBell'
 
 const pageTitles: Record<string, { he: string; en: string }> = {
   '/lists': { he: 'רשימות קניות', en: 'Shopping Lists' },
@@ -42,6 +43,9 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-1">
+          {/* Notification bell */}
+          <NotificationBell />
+
           {/* Dark mode toggle */}
           <button
             onClick={toggleDarkMode}
