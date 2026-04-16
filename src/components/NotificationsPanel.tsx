@@ -1,7 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { formatDistanceToNow } from 'date-fns'
-import { useNotifications } from '@/hooks/useNotifications'
 import type { Notification, NotificationType } from '@/types'
 
 function notificationText(n: Notification, t: ReturnType<typeof useTranslation>['t']): string {
@@ -9,22 +8,21 @@ function notificationText(n: Notification, t: ReturnType<typeof useTranslation>[
   return t(`notifications.types.${n.notification_type as NotificationType}`, { actor })
 }
 
-function listIdFromNotification(n: Notification): string | null {
-  return n.list_id ?? null
-}
-
 interface Props {
   onClose: () => void
+  notifications: Notification[]
+  isLoading: boolean
+  markRead: (id: string) => void
+  markAllRead: () => void
 }
 
-export function NotificationsPanel({ onClose }: Props) {
+export function NotificationsPanel({ onClose, notifications, isLoading, markRead, markAllRead }: Props) {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
-  const { notifications, isLoading, markRead, markAllRead } = useNotifications()
 
   function handleClick(n: Notification) {
     if (!n.read_at) markRead(n.id)
-    const listId = listIdFromNotification(n)
+    const listId = n.list_id ?? null
     if (listId) {
       navigate(`/lists/${listId}`)
       onClose()

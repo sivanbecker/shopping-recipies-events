@@ -5,7 +5,7 @@ import { NotificationsPanel } from './NotificationsPanel'
 
 export function NotificationBell() {
   const [open, setOpen] = useState(false)
-  const { unreadCount } = useNotifications()
+  const { unreadCount, notifications, isLoading, markRead, markAllRead } = useNotifications()
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -32,7 +32,15 @@ export function NotificationBell() {
         )}
       </button>
 
-      {open && <NotificationsPanel onClose={() => setOpen(false)} />}
+      {open && (
+        <NotificationsPanel
+          onClose={() => setOpen(false)}
+          notifications={notifications}
+          isLoading={isLoading}
+          markRead={markRead}
+          markAllRead={markAllRead}
+        />
+      )}
     </div>
   )
 }
