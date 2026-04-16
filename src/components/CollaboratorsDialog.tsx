@@ -34,7 +34,10 @@ export function CollaboratorsDialog({ listId, ownerId, currentUserRole, onClose 
   })
 
   const leaveMutation = useMutation({
-    mutationFn: () => leaveList(listId, user!.id),
+    mutationFn: () => {
+      if (!user) throw new Error('Not authenticated')
+      return leaveList(listId, user.id)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
       toast.success(t('sharing.leaveSuccess'))
@@ -43,7 +46,7 @@ export function CollaboratorsDialog({ listId, ownerId, currentUserRole, onClose 
     onError: () => toast.error(t('sharing.leaveError')),
   })
 
-  const canLeave = currentUserRole !== 'owner' && user?.id !== ownerId
+  const canLeave = currentUserRole !== null && currentUserRole !== 'owner' && !!user && user.id !== ownerId
 
   return (
     <div
@@ -117,7 +120,7 @@ export function CollaboratorsDialog({ listId, ownerId, currentUserRole, onClose 
                   </button>
                   <button
                     onClick={() => leaveMutation.mutate()}
-                    disabled={leaveMutation.isPending}
+                    disabled={leaveMutation.isPending || !user}
                     className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-60"
                   >
                     {leaveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}

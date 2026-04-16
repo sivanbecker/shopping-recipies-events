@@ -23,7 +23,10 @@ export function DeleteListDialog({ listId, listName, onClose, onDeleted }: Props
   })
 
   const deleteMutation = useMutation({
-    mutationFn: () => softDeleteList(listId, user!.id),
+    mutationFn: () => {
+      if (!user) throw new Error('Not authenticated')
+      return softDeleteList(listId, user.id)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shopping_lists'] })
       queryClient.invalidateQueries({ queryKey: ['shopping_list', listId] })
@@ -77,7 +80,7 @@ export function DeleteListDialog({ listId, listName, onClose, onDeleted }: Props
           </button>
           <button
             onClick={() => deleteMutation.mutate()}
-            disabled={deleteMutation.isPending}
+            disabled={deleteMutation.isPending || !user}
             className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-60"
           >
             {deleteMutation.isPending ? (
