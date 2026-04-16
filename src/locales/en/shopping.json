@@ -37,7 +37,8 @@
     "emptyHint": "Tap + to add your first item",
     "confirm": "Add to List",
     "noUnit": "No unit",
-    "inList": "In list: {{qty}}"
+    "inList": "In list: {{qty}}",
+    "editError": "Failed to update item"
   },
   "shopping": {
     "startShopping": "Start Shopping",
@@ -117,6 +118,7 @@
     "quantityUpdated": "Quantity updated",
     "itemChecked": "Item marked done",
     "itemUnchecked": "Item marked not done",
+    "itemEdited": "Item updated",
     "undoButton": "Undo",
     "staleMessage": "Changes made by others — undo skipped"
   },

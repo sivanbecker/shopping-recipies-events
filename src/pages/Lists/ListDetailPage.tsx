@@ -96,9 +96,11 @@ interface ItemRowProps {
   lang: string
   onToggle: () => void
   onRemove: () => void
+  onEditCommit?: (quantity: number, unitId: string | null) => void
   isToggling: boolean
   shoppingMode?: boolean
   members?: ListMemberWithProfile[]
+  unitTypes?: UnitType[]
   editable?: boolean
 }
 
@@ -107,11 +109,17 @@ function ItemRow({
   lang,
   onToggle,
   onRemove,
+  onEditCommit,
   isToggling,
   shoppingMode,
   members,
+  unitTypes = [],
   editable = true,
 }: ItemRowProps) {
+  const [editing, setEditing] = useState(false)
+  const [draftQty, setDraftQty] = useState(1)
+  const [draftUnitId, setDraftUnitId] = useState<string | null>(null)
+
   // Prefer last_edited_by for attribution, fall back to added_by for pre-migration rows
   const attributionUserId = item.last_edited_by ?? item.added_by
   const attributionMember = members?.find(m => m.user_id === attributionUserId)
@@ -121,11 +129,33 @@ function ItemRow({
       : (item.product.name_en ?? item.product.name_he)
     : '—'
 
-  const unitLabel = (() => {
-    const u = item.unit ?? item.product?.default_unit
-    if (!u) return null
-    return lang === 'he' ? u.label_he : u.label_en
+  const currentUnit = item.unit ?? item.product?.default_unit
+  const unitLabel = currentUnit ? (lang === 'he' ? currentUnit.label_he : currentUnit.label_en) : null
+
+  // Filter unit options to the same type as the product's default unit
+  const relevantUnits = (() => {
+    const type = item.product?.default_unit?.type
+    return type ? unitTypes.filter(u => u.type === type) : unitTypes
   })()
+  const isCount = !currentUnit || currentUnit.type === 'count'
+
+  function startEdit() {
+    setDraftQty(Number(item.quantity))
+    setDraftUnitId(item.unit_id ?? item.product?.default_unit?.id ?? null)
+    setEditing(true)
+  }
+
+  function commitEdit() {
+    const qty = Math.max(isCount ? 1 : 0.01, draftQty)
+    onEditCommit?.(qty, draftUnitId)
+    setEditing(false)
+  }
+
+  function cancelEdit() {
+    setEditing(false)
+  }
+
+  const canEdit = editable && !shoppingMode && !item.is_checked
 
   return (
     <div
@@ -133,6 +163,7 @@ function ItemRow({
         shoppingMode ? 'p-4' : 'p-3.5'
       } ${item.is_checked ? 'border-green-100 dark:border-green-900 opacity-60' : 'border-gray-100 dark:border-gray-700'}`}
     >
+      {/* Check button */}
       <button
         onClick={onToggle}
         disabled={isToggling}
@@ -151,6 +182,7 @@ function ItemRow({
         ) : null}
       </button>
 
+      {/* Name + qty/unit (or inline edit) */}
       <div className="min-w-0 flex-1">
         <span
           className={`block truncate font-medium ${shoppingMode ? 'text-base' : 'text-sm'} ${
@@ -159,13 +191,98 @@ function ItemRow({
         >
           {name}
         </span>
-        {(item.quantity !== 1 || unitLabel) && (
-          <span className="text-xs text-gray-400 dark:text-gray-500">
-            {item.quantity}
-            {unitLabel ? ` ${unitLabel}` : ''}
-          </span>
+
+        {editing ? (
+          <div className="mt-1.5 flex items-center gap-1.5">
+            {/* Quantity control */}
+            {isCount ? (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setDraftQty(q => Math.max(1, q - 1))}
+                  className="flex h-6 w-6 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+                >
+                  <Minus className="h-3 w-3" />
+                </button>
+                <span className="w-6 text-center text-sm font-semibold text-gray-800 dark:text-gray-100">
+                  {draftQty}
+                </span>
+                <button
+                  onClick={() => setDraftQty(q => q + 1)}
+                  className="flex h-6 w-6 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-800"
+                >
+                  <Plus className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <input
+                type="number"
+                min="0.01"
+                step="any"
+                value={draftQty}
+                onChange={e => setDraftQty(Math.max(0.01, parseFloat(e.target.value) || 0.01))}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') commitEdit()
+                  if (e.key === 'Escape') cancelEdit()
+                }}
+                className="w-16 rounded-lg border border-gray-200 bg-white px-2 py-0.5 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                autoFocus
+              />
+            )}
+
+            {/* Unit select */}
+            {relevantUnits.length > 0 && (
+              <select
+                value={draftUnitId ?? ''}
+                onChange={e => setDraftUnitId(e.target.value || null)}
+                className="rounded-lg border border-gray-200 bg-white px-1.5 py-0.5 text-xs text-gray-600 focus:border-brand-400 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+              >
+                <option value="">—</option>
+                {relevantUnits.map(u => (
+                  <option key={u.id} value={u.id}>
+                    {lang === 'he' ? u.label_he : u.label_en}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Save */}
+            <button
+              onClick={commitEdit}
+              className="flex h-6 w-6 items-center justify-center rounded-lg bg-brand-500 text-white hover:bg-brand-600"
+            >
+              <Check className="h-3.5 w-3.5" />
+            </button>
+
+            {/* Cancel */}
+            <button
+              onClick={cancelEdit}
+              className="flex h-6 w-6 items-center justify-center rounded-lg border border-gray-200 text-gray-400 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ) : (
+          <>
+            {(item.quantity !== 1 || unitLabel) && (
+              <span
+                onClick={canEdit ? startEdit : undefined}
+                className={`inline-block text-xs text-gray-400 dark:text-gray-500 ${canEdit ? 'cursor-pointer rounded px-0.5 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300' : ''}`}
+              >
+                {item.quantity}
+                {unitLabel ? ` ${unitLabel}` : ''}
+              </span>
+            )}
+            {item.quantity === 1 && !unitLabel && canEdit && (
+              <span
+                onClick={startEdit}
+                className="inline-block cursor-pointer rounded px-0.5 text-xs text-gray-300 hover:bg-gray-100 hover:text-gray-500 dark:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-400"
+              >
+                1
+              </span>
+            )}
+            {item.note && <span className="block text-xs italic text-gray-400">{item.note}</span>}
+          </>
         )}
-        {item.note && <span className="block text-xs italic text-gray-400">{item.note}</span>}
       </div>
 
       <UserAvatar
@@ -175,7 +292,7 @@ function ItemRow({
         size={20}
       />
 
-      {!shoppingMode && editable && (
+      {!shoppingMode && editable && !editing && (
         <button
           onClick={onRemove}
           className="rounded-lg p-1.5 text-gray-300 transition hover:bg-red-50 hover:text-red-400"
@@ -896,6 +1013,65 @@ export default function ListDetailPage() {
     renameMutation.mutate(nameInput)
   }
 
+  const { data: unitTypes = [] } = useQuery<UnitType[]>({
+    queryKey: ['unit_types'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('unit_types').select('*').order('type')
+      if (error) throw error
+      return data as UnitType[]
+    },
+    staleTime: 60 * 60 * 1000,
+  })
+
+  const updateItemMutation = useMutation({
+    mutationFn: async ({
+      itemId,
+      quantity,
+      unitId,
+      prevQuantity,
+      prevUnitId,
+      updatedAt,
+    }: {
+      itemId: string
+      quantity: number
+      unitId: string | null
+      prevQuantity: number
+      prevUnitId: string | null
+      updatedAt: string
+    }) => {
+      const { data, error } = await supabase
+        .from('shopping_items')
+        .update({ quantity, unit_id: unitId })
+        .eq('id', itemId)
+        .select('updated_at')
+        .single()
+      if (error) throw error
+      return { newUpdatedAt: data.updated_at, prevQuantity, prevUnitId, updatedAt }
+    },
+    onSuccess: ({ newUpdatedAt, prevQuantity, prevUnitId, updatedAt }, { itemId }) => {
+      queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+      broadcastChange(id!, 'items-changed')
+      showUndoToast(
+        {
+          type: 'item_edit',
+          itemId,
+          before: { quantity: prevQuantity, unitId: prevUnitId },
+          updatedAt: newUpdatedAt ?? updatedAt,
+        },
+        {
+          label: t('undo.itemEdited'),
+          undoLabel: t('undo.undoButton'),
+          staleMessage: t('undo.staleMessage'),
+          onUndone: () => {
+            queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
+            broadcastChange(id!, 'items-changed')
+          },
+        }
+      )
+    },
+    onError: () => toast.error(t('items.editError')),
+  })
+
   // ── Derived state ─────────────────────────────────────────────────────────
 
   const uncheckedItems = items.filter(i => !i.is_checked)
@@ -1136,6 +1312,17 @@ export default function ListDetailPage() {
                 })
               }
               onRemove={() => removeMutation.mutate(item.id)}
+              onEditCommit={(qty, unitId) =>
+                updateItemMutation.mutate({
+                  itemId: item.id,
+                  quantity: qty,
+                  unitId,
+                  prevQuantity: Number(item.quantity),
+                  prevUnitId: item.unit_id,
+                  updatedAt: item.updated_at,
+                })
+              }
+              unitTypes={unitTypes}
             />
           ))}
 
@@ -1187,6 +1374,7 @@ export default function ListDetailPage() {
               item={item}
               lang={lang}
               members={members}
+              unitTypes={unitTypes}
               editable={isEditor}
               isToggling={togglingIds.has(item.id)}
               onToggle={() =>
@@ -1198,6 +1386,16 @@ export default function ListDetailPage() {
                 })
               }
               onRemove={() => removeMutation.mutate(item.id)}
+              onEditCommit={(qty, unitId) =>
+                updateItemMutation.mutate({
+                  itemId: item.id,
+                  quantity: qty,
+                  unitId,
+                  prevQuantity: Number(item.quantity),
+                  prevUnitId: item.unit_id,
+                  updatedAt: item.updated_at,
+                })
+              }
             />
           ))}
         </div>

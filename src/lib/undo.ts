@@ -15,6 +15,12 @@ export type UndoableAction =
       updatedAt: string
     }
   | { type: 'item_toggle'; itemId: string; before: boolean; updatedAt: string }
+  | {
+      type: 'item_edit'
+      itemId: string
+      before: { quantity: number; unitId: string | null }
+      updatedAt: string
+    }
 
 export type ShoppingItemSnapshot = Pick<
   ShoppingItem,
@@ -89,6 +95,17 @@ async function reverseAction(action: UndoableAction): Promise<boolean> {
       const { error } = await supabase
         .from('shopping_items')
         .update({ is_checked: action.before })
+        .eq('id', action.itemId)
+      if (error) throw error
+      return true
+    }
+
+    case 'item_edit': {
+      const fresh = await fetchFreshness(action.itemId)
+      if (!fresh || fresh.updated_at !== action.updatedAt) return false
+      const { error } = await supabase
+        .from('shopping_items')
+        .update({ quantity: action.before.quantity, unit_id: action.before.unitId })
         .eq('id', action.itemId)
       if (error) throw error
       return true

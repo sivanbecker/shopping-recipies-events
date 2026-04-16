@@ -37,7 +37,8 @@
     "emptyHint": "לחץ על + להוסיף פריט ראשון",
     "confirm": "הוסף לרשימה",
     "noUnit": "ללא יחידה",
-    "inList": "ברשימה: {{qty}}"
+    "inList": "ברשימה: {{qty}}",
+    "editError": "שגיאה בעדכון הפריט"
   },
   "shopping": {
     "startShopping": "התחל קנייה",
@@ -117,6 +118,7 @@
     "quantityUpdated": "הכמות עודכנה",
     "itemChecked": "הפריט סומן כבוצע",
     "itemUnchecked": "הפריט סומן כלא בוצע",
+    "itemEdited": "הפריט עודכן",
     "undoButton": "בטל",
     "staleMessage": "בוצעו שינויים על ידי אחרים — הביטול דולג"
   },
