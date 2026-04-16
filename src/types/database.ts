@@ -555,7 +555,7 @@ export type Database = {
     Views: Record<string, never>
     Functions: {
       find_user_by_email: {
-        Args: { p_email: string; p_list_id: string }
+        Args: { p_email: string; p_list_id?: string }
         Returns: { user_id: string; display_name: string | null }[]
       }
       get_list_members: {
