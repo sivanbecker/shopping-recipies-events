@@ -1,5 +1,7 @@
+import { createElement } from 'react'
 import { toast } from 'sonner'
 import { supabase } from './supabase'
+import { UndoToastContent, DURATION_MS } from '@/components/UndoToastContent'
 import type { ShoppingItem } from '@/types'
 
 export type UndoableAction =
@@ -40,20 +42,20 @@ interface UndoOptions {
  * case we surface a friendly message instead of clobbering their write.
  */
 export function showUndoToast(action: UndoableAction, opts: UndoOptions): void {
-  toast(opts.label, {
-    duration: 10_000,
-    action: {
-      label: opts.undoLabel,
-      onClick: async () => {
-        const ok = await reverseAction(action)
-        if (ok) {
-          opts.onUndone?.()
-        } else {
-          toast.info(opts.staleMessage)
-        }
-      },
-    },
-  })
+  toast.custom(
+    id =>
+      createElement(UndoToastContent, {
+        toastId: id,
+        label: opts.label,
+        undoLabel: opts.undoLabel,
+        onUndo: async () => {
+          const ok = await reverseAction(action)
+          if (ok) opts.onUndone?.()
+          else toast.info(opts.staleMessage)
+        },
+      }),
+    { duration: DURATION_MS }
+  )
 }
 
 async function reverseAction(action: UndoableAction): Promise<boolean> {
