@@ -95,6 +95,7 @@ export function useNotifications() {
 
   useEffect(() => {
     if (!userId) return
+    if (session?.access_token) supabase.realtime.setAuth(session.access_token)
     const channel = supabase
       .channel(`notifications-${userId}`)
       .on(
@@ -114,7 +115,7 @@ export function useNotifications() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [userId, queryClient])
+  }, [userId, session?.access_token, queryClient])
 
   return {
     notifications: listQuery.data ?? [],
