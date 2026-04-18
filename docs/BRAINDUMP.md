@@ -19,3 +19,4 @@
 - feat: add "hide" btn for list (and other entities ?) 
 - feat: list ownership transfer
 - fix: on mobile, list detail page has some overlapping elements.
+- check: can i backup supabase DB for local work ?
