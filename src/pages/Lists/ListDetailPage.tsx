@@ -1234,7 +1234,7 @@ export default function ListDetailPage() {
                 ) : (
                   <Copy className="h-4 w-4" />
                 )}
-                {t('lists.clone')}
+                <span className="hidden sm:inline">{t('lists.clone')}</span>
               </button>
             )}
 
@@ -1256,7 +1256,9 @@ export default function ListDetailPage() {
                 ) : (
                   <Archive className="h-4 w-4" />
                 )}
-                {list.is_archived ? t('lists.reactivate') : t('lists.markDone')}
+                <span className="hidden sm:inline">
+                  {list.is_archived ? t('lists.reactivate') : t('lists.markDone')}
+                </span>
               </button>
             )}
 
