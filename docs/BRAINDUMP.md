@@ -20,3 +20,4 @@
 - feat: list ownership transfer
 - fix: on mobile, list detail page has some overlapping elements.
 - check: can i backup supabase DB for local work ?
+- feat: add sorting option inside shopping list, such that i can sort by category.
