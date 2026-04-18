@@ -37,11 +37,17 @@ Execute every step in order. Do not skip any step.
 1. Stage the file: `git add docs/BRAINDUMP.md`.
 2. Commit: `git commit -m "idea: update braindump"`.
 3. Push: `git push -u origin <branch-name>`.
-4. Create PR:
+4. Read the diff from Step 1 and extract the added lines (lines starting with `+` that are not the `+++` header). Format them as a bullet list for the PR body.
+5. Create PR with a body that lists the specific additions:
 ```
-gh pr create --title "idea: update braindump" --body "Updates BRAINDUMP.md with new ideas."
+gh pr create --title "idea: update braindump" --body "$(cat <<'EOF'
+Updates BRAINDUMP.md with new ideas:
+
+<bullet list of added lines extracted from the diff>
+EOF
+)"
 ```
-5. Merge immediately and delete remote branch:
+6. Merge immediately and delete remote branch:
 ```
 gh pr merge --merge --delete-branch
 ```
