@@ -18,3 +18,4 @@
 - feat: lock a list (or a recipe/event) so that is cannot be deleted. (maybe not even chcanged ?)  
 - feat: add "hide" btn for list (and other entities ?) 
 - feat: list ownership transfer
+- fix: on mobile, list detail page has some overlapping elements.
