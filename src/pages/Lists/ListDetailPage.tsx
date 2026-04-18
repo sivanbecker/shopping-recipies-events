@@ -1256,7 +1256,9 @@ export default function ListDetailPage() {
                 ) : (
                   <Archive className="h-4 w-4" />
                 )}
-                <span className="hidden sm:inline">{list.is_archived ? t('lists.reactivate') : t('lists.markDone')}</span>
+                <span className="hidden sm:inline">
+                  {list.is_archived ? t('lists.reactivate') : t('lists.markDone')}
+                </span>
               </button>
             )}
 
