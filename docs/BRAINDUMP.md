@@ -15,4 +15,6 @@
     * swipe right/left
     * long press
 - feat: add base products list per category that a new user can import and use in his account. 
-- feat: lock a list (or a recipe/event) so that is cannot be deleted. (maybe not even chcanged ?)   
+- feat: lock a list (or a recipe/event) so that is cannot be deleted. (maybe not even chcanged ?)  
+- feat: add "hide" btn for list (and other entities ?) 
+- feat: list ownership transfer
