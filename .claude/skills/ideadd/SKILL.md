@@ -47,7 +47,12 @@ Updates BRAINDUMP.md with new ideas:
 EOF
 )"
 ```
-6. Merge immediately and delete remote branch:
+6. Wait for all PR checks to pass:
+```
+gh pr checks --watch
+```
+   If any check fails, report it to the user and stop — do not merge.
+7. Merge and delete remote branch:
 ```
 gh pr merge --merge --delete-branch
 ```
