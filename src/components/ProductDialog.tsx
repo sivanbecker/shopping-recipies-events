@@ -1,11 +1,12 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Loader2, Sparkles, X } from 'lucide-react'
+import { Loader2, Mic, MicOff, Sparkles, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import type { Category, UnitType } from '@/types'
+import { useVoiceInput } from '@/hooks/useVoiceInput'
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
@@ -16,6 +17,9 @@ const productSchema = z.object({
   default_unit_id: z.string().optional(),
 })
 export type ProductFormData = z.infer<typeof productSchema>
+
+const HE_VOICE_REGEX = /[\u05D0-\u05EA\u05F0-\u05F4\uFB1D-\uFB4E]/
+const EN_VOICE_REGEX = /[a-zA-Z]/
 
 // ─── ProductDialog ────────────────────────────────────────────────────────────
 
@@ -49,12 +53,32 @@ export function ProductDialog({
 }: ProductDialogProps) {
   const { t } = useTranslation()
   const [isSuggesting, setIsSuggesting] = useState(false)
+  const [voiceActiveLang, setVoiceActiveLang] = useState<'he' | 'en' | null>(null)
+  const voiceActiveLangRef = useRef<'he' | 'en' | null>(null)
+  const [wrongTyping, setWrongTyping] = useState<{ he: boolean; en: boolean }>({
+    he: false,
+    en: false,
+  })
+  const wrongTypingTimers = useRef<{
+    he?: ReturnType<typeof setTimeout>
+    en?: ReturnType<typeof setTimeout>
+  }>({})
+
+  const flashWrongTyping = useCallback((field: 'he' | 'en') => {
+    setWrongTyping(prev => ({ ...prev, [field]: true }))
+    clearTimeout(wrongTypingTimers.current[field])
+    wrongTypingTimers.current[field] = setTimeout(
+      () => setWrongTyping(prev => ({ ...prev, [field]: false })),
+      1500
+    )
+  }, [])
 
   const {
     register,
     handleSubmit,
     setValue,
     getValues,
+    watch,
     formState: { errors },
   } = useForm<ProductFormData>({
     resolver: zodResolver(productSchema),
@@ -65,6 +89,9 @@ export function ProductDialog({
       default_unit_id: product?.default_unit_id ?? '',
     },
   })
+
+  const nameHeValue = watch('name_he')
+  const nameEnValue = watch('name_en')
 
   const handleSuggest = useCallback(async () => {
     const nameHe = getValues('name_he')?.trim()
@@ -96,6 +123,40 @@ export function ProductDialog({
       setIsSuggesting(false)
     }
   }, [getValues, isSuggesting, categories, unitTypes, setValue])
+
+  const {
+    status: voiceStatus,
+    start: startVoice,
+    stop: stopVoice,
+  } = useVoiceInput({
+    onResult: useCallback(
+      (text: string) => {
+        const lang = voiceActiveLangRef.current
+        const isHe = HE_VOICE_REGEX.test(text)
+        const isEn = EN_VOICE_REGEX.test(text)
+        if (lang === 'he' && isHe) setValue('name_he', text)
+        else if (lang === 'en' && isEn && !isHe) setValue('name_en', text)
+        voiceActiveLangRef.current = null
+        setVoiceActiveLang(null)
+      },
+      [setValue]
+    ),
+  })
+
+  const handleVoiceClick = useCallback(
+    (lang: 'he' | 'en') => {
+      if (voiceActiveLang === lang && voiceStatus === 'listening') {
+        stopVoice()
+        voiceActiveLangRef.current = null
+        setVoiceActiveLang(null)
+      } else {
+        voiceActiveLangRef.current = lang
+        setVoiceActiveLang(lang)
+        startVoice(lang)
+      }
+    },
+    [voiceActiveLang, voiceStatus, startVoice, stopVoice]
+  )
 
   const unitGroups = (['count', 'weight', 'volume', 'cooking'] as const).map(type => ({
     type,
@@ -136,7 +197,22 @@ export function ProductDialog({
                 type="text"
                 placeholder={t('products.namePlaceholder')}
                 dir="rtl"
-                className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+                onInput={e => {
+                  const el = e.currentTarget
+                  const filtered = el.value.replace(
+                    /[^\u05D0-\u05EA\u05F0-\u05F4\uFB1D-\uFB4E\s'"-]/g,
+                    ''
+                  )
+                  if (filtered !== el.value) {
+                    setValue('name_he', filtered)
+                    flashWrongTyping('he')
+                  }
+                }}
+                className={`w-full rounded-xl border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 dark:bg-gray-800 dark:text-gray-100 ${
+                  wrongTyping.he
+                    ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20 dark:border-red-500'
+                    : 'border-gray-200 focus:border-brand-500 focus:ring-brand-500/20 dark:border-gray-600'
+                }`}
               />
               {mode === 'add' && (
                 <button
@@ -153,9 +229,38 @@ export function ProductDialog({
                   )}
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => handleVoiceClick('he')}
+                title={t('products.voiceHe')}
+                className={`shrink-0 rounded-xl border px-3 py-2.5 transition ${
+                  voiceActiveLang === 'he' && voiceStatus === 'listening'
+                    ? 'border-red-400 bg-red-50 text-red-500 dark:border-red-500 dark:bg-red-900/30 dark:text-red-400'
+                    : 'border-gray-200 text-gray-500 hover:bg-brand-50 hover:text-brand-600 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-brand-900 dark:hover:text-brand-400'
+                }`}
+              >
+                {voiceActiveLang === 'he' && voiceStatus === 'listening' ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </button>
+              {nameHeValue && (
+                <button
+                  type="button"
+                  onClick={() => setValue('name_he', '')}
+                  title={t('products.clearField')}
+                  className="shrink-0 rounded-xl border border-gray-200 px-3 py-2.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:border-gray-600 dark:text-gray-500 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
             {errors.name_he && (
               <p className="mt-1 text-xs text-red-500">{t('validation.required')}</p>
+            )}
+            {wrongTyping.he && (
+              <p className="mt-1 text-xs text-red-500">{t('products.typingWrongLangHe')}</p>
             )}
           </div>
 
@@ -164,13 +269,56 @@ export function ProductDialog({
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               {t('products.nameEn')}
             </label>
-            <input
-              {...register('name_en')}
-              type="text"
-              placeholder={t('products.nameEnPlaceholder')}
-              dir="ltr"
-              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            />
+            <div className="flex gap-2">
+              <input
+                {...register('name_en')}
+                type="text"
+                placeholder={t('products.nameEnPlaceholder')}
+                dir="ltr"
+                onInput={e => {
+                  const el = e.currentTarget
+                  const filtered = el.value.replace(/[^a-zA-Z\s'"-]/g, '')
+                  if (filtered !== el.value) {
+                    setValue('name_en', filtered)
+                    flashWrongTyping('en')
+                  }
+                }}
+                className={`w-full rounded-xl border px-4 py-2.5 text-sm focus:outline-none focus:ring-2 dark:bg-gray-800 dark:text-gray-100 ${
+                  wrongTyping.en
+                    ? 'border-red-400 focus:border-red-400 focus:ring-red-400/20 dark:border-red-500'
+                    : 'border-gray-200 focus:border-brand-500 focus:ring-brand-500/20 dark:border-gray-600'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => handleVoiceClick('en')}
+                title={t('products.voiceEn')}
+                className={`shrink-0 rounded-xl border px-3 py-2.5 transition ${
+                  voiceActiveLang === 'en' && voiceStatus === 'listening'
+                    ? 'border-red-400 bg-red-50 text-red-500 dark:border-red-500 dark:bg-red-900/30 dark:text-red-400'
+                    : 'border-gray-200 text-gray-500 hover:bg-brand-50 hover:text-brand-600 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-brand-900 dark:hover:text-brand-400'
+                }`}
+              >
+                {voiceActiveLang === 'en' && voiceStatus === 'listening' ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </button>
+              {nameEnValue && (
+                <button
+                  type="button"
+                  onClick={() => setValue('name_en', '')}
+                  title={t('products.clearField')}
+                  className="shrink-0 rounded-xl border border-gray-200 px-3 py-2.5 text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:border-gray-600 dark:text-gray-500 dark:hover:bg-gray-700 dark:hover:text-gray-300"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            {wrongTyping.en && (
+              <p className="mt-1 text-xs text-red-500">{t('products.typingWrongLangEn')}</p>
+            )}
           </div>
 
           {/* Category */}
