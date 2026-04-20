@@ -18,9 +18,6 @@ const productSchema = z.object({
 })
 export type ProductFormData = z.infer<typeof productSchema>
 
-const HE_VOICE_REGEX = /[\u05D0-\u05EA\u05F0-\u05F4\uFB1D-\uFB4E]/
-const EN_VOICE_REGEX = /[a-zA-Z]/
-
 // ─── ProductDialog ────────────────────────────────────────────────────────────
 
 interface ProductDialogProps {
@@ -53,8 +50,6 @@ export function ProductDialog({
 }: ProductDialogProps) {
   const { t } = useTranslation()
   const [isSuggesting, setIsSuggesting] = useState(false)
-  const [voiceActiveLang, setVoiceActiveLang] = useState<'he' | 'en' | null>(null)
-  const voiceActiveLangRef = useRef<'he' | 'en' | null>(null)
   const [wrongTyping, setWrongTyping] = useState<{ he: boolean; en: boolean }>({
     he: false,
     en: false,
@@ -125,38 +120,32 @@ export function ProductDialog({
   }, [getValues, isSuggesting, categories, unitTypes, setValue])
 
   const {
-    status: voiceStatus,
-    start: startVoice,
-    stop: stopVoice,
+    status: voiceHeStatus,
+    start: startVoiceHe,
+    stop: stopVoiceHe,
   } = useVoiceInput({
-    onResult: useCallback(
-      (text: string, isFinal: boolean) => {
-        if (!isFinal) return
-        const lang = voiceActiveLangRef.current
-        const isHe = HE_VOICE_REGEX.test(text)
-        const isEn = EN_VOICE_REGEX.test(text)
-        if (lang === 'he' && !isEn) setValue('name_he', text)
-        else if (lang === 'en' && isEn && !isHe) setValue('name_en', text)
-        voiceActiveLangRef.current = null
-        setVoiceActiveLang(null)
-      },
-      [setValue]
-    ),
+    onResult: useCallback((text: string) => setValue('name_he', text), [setValue]),
+  })
+
+  const {
+    status: voiceEnStatus,
+    start: startVoiceEn,
+    stop: stopVoiceEn,
+  } = useVoiceInput({
+    onResult: useCallback((text: string) => setValue('name_en', text), [setValue]),
   })
 
   const handleVoiceClick = useCallback(
     (lang: 'he' | 'en') => {
-      if (voiceActiveLang === lang && voiceStatus === 'listening') {
-        stopVoice()
-        voiceActiveLangRef.current = null
-        setVoiceActiveLang(null)
+      if (lang === 'he') {
+        if (voiceHeStatus === 'listening') stopVoiceHe()
+        else startVoiceHe('he')
       } else {
-        voiceActiveLangRef.current = lang
-        setVoiceActiveLang(lang)
-        startVoice(lang)
+        if (voiceEnStatus === 'listening') stopVoiceEn()
+        else startVoiceEn('en')
       }
     },
-    [voiceActiveLang, voiceStatus, startVoice, stopVoice]
+    [voiceHeStatus, voiceEnStatus, startVoiceHe, stopVoiceHe, startVoiceEn, stopVoiceEn]
   )
 
   const unitGroups = (['count', 'weight', 'volume', 'cooking'] as const).map(type => ({
@@ -235,12 +224,12 @@ export function ProductDialog({
                 onClick={() => handleVoiceClick('he')}
                 title={t('products.voiceHe')}
                 className={`shrink-0 rounded-xl border px-3 py-2.5 transition ${
-                  voiceActiveLang === 'he' && voiceStatus === 'listening'
+                  voiceHeStatus === 'listening'
                     ? 'border-red-400 bg-red-50 text-red-500 dark:border-red-500 dark:bg-red-900/30 dark:text-red-400'
                     : 'border-gray-200 text-gray-500 hover:bg-brand-50 hover:text-brand-600 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-brand-900 dark:hover:text-brand-400'
                 }`}
               >
-                {voiceActiveLang === 'he' && voiceStatus === 'listening' ? (
+                {voiceHeStatus === 'listening' ? (
                   <MicOff className="h-4 w-4" />
                 ) : (
                   <Mic className="h-4 w-4" />
@@ -295,12 +284,12 @@ export function ProductDialog({
                 onClick={() => handleVoiceClick('en')}
                 title={t('products.voiceEn')}
                 className={`shrink-0 rounded-xl border px-3 py-2.5 transition ${
-                  voiceActiveLang === 'en' && voiceStatus === 'listening'
+                  voiceEnStatus === 'listening'
                     ? 'border-red-400 bg-red-50 text-red-500 dark:border-red-500 dark:bg-red-900/30 dark:text-red-400'
                     : 'border-gray-200 text-gray-500 hover:bg-brand-50 hover:text-brand-600 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-brand-900 dark:hover:text-brand-400'
                 }`}
               >
-                {voiceActiveLang === 'en' && voiceStatus === 'listening' ? (
+                {voiceEnStatus === 'listening' ? (
                   <MicOff className="h-4 w-4" />
                 ) : (
                   <Mic className="h-4 w-4" />
