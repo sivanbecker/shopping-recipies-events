@@ -34,6 +34,8 @@ import { filterProducts } from '@/lib/filterProducts'
 import { ShareListDialog } from './ShareListDialog'
 import { CollaboratorsDialog } from '@/components/CollaboratorsDialog'
 import { DeleteListDialog } from '@/components/DeleteListDialog'
+import { ProductDialog } from '@/components/ProductDialog'
+import type { ProductFormData } from '@/components/ProductDialog'
 import { AvatarStack } from '@/components/AvatarStack'
 import { UserAvatar } from '@/components/UserAvatar'
 import type {
@@ -350,6 +352,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [configuring, setConfiguring] = useState<ProductWithUnit | null>(null)
+  const [creatingName, setCreatingName] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [unitId, setUnitId] = useState<string | null>(null)
 
@@ -372,6 +375,16 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
       const { data, error } = await supabase.from('unit_types').select('*').order('type')
       if (error) throw error
       return data as UnitType[]
+    },
+    staleTime: 60 * 60 * 1000,
+  })
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('categories').select('*').order('sort_order')
+      if (error) throw error
+      return data as Category[]
     },
     staleTime: 60 * 60 * 1000,
   })
@@ -434,13 +447,15 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
   })
 
   // Create product then go to configure step (no item inserted yet)
-  const createMutation = useMutation<ProductWithUnit, Error, string>({
-    mutationFn: async (name: string) => {
+  const createMutation = useMutation<ProductWithUnit, Error, ProductFormData>({
+    mutationFn: async (formData: ProductFormData) => {
       const { data: product, error } = await supabase
         .from('products')
         .insert({
-          name_he: name,
-          name_en: lang === 'en' ? name : null,
+          name_he: formData.name_he,
+          name_en: formData.name_en || null,
+          category_id: formData.category_id || null,
+          default_unit_id: formData.default_unit_id || null,
           created_by: user!.id,
           is_shared: false,
         })
@@ -451,6 +466,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
     },
     onSuccess: product => {
       queryClient.invalidateQueries({ queryKey: ['products_with_units'] })
+      setCreatingName(null)
       openConfigure(product)
       setSearch('')
     },
@@ -466,6 +482,21 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
     : false
 
   // ── Configure step ────────────────────────────────────────────────────────
+
+  if (creatingName !== null) {
+    return (
+      <ProductDialog
+        mode="add"
+        initialNameHe={creatingName}
+        categories={categories}
+        unitTypes={unitTypes}
+        lang={lang as 'he' | 'en'}
+        isSubmitting={createMutation.isPending}
+        onClose={() => setCreatingName(null)}
+        onSubmit={formData => createMutation.mutate(formData)}
+      />
+    )
+  }
 
   if (configuring) {
     const name = lang === 'he' ? configuring.name_he : (configuring.name_en ?? configuring.name_he)
@@ -654,15 +685,10 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
 
           {trimmed && !exactMatch && (
             <button
-              onClick={() => createMutation.mutate(trimmed)}
-              disabled={createMutation.isPending}
+              onClick={() => setCreatingName(trimmed)}
               className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm text-brand-600 transition hover:bg-brand-50"
             >
-              {createMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4 shrink-0" />
-              )}
+              <Plus className="h-4 w-4 shrink-0" />
               {t('items.createNew', { name: trimmed })}
             </button>
           )}
