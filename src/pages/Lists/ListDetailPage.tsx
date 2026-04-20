@@ -1427,9 +1427,9 @@ export default function ListDetailPage() {
               <div key={key ?? '__uncategorized__'} className="space-y-2">
                 <button
                   onClick={() => toggleCategory(key)}
-                  className="flex w-full items-center gap-2 py-3 text-sm font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 border-b border-gray-700/50 dark:border-gray-600/40 shadow-sm"
+                  className="flex w-full items-center gap-2 py-3 text-xl font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 border-b border-gray-700/50 dark:border-gray-600/40 shadow-sm"
                 >
-                  {category?.icon && <span className="text-base">{category.icon}</span>}
+                  {category?.icon && <span className="text-2xl">{category.icon}</span>}
                   <span className="flex-1 text-start">{categoryName}</span>
                   <ChevronDown
                     className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
@@ -1542,9 +1542,9 @@ export default function ListDetailPage() {
               <div key={key ?? '__uncategorized__'} className="space-y-2">
                 <button
                   onClick={() => toggleCategory(key)}
-                  className="flex w-full items-center gap-2 py-3 text-sm font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 border-b border-gray-700/50 dark:border-gray-600/40 shadow-sm"
+                  className="flex w-full items-center gap-2 py-3 text-xl font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 border-b border-gray-700/50 dark:border-gray-600/40 shadow-sm"
                 >
-                  {category?.icon && <span className="text-base">{category.icon}</span>}
+                  {category?.icon && <span className="text-2xl">{category.icon}</span>}
                   <span className="flex-1 text-start">{categoryName}</span>
                   <ChevronDown
                     className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
