@@ -5,7 +5,6 @@ type VoiceInputStatus = 'idle' | 'listening' | 'error'
 
 interface UseVoiceInputOptions {
   onResult: (text: string) => void
-  onWrongLanguage: () => void
 }
 
 interface UseVoiceInputReturn {
@@ -15,28 +14,15 @@ interface UseVoiceInputReturn {
   stop: () => void
 }
 
-const HE_CHAR_REGEX = /[\u05D0-\u05EA]/
-const EN_CHAR_REGEX = /[a-zA-Z]/
-
-function detectLang(text: string): VoiceInputLang | null {
-  if (HE_CHAR_REGEX.test(text)) return 'he'
-  if (EN_CHAR_REGEX.test(text)) return 'en'
-  return null
-}
-
 const BCP47: Record<VoiceInputLang, string> = {
   he: 'he-IL',
   en: 'en-US',
 }
 
-export function useVoiceInput({
-  onResult,
-  onWrongLanguage,
-}: UseVoiceInputOptions): UseVoiceInputReturn {
+export function useVoiceInput({ onResult }: UseVoiceInputOptions): UseVoiceInputReturn {
   const [status, setStatus] = useState<VoiceInputStatus>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
-  const expectedLangRef = useRef<VoiceInputLang>('he')
 
   const stop = useCallback(() => {
     recognitionRef.current?.stop()
@@ -61,7 +47,6 @@ export function useVoiceInput({
         recognitionRef.current.stop()
       }
 
-      expectedLangRef.current = lang
       setErrorMessage(null)
 
       const recognition = new SpeechRecognition()
@@ -74,15 +59,7 @@ export function useVoiceInput({
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0]?.[0]?.transcript?.trim() ?? ''
-        if (!transcript) return
-
-        const detected = detectLang(transcript)
-        if (detected !== null && detected !== expectedLangRef.current) {
-          onWrongLanguage()
-          return
-        }
-
-        onResult(transcript)
+        if (transcript) onResult(transcript)
       }
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -101,7 +78,7 @@ export function useVoiceInput({
 
       recognition.start()
     },
-    [onResult, onWrongLanguage]
+    [onResult]
   )
 
   return { status, errorMessage, start, stop }
