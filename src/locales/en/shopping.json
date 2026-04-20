@@ -52,7 +52,9 @@
     "keepShopping": "Keep Shopping",
     "collapseAll": "Collapse all",
     "expandAll": "Expand all",
-    "uncategorized": "Other"
+    "uncategorized": "Other",
+    "markCategoryDone": "Mark all done",
+    "unmarkCategoryDone": "Unmark all"
   },
   "missing": {
     "addMissing": "Something missing?",

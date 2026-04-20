@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -116,6 +116,112 @@ function ProgressBar({ done, total }: ProgressBarProps) {
           className="h-full rounded-full bg-brand-500 transition-all duration-300"
           style={{ width: `${pct}%` }}
         />
+      </div>
+    </div>
+  )
+}
+
+// ─── CategoryHeader ───────────────────────────────────────────────────────────
+
+interface CategoryHeaderProps {
+  categoryName: string
+  icon?: string | null
+  isCollapsed: boolean
+  allDone: boolean
+  isToggling: boolean
+  editable: boolean
+  onCollapse: () => void
+  onToggleAll: (checked: boolean) => void
+}
+
+function CategoryHeader({
+  categoryName,
+  icon,
+  isCollapsed,
+  allDone,
+  isToggling,
+  editable,
+  onCollapse,
+  onToggleAll,
+}: CategoryHeaderProps) {
+  const { t } = useTranslation('shopping')
+  const [swipeX, setSwipeX] = useState(0)
+  const touchStartX = useRef<number | null>(null)
+  const SWIPE_THRESHOLD = 60
+
+  function handleTouchStart(e: React.TouchEvent) {
+    touchStartX.current = e.touches[0].clientX
+    setSwipeX(0)
+  }
+
+  function handleTouchMove(e: React.TouchEvent) {
+    if (touchStartX.current === null) return
+    const delta = e.touches[0].clientX - touchStartX.current
+    // only track rightward swipe, cap at threshold
+    setSwipeX(Math.max(0, Math.min(delta, SWIPE_THRESHOLD + 20)))
+  }
+
+  function handleTouchEnd() {
+    if (swipeX >= SWIPE_THRESHOLD && editable) {
+      onToggleAll(!allDone)
+    }
+    setSwipeX(0)
+    touchStartX.current = null
+  }
+
+  const swipeProgress = Math.min(swipeX / SWIPE_THRESHOLD, 1)
+  const showSwipeFill = swipeX > 10
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-lg"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Swipe-right reveal layer */}
+      {showSwipeFill && (
+        <div
+          className={`absolute inset-0 rounded-lg transition-colors ${allDone ? 'bg-orange-100 dark:bg-orange-900/30' : 'bg-green-100 dark:bg-green-900/30'}`}
+          style={{ opacity: swipeProgress }}
+        />
+      )}
+      <div
+        className="relative flex w-full items-center gap-2 py-3"
+        style={{ transform: `translateX(${swipeX * 0.3}px)` }}
+      >
+        {/* Category checkbox */}
+        {editable && (
+          <button
+            onClick={e => {
+              e.stopPropagation()
+              onToggleAll(!allDone)
+            }}
+            disabled={isToggling}
+            title={allDone ? t('shopping.unmarkCategoryDone') : t('shopping.markCategoryDone')}
+            className={`shrink-0 flex items-center justify-center rounded-full border-2 h-5 w-5 transition ${
+              allDone
+                ? 'border-green-500 bg-green-500 text-white'
+                : 'border-gray-300 hover:border-brand-400 dark:border-gray-600'
+            }`}
+          >
+            {isToggling ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : allDone ? (
+              <Check className="h-3 w-3" />
+            ) : null}
+          </button>
+        )}
+        <button
+          onClick={onCollapse}
+          className="flex flex-1 items-center gap-2 text-xl font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 border-b border-gray-700/50 dark:border-gray-600/40 shadow-sm"
+        >
+          {icon && <span className="text-2xl">{icon}</span>}
+          <span className="flex-1 text-start">{categoryName}</span>
+          <ChevronDown
+            className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
+          />
+        </button>
       </div>
     </div>
   )
@@ -1187,6 +1293,15 @@ export default function ListDetailPage() {
     setAllCollapsed(v => !v)
   }
 
+  function toggleCategoryItems(groupItems: ShoppingItemWithProduct[], checked: boolean) {
+    if (!isEditor) return
+    for (const item of groupItems) {
+      if (item.is_checked !== checked) {
+        toggleMutation.mutate({ itemId: item.id, checked, updatedAt: item.updated_at })
+      }
+    }
+  }
+
   // ── Loading / not found ───────────────────────────────────────────────────
 
   if (listLoading) {
@@ -1423,18 +1538,20 @@ export default function ListDetailPage() {
                 ? category.name_he
                 : category.name_en
               : t('shopping.uncategorized')
+            const allDone = groupItems.every(i => i.is_checked)
+            const isCategoryToggling = groupItems.some(i => togglingIds.has(i.id))
             return (
               <div key={key ?? '__uncategorized__'} className="space-y-2">
-                <button
-                  onClick={() => toggleCategory(key)}
-                  className="flex w-full items-center gap-2 py-3 text-xl font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 border-b border-gray-700/50 dark:border-gray-600/40 shadow-sm"
-                >
-                  {category?.icon && <span className="text-2xl">{category.icon}</span>}
-                  <span className="flex-1 text-start">{categoryName}</span>
-                  <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
-                  />
-                </button>
+                <CategoryHeader
+                  categoryName={categoryName}
+                  icon={category?.icon}
+                  isCollapsed={isCollapsed}
+                  allDone={allDone}
+                  isToggling={isCategoryToggling}
+                  editable={isEditor}
+                  onCollapse={() => toggleCategory(key)}
+                  onToggleAll={checked => toggleCategoryItems(groupItems, checked)}
+                />
                 {!isCollapsed && (
                   <div className="space-y-2">
                     {groupItems.map(item => (
@@ -1538,18 +1655,20 @@ export default function ListDetailPage() {
                 ? category.name_he
                 : category.name_en
               : t('shopping.uncategorized')
+            const allDone = groupItems.every(i => i.is_checked)
+            const isCategoryToggling = groupItems.some(i => togglingIds.has(i.id))
             return (
               <div key={key ?? '__uncategorized__'} className="space-y-2">
-                <button
-                  onClick={() => toggleCategory(key)}
-                  className="flex w-full items-center gap-2 py-3 text-xl font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 border-b border-gray-700/50 dark:border-gray-600/40 shadow-sm"
-                >
-                  {category?.icon && <span className="text-2xl">{category.icon}</span>}
-                  <span className="flex-1 text-start">{categoryName}</span>
-                  <ChevronDown
-                    className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
-                  />
-                </button>
+                <CategoryHeader
+                  categoryName={categoryName}
+                  icon={category?.icon}
+                  isCollapsed={isCollapsed}
+                  allDone={allDone}
+                  isToggling={isCategoryToggling}
+                  editable={isEditor}
+                  onCollapse={() => toggleCategory(key)}
+                  onToggleAll={checked => toggleCategoryItems(groupItems, checked)}
+                />
                 {!isCollapsed && (
                   <div className="space-y-2">
                     {groupItems.map(item => (
