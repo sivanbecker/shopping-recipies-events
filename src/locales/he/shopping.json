@@ -52,7 +52,9 @@
     "keepShopping": "המשך לקנות",
     "collapseAll": "כווץ הכל",
     "expandAll": "הרחב הכל",
-    "uncategorized": "אחר"
+    "uncategorized": "אחר",
+    "markCategoryDone": "סמן הכל כבוצע",
+    "unmarkCategoryDone": "בטל סימון הכל"
   },
   "missing": {
     "addMissing": "משהו חסר?",
