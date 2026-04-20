@@ -356,7 +356,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
   const [search, setSearch] = useState('')
   const [configuring, setConfiguring] = useState<ProductWithUnit | null>(null)
 
-  const voice = useVoiceInput({ onResult: text => setSearch(text) })
+  const voice = useVoiceInput({ onResult: text => setSearch(text), interimResults: true })
   const [creatingName, setCreatingName] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [unitId, setUnitId] = useState<string | null>(null)
