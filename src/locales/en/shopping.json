@@ -139,5 +139,9 @@
     "thirdCup": "⅓ cup",
     "halfCup": "½ cup",
     "container": "container"
+  },
+  "voice": {
+    "start": "Search by voice",
+    "stop": "Stop listening"
   }
 }
