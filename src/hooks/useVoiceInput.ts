@@ -45,7 +45,10 @@ function getSpeechRecognition(): (new () => ISpeechRecognition) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
 }
 
-export function useVoiceInput({ onResult, interimResults = false }: UseVoiceInputOptions): UseVoiceInputReturn {
+export function useVoiceInput({
+  onResult,
+  interimResults = false,
+}: UseVoiceInputOptions): UseVoiceInputReturn {
   const [status, setStatus] = useState<VoiceInputStatus>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
