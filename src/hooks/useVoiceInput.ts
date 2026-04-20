@@ -24,6 +24,7 @@ type VoiceInputStatus = 'idle' | 'listening' | 'error'
 
 interface UseVoiceInputOptions {
   onResult: (text: string, isFinal: boolean) => void
+  interimResults?: boolean
 }
 
 interface UseVoiceInputReturn {
@@ -44,7 +45,10 @@ function getSpeechRecognition(): (new () => ISpeechRecognition) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
 }
 
-export function useVoiceInput({ onResult }: UseVoiceInputOptions): UseVoiceInputReturn {
+export function useVoiceInput({
+  onResult,
+  interimResults = false,
+}: UseVoiceInputOptions): UseVoiceInputReturn {
   const [status, setStatus] = useState<VoiceInputStatus>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
@@ -72,7 +76,7 @@ export function useVoiceInput({ onResult }: UseVoiceInputOptions): UseVoiceInput
 
       const recognition = new Ctor()
       recognition.lang = BCP47[lang]
-      recognition.interimResults = true
+      recognition.interimResults = interimResults
       recognition.maxAlternatives = 1
       recognitionRef.current = recognition
 
@@ -116,7 +120,7 @@ export function useVoiceInput({ onResult }: UseVoiceInputOptions): UseVoiceInput
 
       recognition.start()
     },
-    [onResult]
+    [onResult, interimResults]
   )
 
   return { status, errorMessage, start, stop }
