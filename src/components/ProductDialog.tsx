@@ -3,9 +3,10 @@ import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Loader2, Sparkles, X } from 'lucide-react'
+import { Loader2, Mic, MicOff, Sparkles, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import type { Category, UnitType } from '@/types'
+import { useVoiceInput } from '@/hooks/useVoiceInput'
 
 // ─── Schema ───────────────────────────────────────────────────────────────────
 
@@ -49,6 +50,8 @@ export function ProductDialog({
 }: ProductDialogProps) {
   const { t } = useTranslation()
   const [isSuggesting, setIsSuggesting] = useState(false)
+  const [voiceActiveLang, setVoiceActiveLang] = useState<'he' | 'en' | null>(null)
+  const [wrongLangWarning, setWrongLangWarning] = useState<'he' | 'en' | null>(null)
 
   const {
     register,
@@ -96,6 +99,43 @@ export function ProductDialog({
       setIsSuggesting(false)
     }
   }, [getValues, isSuggesting, categories, unitTypes, setValue])
+
+  const handleVoiceResult = useCallback(
+    (text: string, lang: 'he' | 'en') => {
+      setValue(lang === 'he' ? 'name_he' : 'name_en', text)
+      setVoiceActiveLang(null)
+      setWrongLangWarning(null)
+    },
+    [setValue]
+  )
+
+  const handleWrongLanguage = useCallback((expectedLang: 'he' | 'en') => {
+    setWrongLangWarning(expectedLang)
+    setVoiceActiveLang(null)
+  }, [])
+
+  const {
+    status: voiceStatus,
+    start: startVoice,
+    stop: stopVoice,
+  } = useVoiceInput({
+    onResult: text => handleVoiceResult(text, voiceActiveLang ?? 'he'),
+    onWrongLanguage: () => handleWrongLanguage(voiceActiveLang ?? 'he'),
+  })
+
+  const handleVoiceClick = useCallback(
+    (lang: 'he' | 'en') => {
+      setWrongLangWarning(null)
+      if (voiceActiveLang === lang && voiceStatus === 'listening') {
+        stopVoice()
+        setVoiceActiveLang(null)
+      } else {
+        setVoiceActiveLang(lang)
+        startVoice(lang)
+      }
+    },
+    [voiceActiveLang, voiceStatus, startVoice, stopVoice]
+  )
 
   const unitGroups = (['count', 'weight', 'volume', 'cooking'] as const).map(type => ({
     type,
@@ -153,9 +193,28 @@ export function ProductDialog({
                   )}
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => handleVoiceClick('he')}
+                title={t('products.voiceHe')}
+                className={`shrink-0 rounded-xl border px-3 py-2.5 transition ${
+                  voiceActiveLang === 'he' && voiceStatus === 'listening'
+                    ? 'border-red-400 bg-red-50 text-red-500 dark:border-red-500 dark:bg-red-900/30 dark:text-red-400'
+                    : 'border-gray-200 text-gray-500 hover:bg-brand-50 hover:text-brand-600 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-brand-900 dark:hover:text-brand-400'
+                }`}
+              >
+                {voiceActiveLang === 'he' && voiceStatus === 'listening' ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </button>
             </div>
             {errors.name_he && (
               <p className="mt-1 text-xs text-red-500">{t('validation.required')}</p>
+            )}
+            {wrongLangWarning === 'he' && (
+              <p className="mt-1 text-xs text-amber-500">{t('products.voiceWrongLangHe')}</p>
             )}
           </div>
 
@@ -164,13 +223,34 @@ export function ProductDialog({
             <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               {t('products.nameEn')}
             </label>
-            <input
-              {...register('name_en')}
-              type="text"
-              placeholder={t('products.nameEnPlaceholder')}
-              dir="ltr"
-              className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
-            />
+            <div className="flex gap-2">
+              <input
+                {...register('name_en')}
+                type="text"
+                placeholder={t('products.nameEnPlaceholder')}
+                dir="ltr"
+                className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
+              />
+              <button
+                type="button"
+                onClick={() => handleVoiceClick('en')}
+                title={t('products.voiceEn')}
+                className={`shrink-0 rounded-xl border px-3 py-2.5 transition ${
+                  voiceActiveLang === 'en' && voiceStatus === 'listening'
+                    ? 'border-red-400 bg-red-50 text-red-500 dark:border-red-500 dark:bg-red-900/30 dark:text-red-400'
+                    : 'border-gray-200 text-gray-500 hover:bg-brand-50 hover:text-brand-600 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-brand-900 dark:hover:text-brand-400'
+                }`}
+              >
+                {voiceActiveLang === 'en' && voiceStatus === 'listening' ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </button>
+            </div>
+            {wrongLangWarning === 'en' && (
+              <p className="mt-1 text-xs text-amber-500">{t('products.voiceWrongLangEn')}</p>
+            )}
           </div>
 
           {/* Category */}
