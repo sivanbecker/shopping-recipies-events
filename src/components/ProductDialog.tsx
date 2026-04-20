@@ -206,21 +206,19 @@ export function ProductDialog({
                     : 'border-gray-200 focus:border-brand-500 focus:ring-brand-500/20 dark:border-gray-600'
                 }`}
               />
-              {mode === 'add' && (
-                <button
-                  type="button"
-                  onClick={handleSuggest}
-                  disabled={isSuggesting}
-                  title={t('products.suggest')}
-                  className="shrink-0 rounded-xl border border-gray-200 px-3 py-2.5 text-gray-500 transition hover:bg-brand-50 hover:text-brand-600 disabled:opacity-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-brand-900 dark:hover:text-brand-400"
-                >
-                  {isSuggesting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="h-4 w-4" />
-                  )}
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleSuggest}
+                disabled={isSuggesting}
+                title={t('products.suggest')}
+                className="shrink-0 rounded-xl border border-gray-200 px-3 py-2.5 text-gray-500 transition hover:bg-brand-50 hover:text-brand-600 disabled:opacity-50 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-brand-900 dark:hover:text-brand-400"
+              >
+                {isSuggesting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+              </button>
               <button
                 type="button"
                 onClick={() => handleVoiceClick('he')}
