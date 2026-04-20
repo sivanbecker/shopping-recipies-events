@@ -99,7 +99,7 @@ export function useVoiceInput({ onResult }: UseVoiceInputOptions): UseVoiceInput
 
       recognition.start()
     },
-    [onResult],
+    [onResult]
   )
 
   return { status, errorMessage, start, stop }
