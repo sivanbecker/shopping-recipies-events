@@ -130,7 +130,8 @@ export function ProductDialog({
     stop: stopVoice,
   } = useVoiceInput({
     onResult: useCallback(
-      (text: string) => {
+      (text: string, isFinal: boolean) => {
+        if (!isFinal) return
         const lang = voiceActiveLangRef.current
         const isHe = HE_VOICE_REGEX.test(text)
         const isEn = EN_VOICE_REGEX.test(text)
