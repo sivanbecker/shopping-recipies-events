@@ -668,9 +668,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
             />
             <button
               type="button"
-              onClick={() =>
-                voice.status === 'listening' ? voice.stop() : voice.start('he')
-              }
+              onClick={() => (voice.status === 'listening' ? voice.stop() : voice.start('he'))}
               aria-label={voice.status === 'listening' ? t('voice.stop') : t('voice.start')}
               className={`absolute end-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 transition ${
                 voice.status === 'listening'
