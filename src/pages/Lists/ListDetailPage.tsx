@@ -21,11 +21,14 @@ import {
   UserPlus,
   Users,
   Pencil,
+  Mic,
+  MicOff,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { useVoiceInput } from '@/hooks/useVoiceInput'
 import { useAuth } from '@/hooks/useAuth'
 import { useListRole, canEdit, canOwn } from '@/hooks/useListRole'
 import { showUndoToast } from '@/lib/undo'
@@ -352,6 +355,8 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [configuring, setConfiguring] = useState<ProductWithUnit | null>(null)
+
+  const voice = useVoiceInput({ onResult: text => setSearch(text) })
   const [creatingName, setCreatingName] = useState<string | null>(null)
   const [quantity, setQuantity] = useState(1)
   const [unitId, setUnitId] = useState<string | null>(null)
@@ -658,9 +663,27 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder={t('items.searchPlaceholder')}
-              className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 ps-9 pe-4 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
+              className="w-full rounded-xl border border-gray-200 bg-gray-50 py-2.5 ps-9 pe-10 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder:text-gray-500"
               autoFocus
             />
+            <button
+              type="button"
+              onClick={() =>
+                voice.status === 'listening' ? voice.stop() : voice.start('he')
+              }
+              aria-label={voice.status === 'listening' ? t('voice.stop') : t('voice.start')}
+              className={`absolute end-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 transition ${
+                voice.status === 'listening'
+                  ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-950'
+                  : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700'
+              }`}
+            >
+              {voice.status === 'listening' ? (
+                <MicOff className="h-4 w-4" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </button>
           </div>
         </div>
 
