@@ -135,7 +135,7 @@ export function ProductDialog({
         const lang = voiceActiveLangRef.current
         const isHe = HE_VOICE_REGEX.test(text)
         const isEn = EN_VOICE_REGEX.test(text)
-        if (lang === 'he' && isHe) setValue('name_he', text)
+        if (lang === 'he' && !isEn) setValue('name_he', text)
         else if (lang === 'en' && isEn && !isHe) setValue('name_en', text)
         voiceActiveLangRef.current = null
         setVoiceActiveLang(null)
