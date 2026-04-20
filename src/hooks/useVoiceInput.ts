@@ -78,10 +78,22 @@ export function useVoiceInput({ onResult }: UseVoiceInputOptions): UseVoiceInput
 
       recognition.onstart = () => setStatus('listening')
 
+      // Track the latest transcript so onend can flush it as final if mobile
+      // Chrome ends recognition before setting isFinal: true on the last result.
+      let lastTranscript = ''
+      let finalFired = false
+
       recognition.onresult = (event: ISpeechRecognitionEvent) => {
         const result = event.results[event.results.length - 1]
         const transcript = result?.[0]?.transcript?.trim() ?? ''
-        if (transcript) onResult(transcript, result?.isFinal ?? true)
+        if (!transcript) return
+        lastTranscript = transcript
+        if (result?.isFinal) {
+          finalFired = true
+          onResult(transcript, true)
+        } else {
+          onResult(transcript, false)
+        }
       }
 
       recognition.onerror = (event: ISpeechRecognitionErrorEvent) => {
@@ -94,6 +106,10 @@ export function useVoiceInput({ onResult }: UseVoiceInputOptions): UseVoiceInput
       }
 
       recognition.onend = () => {
+        // Mobile Chrome sometimes ends without ever firing isFinal: true
+        if (!finalFired && lastTranscript) {
+          onResult(lastTranscript, true)
+        }
         recognitionRef.current = null
         setStatus('idle')
       }
