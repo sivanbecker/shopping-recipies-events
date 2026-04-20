@@ -23,7 +23,7 @@ type VoiceInputLang = 'he' | 'en'
 type VoiceInputStatus = 'idle' | 'listening' | 'error'
 
 interface UseVoiceInputOptions {
-  onResult: (text: string) => void
+  onResult: (text: string, isFinal: boolean) => void
 }
 
 interface UseVoiceInputReturn {
@@ -72,15 +72,16 @@ export function useVoiceInput({ onResult }: UseVoiceInputOptions): UseVoiceInput
 
       const recognition = new Ctor()
       recognition.lang = BCP47[lang]
-      recognition.interimResults = false
+      recognition.interimResults = true
       recognition.maxAlternatives = 1
       recognitionRef.current = recognition
 
       recognition.onstart = () => setStatus('listening')
 
       recognition.onresult = (event: ISpeechRecognitionEvent) => {
-        const transcript = event.results[0]?.[0]?.transcript?.trim() ?? ''
-        if (transcript) onResult(transcript)
+        const result = event.results[event.results.length - 1]
+        const transcript = result?.[0]?.transcript?.trim() ?? ''
+        if (transcript) onResult(transcript, result?.isFinal ?? true)
       }
 
       recognition.onerror = (event: ISpeechRecognitionErrorEvent) => {
