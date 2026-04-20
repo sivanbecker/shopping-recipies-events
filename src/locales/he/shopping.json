@@ -49,7 +49,10 @@
     "donePromptTitle": "סיימת לקנות?",
     "donePromptBody": "האם לארכב את הרשימה?",
     "archiveAndDone": "ארכב וסיים",
-    "keepShopping": "המשך לקנות"
+    "keepShopping": "המשך לקנות",
+    "collapseAll": "כווץ הכל",
+    "expandAll": "הרחב הכל",
+    "uncategorized": "אחר"
   },
   "missing": {
     "addMissing": "משהו חסר?",

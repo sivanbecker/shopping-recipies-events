@@ -49,7 +49,10 @@
     "donePromptTitle": "Done shopping?",
     "donePromptBody": "Would you like to archive this list?",
     "archiveAndDone": "Archive & Done",
-    "keepShopping": "Keep Shopping"
+    "keepShopping": "Keep Shopping",
+    "collapseAll": "Collapse all",
+    "expandAll": "Expand all",
+    "uncategorized": "Other"
   },
   "missing": {
     "addMissing": "Something missing?",

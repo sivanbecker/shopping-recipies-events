@@ -17,6 +17,7 @@ import {
   X,
   ListPlus,
   ChevronDown,
+  ChevronsUpDown,
   UserPlus,
   Users,
   Pencil,
@@ -41,6 +42,7 @@ import type {
   Product,
   UnitType,
   ListMemberWithProfile,
+  Category,
 } from '@/types'
 import type { Database } from '@/types/database'
 
@@ -60,6 +62,31 @@ function listDisplayName(list: ShoppingList, locale: string): string {
 function broadcastChange(listId: string, event: 'items-changed' | 'list-changed') {
   const ch = supabase.getChannels().find(c => c.topic === `realtime:list-detail-${listId}`)
   void ch?.send({ type: 'broadcast', event, payload: {} })
+}
+
+// ─── Category grouping ────────────────────────────────────────────────────────
+
+interface CategoryGroup {
+  category: Category | null
+  items: ShoppingItemWithProduct[]
+}
+
+function groupByCategory(items: ShoppingItemWithProduct[]): CategoryGroup[] {
+  const map = new Map<string | null, CategoryGroup>()
+  for (const item of items) {
+    const cat = item.product?.category ?? null
+    const key = cat?.id ?? null
+    if (!map.has(key)) map.set(key, { category: cat, items: [] })
+    map.get(key)!.items.push(item)
+  }
+
+  const groups = Array.from(map.values())
+  groups.sort((a, b) => {
+    if (a.category === null) return 1
+    if (b.category === null) return -1
+    return (a.category.sort_order ?? 0) - (b.category.sort_order ?? 0)
+  })
+  return groups
 }
 
 // ─── ProgressBar ──────────────────────────────────────────────────────────────
@@ -668,6 +695,8 @@ export default function ListDetailPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [isEditingName, setIsEditingName] = useState(false)
   const [nameInput, setNameInput] = useState('')
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string | null>>(new Set())
+  const [allCollapsed, setAllCollapsed] = useState(false)
 
   const { data: role } = useListRole(id)
   const isEditor = canEdit(role)
@@ -1091,6 +1120,25 @@ export default function ListDetailPage() {
   const checkedItems = items.filter(i => i.is_checked)
   const checkedCount = checkedItems.length
   const totalCount = items.length
+  const categoryGroups = groupByCategory(uncheckedItems)
+
+  function toggleCategory(key: string | null) {
+    setCollapsedCategories(prev => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  function toggleAllCategories(groups: CategoryGroup[]) {
+    if (allCollapsed) {
+      setCollapsedCategories(new Set())
+    } else {
+      setCollapsedCategories(new Set(groups.map(g => g.category?.id ?? null)))
+    }
+    setAllCollapsed(v => !v)
+  }
 
   // ── Loading / not found ───────────────────────────────────────────────────
 
@@ -1305,39 +1353,79 @@ export default function ListDetailPage() {
         </div>
       ) : shoppingMode ? (
         /* ── Shopping mode layout ── */
-        <div className="space-y-3">
-          {/* Unchecked items */}
-          {uncheckedItems.map(item => (
-            <ItemRow
-              key={item.id}
-              item={item}
-              lang={lang}
-              shoppingMode
-              members={members}
-              editable={isEditor}
-              isToggling={togglingIds.has(item.id)}
-              onToggle={() =>
-                isEditor &&
-                toggleMutation.mutate({
-                  itemId: item.id,
-                  checked: !item.is_checked,
-                  updatedAt: item.updated_at,
-                })
-              }
-              onRemove={() => removeMutation.mutate(item.id)}
-              onEditCommit={(qty, unitId) =>
-                updateItemMutation.mutate({
-                  itemId: item.id,
-                  quantity: qty,
-                  unitId,
-                  prevQuantity: Number(item.quantity),
-                  prevUnitId: item.unit_id,
-                  updatedAt: item.updated_at,
-                })
-              }
-              unitTypes={unitTypes}
-            />
-          ))}
+        <div className="space-y-1">
+          {/* Collapse-all toggle */}
+          {categoryGroups.length > 1 && (
+            <div className="flex justify-end pb-1">
+              <button
+                onClick={() => toggleAllCategories(categoryGroups)}
+                className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <ChevronsUpDown className="h-3.5 w-3.5" />
+                {allCollapsed ? t('shopping.expandAll') : t('shopping.collapseAll')}
+              </button>
+            </div>
+          )}
+
+          {/* Unchecked items grouped by category */}
+          {categoryGroups.map(({ category, items: groupItems }) => {
+            const key = category?.id ?? null
+            const isCollapsed = collapsedCategories.has(key)
+            const categoryName = category
+              ? lang === 'he'
+                ? category.name_he
+                : category.name_en
+              : t('shopping.uncategorized')
+            return (
+              <div key={key ?? '__uncategorized__'} className="space-y-2">
+                <button
+                  onClick={() => toggleCategory(key)}
+                  className="flex w-full items-center gap-1.5 py-1 text-xs font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                >
+                  {category?.icon && <span className="text-sm">{category.icon}</span>}
+                  <span className="flex-1 text-start">{categoryName}</span>
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
+                  />
+                </button>
+                {!isCollapsed && (
+                  <div className="space-y-2">
+                    {groupItems.map(item => (
+                      <ItemRow
+                        key={item.id}
+                        item={item}
+                        lang={lang}
+                        shoppingMode
+                        members={members}
+                        editable={isEditor}
+                        isToggling={togglingIds.has(item.id)}
+                        onToggle={() =>
+                          isEditor &&
+                          toggleMutation.mutate({
+                            itemId: item.id,
+                            checked: !item.is_checked,
+                            updatedAt: item.updated_at,
+                          })
+                        }
+                        onRemove={() => removeMutation.mutate(item.id)}
+                        onEditCommit={(qty, unitId) =>
+                          updateItemMutation.mutate({
+                            itemId: item.id,
+                            quantity: qty,
+                            unitId,
+                            prevQuantity: Number(item.quantity),
+                            prevUnitId: item.unit_id,
+                            updatedAt: item.updated_at,
+                          })
+                        }
+                        unitTypes={unitTypes}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
 
           {/* In Cart collapsible section */}
           {checkedItems.length > 0 && (
@@ -1380,37 +1468,114 @@ export default function ListDetailPage() {
         </div>
       ) : (
         /* ── Normal layout ── */
-        <div className="space-y-2">
-          {items.map(item => (
-            <ItemRow
-              key={item.id}
-              item={item}
-              lang={lang}
-              members={members}
-              unitTypes={unitTypes}
-              editable={isEditor}
-              isToggling={togglingIds.has(item.id)}
-              onToggle={() =>
-                isEditor &&
-                toggleMutation.mutate({
-                  itemId: item.id,
-                  checked: !item.is_checked,
-                  updatedAt: item.updated_at,
-                })
-              }
-              onRemove={() => removeMutation.mutate(item.id)}
-              onEditCommit={(qty, unitId) =>
-                updateItemMutation.mutate({
-                  itemId: item.id,
-                  quantity: qty,
-                  unitId,
-                  prevQuantity: Number(item.quantity),
-                  prevUnitId: item.unit_id,
-                  updatedAt: item.updated_at,
-                })
-              }
-            />
-          ))}
+        <div className="space-y-1">
+          {/* Collapse-all toggle */}
+          {categoryGroups.length > 1 && (
+            <div className="flex justify-end pb-1">
+              <button
+                onClick={() => toggleAllCategories(categoryGroups)}
+                className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <ChevronsUpDown className="h-3.5 w-3.5" />
+                {allCollapsed ? t('shopping.expandAll') : t('shopping.collapseAll')}
+              </button>
+            </div>
+          )}
+
+          {/* Unchecked items grouped by category */}
+          {categoryGroups.map(({ category, items: groupItems }) => {
+            const key = category?.id ?? null
+            const isCollapsed = collapsedCategories.has(key)
+            const categoryName = category
+              ? lang === 'he'
+                ? category.name_he
+                : category.name_en
+              : t('shopping.uncategorized')
+            return (
+              <div key={key ?? '__uncategorized__'} className="space-y-2">
+                <button
+                  onClick={() => toggleCategory(key)}
+                  className="flex w-full items-center gap-1.5 py-1 text-xs font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
+                >
+                  {category?.icon && <span className="text-sm">{category.icon}</span>}
+                  <span className="flex-1 text-start">{categoryName}</span>
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
+                  />
+                </button>
+                {!isCollapsed && (
+                  <div className="space-y-2">
+                    {groupItems.map(item => (
+                      <ItemRow
+                        key={item.id}
+                        item={item}
+                        lang={lang}
+                        members={members}
+                        unitTypes={unitTypes}
+                        editable={isEditor}
+                        isToggling={togglingIds.has(item.id)}
+                        onToggle={() =>
+                          isEditor &&
+                          toggleMutation.mutate({
+                            itemId: item.id,
+                            checked: !item.is_checked,
+                            updatedAt: item.updated_at,
+                          })
+                        }
+                        onRemove={() => removeMutation.mutate(item.id)}
+                        onEditCommit={(qty, unitId) =>
+                          updateItemMutation.mutate({
+                            itemId: item.id,
+                            quantity: qty,
+                            unitId,
+                            prevQuantity: Number(item.quantity),
+                            prevUnitId: item.unit_id,
+                            updatedAt: item.updated_at,
+                          })
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+
+          {/* Checked items flat at bottom in normal mode */}
+          {checkedItems.length > 0 && (
+            <div className="space-y-2 pt-2">
+              {checkedItems.map(item => (
+                <ItemRow
+                  key={item.id}
+                  item={item}
+                  lang={lang}
+                  members={members}
+                  unitTypes={unitTypes}
+                  editable={isEditor}
+                  isToggling={togglingIds.has(item.id)}
+                  onToggle={() =>
+                    isEditor &&
+                    toggleMutation.mutate({
+                      itemId: item.id,
+                      checked: !item.is_checked,
+                      updatedAt: item.updated_at,
+                    })
+                  }
+                  onRemove={() => removeMutation.mutate(item.id)}
+                  onEditCommit={(qty, unitId) =>
+                    updateItemMutation.mutate({
+                      itemId: item.id,
+                      quantity: qty,
+                      unitId,
+                      prevQuantity: Number(item.quantity),
+                      prevUnitId: item.unit_id,
+                      updatedAt: item.updated_at,
+                    })
+                  }
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
