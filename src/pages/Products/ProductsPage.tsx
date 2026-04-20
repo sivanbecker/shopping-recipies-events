@@ -17,6 +17,8 @@ import {
   Download,
   ListPlus,
   ShoppingCart,
+  Mic,
+  MicOff,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -26,6 +28,7 @@ import { parseImportFile, skippedRowsToCsv } from '@/lib/importProducts'
 import { filterProducts } from '@/lib/filterProducts'
 import type { Product, Category, UnitType, ShoppingList } from '@/types'
 import type { SkippedRow } from '@/lib/importProducts'
+import { useVoiceInput } from '@/hooks/useVoiceInput'
 import { ProductDialog } from '@/components/ProductDialog'
 import type { ProductFormData } from '@/components/ProductDialog'
 
@@ -560,6 +563,7 @@ export default function ProductsPage() {
   const lang = i18n.language as 'he' | 'en'
 
   const [search, setSearch] = useState('')
+  const voice = useVoiceInput({ onResult: text => setSearch(text), interimResults: true })
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [dialogMode, setDialogMode] = useState<'add' | 'edit' | null>(null)
   const [editProduct, setEditProduct] = useState<Product | null>(null)
@@ -775,8 +779,24 @@ export default function ProductsPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder={t('products.search')}
-              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 ps-9 pe-4 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
+              className="w-full rounded-xl border border-gray-200 bg-white py-2.5 ps-9 pe-10 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
             />
+            <button
+              type="button"
+              onClick={() => (voice.status === 'listening' ? voice.stop() : voice.start(lang))}
+              aria-label={voice.status === 'listening' ? t('voice.stop') : t('voice.start')}
+              className={`absolute end-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 transition ${
+                voice.status === 'listening'
+                  ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-950'
+                  : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700'
+              }`}
+            >
+              {voice.status === 'listening' ? (
+                <MicOff className="h-4 w-4" />
+              ) : (
+                <Mic className="h-4 w-4" />
+              )}
+            </button>
           </div>
           <button
             onClick={() => fileInputRef.current?.click()}
