@@ -25,6 +25,7 @@ type VoiceInputStatus = 'idle' | 'listening' | 'error'
 interface UseVoiceInputOptions {
   onResult: (text: string, isFinal: boolean) => void
   interimResults?: boolean
+  autoStopMs?: number
 }
 
 interface UseVoiceInputReturn {
@@ -48,10 +49,12 @@ function getSpeechRecognition(): (new () => ISpeechRecognition) | null {
 export function useVoiceInput({
   onResult,
   interimResults = false,
+  autoStopMs,
 }: UseVoiceInputOptions): UseVoiceInputReturn {
   const [status, setStatus] = useState<VoiceInputStatus>('idle')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const recognitionRef = useRef<ISpeechRecognition | null>(null)
+  const autoStopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const stop = useCallback(() => {
     recognitionRef.current?.stop()
@@ -80,7 +83,15 @@ export function useVoiceInput({
       recognition.maxAlternatives = 1
       recognitionRef.current = recognition
 
-      recognition.onstart = () => setStatus('listening')
+      recognition.onstart = () => {
+        setStatus('listening')
+        if (autoStopMs) {
+          autoStopTimerRef.current = setTimeout(() => {
+            autoStopTimerRef.current = null
+            recognition.stop()
+          }, autoStopMs)
+        }
+      }
 
       // Track the latest transcript so onend can flush it as final if mobile
       // Chrome ends recognition before setting isFinal: true on the last result.
@@ -110,6 +121,10 @@ export function useVoiceInput({
       }
 
       recognition.onend = () => {
+        if (autoStopTimerRef.current) {
+          clearTimeout(autoStopTimerRef.current)
+          autoStopTimerRef.current = null
+        }
         // Mobile Chrome sometimes ends without ever firing isFinal: true
         if (!finalFired && lastTranscript) {
           onResult(lastTranscript, true)
@@ -120,7 +135,7 @@ export function useVoiceInput({
 
       recognition.start()
     },
-    [onResult, interimResults]
+    [onResult, interimResults, autoStopMs]
   )
 
   return { status, errorMessage, start, stop }

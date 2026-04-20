@@ -125,6 +125,7 @@ export function ProductDialog({
     stop: stopVoiceHe,
   } = useVoiceInput({
     onResult: useCallback((text: string) => setValue('name_he', text), [setValue]),
+    autoStopMs: 1000,
   })
 
   const {
@@ -133,6 +134,7 @@ export function ProductDialog({
     stop: stopVoiceEn,
   } = useVoiceInput({
     onResult: useCallback((text: string) => setValue('name_en', text), [setValue]),
+    autoStopMs: 1000,
   })
 
   const handleVoiceClick = useCallback(
