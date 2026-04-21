@@ -36,3 +36,6 @@ npm-debug.log*
 # Supabase
 supabase/.temp
 docs/OWASP_SCAN_*.md
+
+# Local-only docs (contain private slugs/values)
+docs/SECRETS_ROTATION.local.md
