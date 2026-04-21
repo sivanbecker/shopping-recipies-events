@@ -35,3 +35,4 @@ npm-debug.log*
 
 # Supabase
 supabase/.temp
+docs/OWASP_SCAN_*.md
