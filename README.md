@@ -43,7 +43,7 @@ React 18 + TypeScript + Vite · Tailwind CSS + shadcn/ui · Supabase (auth, DB, 
 | Variable | Description |
 |---|---|
 | `VITE_SUPABASE_URL` | Your Supabase project URL |
-| `VITE_SUPABASE_ANON_KEY` | Your Supabase anon/public key |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Your Supabase publishable key (`sb_publishable_...`) |
 
 Get these from [supabase.com/dashboard](https://supabase.com/dashboard) → your project → Settings → API.
 

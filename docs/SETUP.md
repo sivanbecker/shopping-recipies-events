@@ -38,7 +38,7 @@ cp .env.example .env.local
 Edit `.env.local`:
 ```
 VITE_SUPABASE_URL=https://your-project-id.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your-key-here
 ```
 
 ---
@@ -82,7 +82,7 @@ npm run test:e2e
 2. Go to [vercel.com](https://vercel.com) → **New Project** → import from GitHub
 3. Add environment variables in Vercel dashboard:
    - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`
 4. Click **Deploy** — Vercel handles the rest automatically
 
 ---

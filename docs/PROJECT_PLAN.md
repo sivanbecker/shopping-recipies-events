@@ -147,7 +147,7 @@ event_shopping_lists (id, event_id FK, list_id FK)
 
 #### 0.5 — Supabase Project Setup
 - [ ] Create Supabase project in the cloud dashboard
-- [ ] Add `.env.local` with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
+- [ ] Add `.env.local` with `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`
 - [ ] Install `@supabase/supabase-js`
 - [ ] Create `src/lib/supabase.ts` as a singleton client
 - [ ] Enable Row Level Security (RLS) on all tables from day one
