@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -29,6 +29,7 @@ import { format } from 'date-fns'
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { useVoiceInput } from '@/hooks/useVoiceInput'
+import { useDebounce } from '@/hooks/useDebounce'
 import { useAuth } from '@/hooks/useAuth'
 import { useListRole, canEdit, canOwn } from '@/hooks/useListRole'
 import { showUndoToast } from '@/lib/undo'
@@ -460,6 +461,7 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search)
   const [configuring, setConfiguring] = useState<ProductWithUnit | null>(null)
 
   const voice = useVoiceInput({ onResult: text => setSearch(text), interimResults: true })
@@ -584,8 +586,11 @@ function AddItemSheet({ listId, lang, items, onClose }: AddItemSheetProps) {
     onError: () => toast.error('Failed to create product'),
   })
 
-  const filtered = filterProducts(products, search).slice(0, 20)
-  const trimmed = search.trim()
+  const filtered = useMemo(
+    () => filterProducts(products, debouncedSearch).slice(0, 20),
+    [products, debouncedSearch]
+  )
+  const trimmed = debouncedSearch.trim()
   const exactMatch = trimmed
     ? products.some(
         p => p.name_he === trimmed || (p.name_en ?? '').toLowerCase() === trimmed.toLowerCase()
@@ -1269,11 +1274,11 @@ export default function ListDetailPage() {
 
   // ── Derived state ─────────────────────────────────────────────────────────
 
-  const uncheckedItems = items.filter(i => !i.is_checked)
-  const checkedItems = items.filter(i => i.is_checked)
+  const uncheckedItems = useMemo(() => items.filter(i => !i.is_checked), [items])
+  const checkedItems = useMemo(() => items.filter(i => i.is_checked), [items])
   const checkedCount = checkedItems.length
   const totalCount = items.length
-  const categoryGroups = groupByCategory(uncheckedItems)
+  const categoryGroups = useMemo(() => groupByCategory(uncheckedItems), [uncheckedItems])
 
   function toggleCategory(key: string | null) {
     setCollapsedCategories(prev => {

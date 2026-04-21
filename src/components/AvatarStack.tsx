@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react'
 import { UserAvatar } from './UserAvatar'
 
 interface Member {
@@ -14,17 +15,20 @@ interface AvatarStackProps {
   className?: string
 }
 
-export function AvatarStack({ members, size = 28, max = 3, className }: AvatarStackProps) {
+function AvatarStackImpl({ members, size = 28, max = 3, className }: AvatarStackProps) {
+  const sorted = useMemo(
+    () =>
+      [...members].sort((a, b) => {
+        if (a.role === 'owner') return -1
+        if (b.role === 'owner') return 1
+        return 0
+      }),
+    [members]
+  )
+
   if (!members || members.length === 0) {
     return null
   }
-
-  // Sort so owner always comes first
-  const sorted = [...members].sort((a, b) => {
-    if (a.role === 'owner') return -1
-    if (b.role === 'owner') return 1
-    return 0
-  })
 
   const visible = sorted.slice(0, max)
   const hidden = sorted.length - visible.length
@@ -66,3 +70,5 @@ export function AvatarStack({ members, size = 28, max = 3, className }: AvatarSt
     </div>
   )
 }
+
+export const AvatarStack = memo(AvatarStackImpl)

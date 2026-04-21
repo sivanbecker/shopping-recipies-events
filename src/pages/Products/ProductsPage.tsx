@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -29,6 +29,7 @@ import { filterProducts } from '@/lib/filterProducts'
 import type { Product, Category, UnitType, ShoppingList } from '@/types'
 import type { SkippedRow } from '@/lib/importProducts'
 import { useVoiceInput } from '@/hooks/useVoiceInput'
+import { useDebounce } from '@/hooks/useDebounce'
 import { ProductDialog } from '@/components/ProductDialog'
 import type { ProductFormData } from '@/components/ProductDialog'
 
@@ -563,6 +564,7 @@ export default function ProductsPage() {
   const lang = i18n.language as 'he' | 'en'
 
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search)
   const voice = useVoiceInput({ onResult: text => setSearch(text), interimResults: true })
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [dialogMode, setDialogMode] = useState<'add' | 'edit' | null>(null)
@@ -666,18 +668,20 @@ export default function ProductsPage() {
 
   // ── Filter + group ─────────────────────────────────────────────────────────
 
-  const filtered = filterProducts(products, search).filter(p =>
-    selectedCategory ? p.category_id === selectedCategory : true
-  )
-
-  const grouped = categories
-    .filter(c => filtered.some(p => p.category_id === c.id))
-    .map(c => ({
-      category: c,
-      products: filtered.filter(p => p.category_id === c.id),
-    }))
-
-  const uncategorized = filtered.filter(p => !p.category_id)
+  const { grouped, uncategorized } = useMemo(() => {
+    const filtered = filterProducts(products, debouncedSearch).filter(p =>
+      selectedCategory ? p.category_id === selectedCategory : true
+    )
+    const categorySet = new Set(filtered.map(p => p.category_id))
+    const grouped = categories
+      .filter(c => categorySet.has(c.id))
+      .map(c => ({
+        category: c,
+        products: filtered.filter(p => p.category_id === c.id),
+      }))
+    const uncategorized = filtered.filter(p => !p.category_id)
+    return { grouped, uncategorized }
+  }, [products, debouncedSearch, selectedCategory, categories])
 
   // ── Import mutation ────────────────────────────────────────────────────────
 
