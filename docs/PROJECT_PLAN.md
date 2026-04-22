@@ -943,19 +943,8 @@ The `ContactPicker` component required for list/event sharing is specified in **
 - [ ] Swipe left on a list item to reveal delete (mobile)
 - [ ] Subtle press animations on interactive elements
 
-#### 7.6 — App Background Theme
-- [ ] Add a **background theme picker** in the Profile page (under Appearance settings)
-- [ ] Three options:
-  - **White** — plain white background (current default)
-  - **Aero Gradient** — soft blue/sky radial gradient, airy and light
-  - **Abstract Blobs** — pastel bokeh shapes (green, yellow, pink, orange) using layered CSS blurs or an SVG
-- [ ] Background is applied to the `<body>` / root layout element, covering all pages
-- [ ] Responsive: gradient/blob compositions are tuned for portrait (mobile) and landscape/wide (desktop) aspect ratios via CSS `@media` queries or viewport-relative sizing
-- [ ] Selected theme persists via:
-  - `localStorage` for unauthenticated / offline use
-  - `profiles.app_theme` column (new DB migration, nullable text) when logged in — synced on load
-- [ ] i18n keys added to `common.json` for the picker labels in Hebrew and English
-- [ ] No runtime images are loaded — backgrounds are implemented purely in CSS (gradients, `backdrop-filter`, `blur`) to keep load fast and avoid extra assets
+#### 7.6 — App Background Theme — MOVED to Stage 11.3
+The background theme picker has been folded into **Stage 11 — Theming & Appearance** as sub-stage 11.3. See Stage 11 for the full design (presets + dark mode + backgrounds + text scale).
 
 #### 7.5 — Push Notifications (Post-MVP optional)
 - [ ] Browser push notifications for shared list updates
@@ -1136,6 +1125,100 @@ create index if not exists shopping_lists_active_idx
 
 ---
 
+## STAGE 11 — Theming & Appearance
+> **Goal:** Let users customize the app's look via cohesive preset themes plus orthogonal toggles for dark mode and text size. Folds in Stage 7.6's background picker.
+> **Estimated time:** 3–4 days
+> **Note:** Replaces Stage 7.6 (Background Theme). 7.6 has been absorbed as 11.3 below.
+
+### Model
+
+- **Presets** bundle accent color, corner radius, density, and avatar style into one cohesive look. Users pick one preset instead of juggling individual knobs.
+- **Orthogonal axes** — dark mode and text scale — apply on top of any preset.
+- All values are driven by CSS custom properties on `<html>` so a single attribute flip changes the whole app without remounts.
+
+### Preset catalog (v1)
+
+| Preset id | Vibe | Accent | Radius | Density | Avatar |
+|---|---|---|---|---|---|
+| `classic` | Current Bring!-inspired warm | orange 500 `#f97316` | rounded-lg | comfortable | beam |
+| `minimal` | Neutral, sharp, professional | slate 700 | rounded-sm | compact | marble |
+| `warm` | Earthy, soft, hospitable | terracotta `#c2410c` + sage accent | rounded-2xl (pill) | spacious | sunset |
+
+### 11.1 — DB migration
+- [ ] New migration: add columns to `profiles`
+  ```sql
+  ALTER TABLE profiles
+    ADD COLUMN ui_preset    text    DEFAULT 'classic' CHECK (ui_preset IN ('classic', 'minimal', 'warm')),
+    ADD COLUMN theme_mode   text    DEFAULT 'system'  CHECK (theme_mode IN ('light', 'dark', 'system')),
+    ADD COLUMN text_scale   text    DEFAULT 'md'      CHECK (text_scale IN ('sm', 'md', 'lg')),
+    ADD COLUMN app_background text  DEFAULT 'white'   CHECK (app_background IN ('white', 'aero', 'blobs'));
+  ```
+- [ ] RLS: user can read/update only their own row (existing policies cover this).
+- [ ] No data backfill needed — defaults preserve today's look.
+
+### 11.2 — Theme token system
+- [ ] Refactor `src/index.css`: move all `:root` CSS vars into three `[data-preset="..."]` blocks (classic / minimal / warm). Each block defines the full semantic palette plus `--radius`, `--density-row`, `--density-gap`, `--font-size-base`.
+- [ ] Keep the existing `.dark` class orthogonal — dark overrides apply inside every preset.
+- [ ] Update `tailwind.config.ts` to reference `var(--radius)` and density vars for consistent spacing utilities.
+- [ ] New file `src/lib/theme.ts` exports:
+  - `type UiPreset = 'classic' | 'minimal' | 'warm'`
+  - `type ThemeMode = 'light' | 'dark' | 'system'`
+  - `type TextScale = 'sm' | 'md' | 'lg'`
+  - `type AppBackground = 'white' | 'aero' | 'blobs'`
+  - `applyTheme(settings)` — sets `data-preset`, `data-background`, `data-text-scale` on `<html>` and toggles `.dark` based on mode + `prefers-color-scheme`.
+
+### 11.3 — Background styles (absorbs old Stage 7.6)
+- [ ] Add three layered `body::before` / `body::after` background styles keyed off `html[data-background]`:
+  - `white` — plain (current default)
+  - `aero` — soft blue/sky radial gradient tuned for portrait + landscape via `@media (orientation)`
+  - `blobs` — pastel bokeh shapes via layered `radial-gradient`s with `blur` — no image assets
+- [ ] Backgrounds must remain fixed behind scroll (`background-attachment: fixed`) and respect safe-area insets already defined in index.css.
+
+### 11.4 — Zustand + persistence layer
+- [ ] Extend `src/store/useAppStore.ts` with `uiPreset`, `themeMode`, `textScale`, `appBackground` plus setters. Persist to localStorage (existing Zustand persist already handles `isDarkMode` — extend the same slice and migrate `isDarkMode` → `themeMode: 'dark' | 'light'`).
+- [ ] On auth state change (existing `useAuth` / `AuthProvider`): after profile load, hydrate the store from `profiles` columns, then call `applyTheme()`. On setting change while authenticated, debounced-upsert to `profiles` (same pattern as `preferred_language` in `ProfilePage.tsx`).
+- [ ] Update the FOUC-prevention `<head>` script in `index.html` to also read `ui_preset`, `theme_mode`, `text_scale`, `app_background` from localStorage and set the attributes before first paint — prevents theme flash on page load.
+
+### 11.5 — Profile "Appearance" section
+- [ ] New block in `ProfilePage.tsx` below the language toggle:
+  - **Preset picker** — 3 preview cards (mini mock showing button + card + text in that preset's tokens). Tapping selects.
+  - **Dark mode** — segmented control: Light / Dark / System (follows `prefers-color-scheme`).
+  - **Background** — 3 preview swatches: White / Aero / Blobs.
+  - **Text size** — segmented control: S / M / L.
+- [ ] Changes apply live — no save button; writes through Zustand setter → `applyTheme()` → debounced `profiles` update.
+- [ ] Component: `src/components/Appearance/AppearancePanel.tsx` to keep ProfilePage lean.
+- [ ] Reuse `Button`, `Card`, `Label` from existing shadcn/ui.
+
+### 11.6 — Avatar style follows preset
+- [ ] `UserAvatar.tsx`: replace hardcoded `variant="beam"` with a `PRESET_TO_AVATAR_VARIANT` map keyed off `uiPreset`. Read via a small `useUiPreset()` selector to avoid subscribing to the full store.
+
+### 11.7 — i18n
+- [ ] Add keys under `common.appearance.*` in `src/locales/{he,en}/common.json`:
+  - `title`, `preset.classic`, `preset.minimal`, `preset.warm`
+  - `mode.light`, `mode.dark`, `mode.system`
+  - `background.white`, `background.aero`, `background.blobs`
+  - `textSize.sm`, `textSize.md`, `textSize.lg`
+
+### Stage 11 Manual Testing Checklist
+- [ ] Picking each of the 3 presets visibly changes accent color, corner radius, density, and avatar style across all pages
+- [ ] Dark mode toggles independently and correctly overlays each preset
+- [ ] System mode follows OS `prefers-color-scheme` and updates when OS theme changes
+- [ ] Background picker applies on all pages (lists, recipes, events, profile) in both portrait and landscape
+- [ ] Text size scales all text proportionally; layout remains usable at `lg`
+- [ ] RTL (Hebrew) layout renders correctly in every preset × background × mode combination
+- [ ] Settings persist after page refresh (localStorage)
+- [ ] Logout → login on a different device restores the theme from `profiles`
+- [ ] No theme flash on initial page load (FOUC script sets attributes before first paint)
+- [ ] Logged-out user can still pick themes; settings persist via localStorage and migrate to profile on sign-up
+
+### Automated Tests
+- [ ] Unit: `applyTheme()` sets the right `data-*` attributes and `.dark` class for every combination of `{preset, mode, textScale, background} × {light, dark, system}` × `prefers-color-scheme`
+- [ ] Unit: Zustand persist migration for legacy `isDarkMode` → `themeMode`
+- [ ] Unit: `PRESET_TO_AVATAR_VARIANT` returns a valid boring-avatars variant for every preset
+- [ ] E2E: Profile → change preset → navigate to /lists → verify `html[data-preset]` value and a known accent-color element
+
+---
+
 ## Stage Summary & Timeline
 
 | Stage | Name | Estimated Days |
@@ -1152,7 +1235,8 @@ create index if not exists shopping_lists_active_idx
 | 8 | QA & Launch | 2–3 |
 | 9 | Events Enhancements | 4–5 |
 | 10 | Performance Optimization | 2–3 |
-| **Total** | | **~36–49 working days** |
+| 11 | Theming & Appearance | 3–4 |
+| **Total** | | **~39–53 working days** |
 
 > **Quick wins:** Stages 0–4 deliver a fully functional shared shopping list app in approximately **2 weeks** of focused work.
 > The full app (shopping + recipes + events) is achievable in **4–6 weeks**.
@@ -1167,7 +1251,6 @@ create index if not exists shopping_lists_active_idx
 - **Native mobile app** — React Native / Expo with shared business logic
 - **Recipe import from URL** — parse and import recipes from cooking websites
 - **Budget tracking** — estimated cost per shopping list
-- **Dark mode**
 - **Multiple households / groups** — separate workspaces per family unit
 
 ---
