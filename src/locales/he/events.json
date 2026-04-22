@@ -164,5 +164,42 @@
     "listName": "קניות — {{eventName}}"
   },
   "empty": "אין אירועים מתוכננים",
-  "emptyHint": "לחצו על + כדי לתכנן אירוע"
+  "emptyHint": "לחצו על + כדי לתכנן אירוע",
+  "comments": {
+    "title": "תגובות",
+    "open": "תגובות",
+    "empty": "אין עדיין תגובות",
+    "emptyHint": "היו הראשונים לשתף מחשבה על האירוע",
+    "placeholder": "כתבו תגובה…",
+    "send": "שלח",
+    "edit": "ערוך",
+    "delete": "מחק",
+    "save": "שמור",
+    "cancel": "ביטול",
+    "edited": "נערך",
+    "deleted": "התגובה נמחקה",
+    "undo": "בטל",
+    "sendError": "שליחת התגובה נכשלה",
+    "updateError": "עדכון התגובה נכשל",
+    "deleteError": "מחיקת התגובה נכשלה",
+    "charCount": "{{count}} / {{max}}"
+  },
+  "retro": {
+    "open": "תחקיר",
+    "title": "תחקיר האירוע",
+    "subtitle": "איך הלך האירוע?",
+    "notAvailable": "זמין לאחר סיום האירוע",
+    "enoughFood": "האם היה מספיק אוכל?",
+    "enoughFoodPlaceholder": "מה עבד, מה לא, גדלי מנות…",
+    "whatWentWrong": "מה השתבש?",
+    "whatWentWrongPlaceholder": "דברים להימנע מהם בפעם הבאה",
+    "whatWentWell": "מה עבד טוב?",
+    "whatWentWellPlaceholder": "הדברים המוצלחים",
+    "rememberNextTime": "לזכור לפעם הבאה",
+    "rememberNextTimePlaceholder": "הערות לעצמך לעתיד",
+    "save": "שמור",
+    "cancel": "ביטול",
+    "saved": "התחקיר נשמר",
+    "saveError": "שמירת התחקיר נכשלה"
+  }
 }

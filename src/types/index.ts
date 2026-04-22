@@ -18,6 +18,11 @@ export type EventInvitee = Database['public']['Tables']['event_invitees']['Row']
 export type EventEquipment = Database['public']['Tables']['event_equipment']['Row']
 export type EventRecipe = Database['public']['Tables']['event_recipes']['Row']
 export type EventShoppingList = Database['public']['Tables']['event_shopping_lists']['Row']
+export type EventComment = Database['public']['Tables']['event_comments']['Row']
+export type EventCommentWithAuthor = EventComment & {
+  display_name: string | null
+  avatar_url: string | null
+}
 export type ListMember = Database['public']['Tables']['list_members']['Row']
 export type Notification = Database['public']['Tables']['notifications']['Row']
 export type NotificationType = Notification['notification_type']
