@@ -1009,6 +1009,64 @@ The `ContactPicker` component required for list/event sharing is specified in **
 
 ---
 
+## STAGE 9 — Events Enhancements
+> **Goal:** Make events richer and more collaborative: surface photo albums, share with collaborators, support discussion, and capture post-event retros.
+> **Estimated time:** 4–5 days
+> Each sub-stage below is shipped as its own PR.
+
+### 9.1 — Photo Album Link on Event Cards (PR #1)
+- [ ] On `/events`, each `EventCard` shows a compact "Album" chip when `photo_album_url` is set
+- [ ] Chip is a clickable link (opens in a new tab, `rel="noopener noreferrer"`)
+- [ ] `stopPropagation` / `preventDefault` so clicking the chip doesn't trigger card navigation
+- [ ] Only rendered for valid `http(s)` URLs (reuse the same validation used in `EventDetailPage`)
+- [ ] Reuses existing i18n keys (`events:detail.photoAlbum`, `events:detail.openAlbum`)
+- [ ] Icon: `ImageIcon` or `ExternalLink` from `lucide-react` for consistency with the detail page
+
+### 9.2 — Event Sharing (mirror Lists) (PR #2)
+- [ ] New `ShareEventDialog` modeled on `ShareListDialog`
+- [ ] Reuses the existing `event_members` table (migration 019) — roles: `owner | editor | viewer`
+- [ ] Verify / extend RLS so event members can read the event and its children (invitees, equipment, recipes, shopping lists)
+- [ ] Add share button to `EventDetailPage` header
+- [ ] `useEventRole` hook paralleling `useListRole`
+- [ ] `AvatarStack` on event cards and event detail header (same component used for lists)
+- [ ] Integrate `ContactPicker` (Stage 4.7) for share-by-contact
+- [ ] Events page query returns events where user is owner **or** member
+
+### 9.3 — Email Notifications for Shares (deferred — post-MVP)
+> Parked by owner on 2026-04-22. Will revisit. Covers lists, events, and future recipes.
+> When picked up: Supabase Edge Function + transactional provider (Resend / Postmark / SendGrid).
+
+### 9.4 — Event Comments & Post-Mortem (PR #3)
+- [ ] New migration: `event_comments` table
+  - Fields: `id`, `event_id FK`, `user_id FK`, `body TEXT`, `created_at`, `updated_at`
+  - RLS: event owner + members can read/insert; author can update/delete their own comment
+- [ ] `EventDetailPage` header: two new buttons at the top — **Comments** and **Post-mortem**
+- [ ] **Comments** button always enabled — opens a comments panel/drawer
+  - List of comments (author avatar + display name + timestamp + body)
+  - Textarea + Send button at the bottom
+  - Realtime subscription on `event_comments` for the open event
+- [ ] **Post-mortem** button enabled only when `new Date(event.date) < now` — otherwise greyed out with tooltip
+  - Opens an editor for existing `retro_*` fields (migration 019): `retro_enough_food`, `retro_what_went_wrong`, `retro_what_went_well`, `retro_remember_next_time`
+  - Editable by owner + editors
+- [ ] i18n keys in both `en` and `he` for all new labels
+
+#### Stage 9 Manual Testing Checklist
+- [ ] Event with `photo_album_url` shows an Album chip on the card; clicking opens the album in a new tab without navigating to the event detail
+- [ ] Event without `photo_album_url` shows no chip
+- [ ] Share dialog on event invites another user → event appears in their `/events` page
+- [ ] Member can view / edit event according to their role; viewer cannot edit
+- [ ] Comments panel opens; sending a comment appears immediately and is visible to other members in realtime
+- [ ] Post-mortem button is disabled for future events, enabled for past events
+- [ ] Post-mortem editor saves retro fields; values persist on refresh
+
+#### Automated Tests
+- [ ] Unit: URL validation for the photo album chip (only `http(s)` renders)
+- [ ] Unit: `useEventRole` returns correct role for owner / editor / viewer / non-member
+- [ ] Unit: post-mortem button enabled/disabled based on `event.date` vs. now
+- [ ] Unit: RLS — non-member cannot read `event_comments` for an event
+
+---
+
 ## Stage Summary & Timeline
 
 | Stage | Name | Estimated Days |
@@ -1023,7 +1081,8 @@ The `ContactPicker` component required for list/event sharing is specified in **
 | 6 | Events | 5–6 |
 | 7 | PWA & Polish | 3–4 |
 | 8 | QA & Launch | 2–3 |
-| **Total** | | **~30–41 working days** |
+| 9 | Events Enhancements | 4–5 |
+| **Total** | | **~34–46 working days** |
 
 > **Quick wins:** Stages 0–4 deliver a fully functional shared shopping list app in approximately **2 weeks** of focused work.
 > The full app (shopping + recipes + events) is achievable in **4–6 weeks**.
