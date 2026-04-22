@@ -569,6 +569,17 @@ export type Database = {
           avatar_url: string | null
         }[]
       }
+      get_all_list_members_for_user: {
+        Args: Record<string, never>
+        Returns: {
+          id: string
+          list_id: string
+          user_id: string
+          role: 'owner' | 'editor' | 'viewer'
+          display_name: string | null
+          avatar_url: string | null
+        }[]
+      }
       list_member_role: {
         Args: { p_list_id: string }
         Returns: 'owner' | 'editor' | 'viewer' | null

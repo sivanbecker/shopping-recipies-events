@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
@@ -17,13 +17,6 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { AvatarStack } from '@/components/AvatarStack'
 import type { ShoppingList, ListMemberWithProfile } from '@/types'
-
-// Fetch members for a single list (used by ListCard)
-async function fetchListMembers(listId: string): Promise<ListMemberWithProfile[]> {
-  const { data, error } = await supabase.rpc('get_list_members', { p_list_id: listId })
-  if (error) throw error
-  return (data ?? []) as ListMemberWithProfile[]
-}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -47,18 +40,13 @@ function listDisplayName(list: ShoppingList, locale: string): string {
 interface ListCardProps {
   list: ListWithCount
   lang: string
+  members: ListMemberWithProfile[]
 }
 
-function ListCard({ list, lang }: ListCardProps) {
+function ListCard({ list, lang, members }: ListCardProps) {
   const { t } = useTranslation('shopping')
   const count = itemCount(list)
   const name = listDisplayName(list, lang)
-
-  // Fetch members for this list (lazy, only when card is visible)
-  const { data: members = [] } = useQuery<ListMemberWithProfile[]>({
-    queryKey: ['list_members', list.id],
-    queryFn: () => fetchListMembers(list.id),
-  })
 
   return (
     <Link
@@ -233,6 +221,26 @@ export default function ListsPage() {
     enabled: !!user && showArchived,
   })
 
+  const { data: allMembers = [] } = useQuery<ListMemberWithProfile[]>({
+    queryKey: ['all_list_members', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_all_list_members_for_user')
+      if (error) throw error
+      return (data ?? []) as ListMemberWithProfile[]
+    },
+    enabled: !!user,
+  })
+
+  const membersByList = useMemo(() => {
+    const map = new Map<string, ListMemberWithProfile[]>()
+    for (const m of allMembers) {
+      const arr = map.get(m.list_id)
+      if (arr) arr.push(m)
+      else map.set(m.list_id, [m])
+    }
+    return map
+  }, [allMembers])
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -256,7 +264,12 @@ export default function ListsPage() {
       ) : (
         <div className="space-y-3">
           {activeLists.map(list => (
-            <ListCard key={list.id} list={list} lang={lang} />
+            <ListCard
+              key={list.id}
+              list={list}
+              lang={lang}
+              members={membersByList.get(list.id) ?? []}
+            />
           ))}
         </div>
       )}
@@ -287,7 +300,14 @@ export default function ListsPage() {
           ) : archivedLists.length === 0 ? (
             <p className="py-4 text-center text-sm text-gray-400">{t('lists.emptyArchive')}</p>
           ) : (
-            archivedLists.map(list => <ListCard key={list.id} list={list} lang={lang} />)
+            archivedLists.map(list => (
+              <ListCard
+                key={list.id}
+                list={list}
+                lang={lang}
+                members={membersByList.get(list.id) ?? []}
+              />
+            ))
           )}
         </div>
       )}
