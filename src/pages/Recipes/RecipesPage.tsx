@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -17,6 +17,7 @@ import {
 import { toast } from 'sonner'
 
 import { useAuth } from '@/hooks/useAuth'
+import { useDebounce } from '@/hooks/useDebounce'
 import { supabase } from '@/lib/supabase'
 import type { Recipe } from '@/types'
 
@@ -151,6 +152,7 @@ export default function RecipesPage() {
 
   const { t: tCommon } = useTranslation()
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search)
   const [selectedTool, setSelectedTool] = useState<string | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
@@ -198,13 +200,19 @@ export default function RecipesPage() {
     },
   })
 
-  const filteredRecipes = recipes.filter(recipe => {
-    const matchesSearch = recipe.title.toLowerCase().includes(search.toLowerCase())
-    const matchesTool = !selectedTool || recipe.tools?.includes(selectedTool)
-    return matchesSearch && matchesTool
-  })
+  const filteredRecipes = useMemo(() => {
+    const q = debouncedSearch.toLowerCase()
+    return recipes.filter(recipe => {
+      const matchesSearch = recipe.title.toLowerCase().includes(q)
+      const matchesTool = !selectedTool || recipe.tools?.includes(selectedTool)
+      return matchesSearch && matchesTool
+    })
+  }, [recipes, debouncedSearch, selectedTool])
 
-  const allTools = Array.from(new Set(recipes.flatMap(r => r.tools || []))).sort()
+  const allTools = useMemo(
+    () => Array.from(new Set(recipes.flatMap(r => r.tools || []))).sort(),
+    [recipes]
+  )
 
   return (
     <div className="flex flex-col gap-4 pb-24">
