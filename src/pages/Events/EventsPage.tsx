@@ -7,6 +7,8 @@ import {
   Calendar,
   ChevronDown,
   ChevronUp,
+  ExternalLink,
+  Image as ImageIcon,
   Loader2,
   MapPin,
   Trash2,
@@ -81,6 +83,19 @@ function EventCard({ event }: { event: EventWithInvitees }) {
                 count: event.event_invitees.reduce((s, i) => s + i.party_size, 0),
               })}
             </span>
+          )}
+          {event.photo_album_url && /^https?:\/\//i.test(event.photo_album_url) && (
+            <a
+              href={event.photo_album_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-purple-50 px-2 py-0.5 text-xs font-medium text-purple-700 hover:bg-purple-100 dark:bg-purple-900/30 dark:text-purple-300 dark:hover:bg-purple-900/50"
+            >
+              <ImageIcon className="h-3 w-3" />
+              {t('detail.photoAlbum')}
+              <ExternalLink className="h-3 w-3" />
+            </a>
           )}
         </Link>
 
