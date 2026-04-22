@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -19,14 +19,21 @@ import { format } from 'date-fns'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { countdownLabel, isUpcoming } from '@/lib/eventHelpers'
-import type { Event, EventInvitee } from '@/types'
+import { AvatarStack } from '@/components/AvatarStack'
+import type { Event, EventInvitee, EventMemberWithProfile } from '@/types'
 
 type EventWithInvitees = Event & { event_invitees: Pick<EventInvitee, 'party_size'>[] }
 import NewEventDialog from './NewEventDialog'
 
 // ─── EventCard ───────────────────────────────────────────────────────────────
 
-function EventCard({ event }: { event: EventWithInvitees }) {
+function EventCard({
+  event,
+  members,
+}: {
+  event: EventWithInvitees
+  members: EventMemberWithProfile[]
+}) {
   const { t, i18n } = useTranslation('events')
   const { user } = useAuth()
   const queryClient = useQueryClient()
@@ -83,6 +90,11 @@ function EventCard({ event }: { event: EventWithInvitees }) {
                 count: event.event_invitees.reduce((s, i) => s + i.party_size, 0),
               })}
             </span>
+          )}
+          {members.length > 1 && (
+            <div className="mt-1">
+              <AvatarStack members={members} size={20} max={4} />
+            </div>
           )}
           {event.photo_album_url && /^https?:\/\//i.test(event.photo_album_url) && (
             <a
@@ -173,6 +185,26 @@ export default function EventsPage() {
     enabled: !!user,
   })
 
+  const { data: allMembers = [] } = useQuery<EventMemberWithProfile[]>({
+    queryKey: ['all_event_members', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_all_event_members_for_user')
+      if (error) throw error
+      return (data ?? []) as EventMemberWithProfile[]
+    },
+    enabled: !!user,
+  })
+
+  const membersByEvent = useMemo(() => {
+    const map = new Map<string, EventMemberWithProfile[]>()
+    for (const m of allMembers) {
+      const arr = map.get(m.event_id)
+      if (arr) arr.push(m)
+      else map.set(m.event_id, [m])
+    }
+    return map
+  }, [allMembers])
+
   const upcomingEvents = allEvents.filter(e => isUpcoming(e))
   const pastEvents = allEvents.filter(e => !isUpcoming(e)).reverse() // most recent first
 
@@ -203,7 +235,7 @@ export default function EventsPage() {
       ) : (
         <div className="space-y-3">
           {upcomingEvents.map(event => (
-            <EventCard key={event.id} event={event} />
+            <EventCard key={event.id} event={event} members={membersByEvent.get(event.id) ?? []} />
           ))}
         </div>
       )}
@@ -227,7 +259,11 @@ export default function EventsPage() {
           {showPast && (
             <div className="space-y-3">
               {pastEvents.map(event => (
-                <EventCard key={event.id} event={event} />
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  members={membersByEvent.get(event.id) ?? []}
+                />
               ))}
             </div>
           )}
