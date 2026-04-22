@@ -503,6 +503,28 @@ export type Database = {
         Update: Record<string, never>
         Relationships: []
       }
+      event_comments: {
+        Row: {
+          id: string
+          event_id: string
+          user_id: string
+          body: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          user_id: string
+          body: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+        }
+        Relationships: []
+      }
       list_members: {
         Row: {
           id: string

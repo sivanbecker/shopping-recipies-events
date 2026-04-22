@@ -164,5 +164,42 @@
     "listName": "Shopping — {{eventName}}"
   },
   "empty": "No upcoming events",
-  "emptyHint": "Tap + to plan your first event"
+  "emptyHint": "Tap + to plan your first event",
+  "comments": {
+    "title": "Comments",
+    "open": "Comments",
+    "empty": "No comments yet",
+    "emptyHint": "Be the first to share a thought about this event",
+    "placeholder": "Write a comment…",
+    "send": "Send",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edited": "edited",
+    "deleted": "Comment deleted",
+    "undo": "Undo",
+    "sendError": "Failed to send comment",
+    "updateError": "Failed to update comment",
+    "deleteError": "Failed to delete comment",
+    "charCount": "{{count}} / {{max}}"
+  },
+  "retro": {
+    "open": "Post-mortem",
+    "title": "Event Post-mortem",
+    "subtitle": "Reflect on how the event went",
+    "notAvailable": "Available after the event",
+    "enoughFood": "Was there enough food?",
+    "enoughFoodPlaceholder": "What worked, what didn't, portion sizes…",
+    "whatWentWrong": "What went wrong?",
+    "whatWentWrongPlaceholder": "Anything you'd avoid next time",
+    "whatWentWell": "What went well?",
+    "whatWentWellPlaceholder": "The highlights",
+    "rememberNextTime": "Remember for next time",
+    "rememberNextTimePlaceholder": "Notes to your future self",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saved": "Post-mortem saved",
+    "saveError": "Failed to save post-mortem"
+  }
 }

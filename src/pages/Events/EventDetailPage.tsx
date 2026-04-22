@@ -16,6 +16,8 @@ import {
   UtensilsCrossed,
   Package,
   ShoppingCart,
+  MessageSquare,
+  ClipboardList,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -28,6 +30,8 @@ import InviteesTab from './tabs/InviteesTab'
 import EquipmentTab from './tabs/EquipmentTab'
 import RecipesTab from './tabs/RecipesTab'
 import ShoppingTab from './tabs/ShoppingTab'
+import EventCommentsPanel from './EventCommentsPanel'
+import EventRetroDialog from './EventRetroDialog'
 
 // ─── Tab definitions ─────────────────────────────────────────────────────────
 
@@ -51,6 +55,8 @@ export default function EventDetailPage() {
   const queryClient = useQueryClient()
   const [showEdit, setShowEdit] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showComments, setShowComments] = useState(false)
+  const [showRetro, setShowRetro] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('invitees')
 
   const { data: event, isLoading } = useQuery<Event>({
@@ -98,6 +104,7 @@ export default function EventDetailPage() {
   }
 
   const isOwner = event.owner_id === user?.id
+  const isPastEvent = new Date(event.date).getTime() < Date.now()
   const countdown = countdownLabel(event.date)
   const dateStr = format(
     new Date(event.date),
@@ -131,6 +138,26 @@ export default function EventDetailPage() {
             </button>
           </div>
         )}
+      </div>
+
+      {/* Comments + Post-mortem buttons */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setShowComments(true)}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          <MessageSquare className="h-4 w-4" />
+          {t('comments.open')}
+        </button>
+        <button
+          onClick={() => isPastEvent && setShowRetro(true)}
+          disabled={!isPastEvent}
+          title={!isPastEvent ? t('retro.notAvailable') : undefined}
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800 dark:disabled:hover:bg-gray-900"
+        >
+          <ClipboardList className="h-4 w-4" />
+          {t('retro.open')}
+        </button>
       </div>
 
       {/* Overview card */}
@@ -214,6 +241,14 @@ export default function EventDetailPage() {
 
       {/* Edit dialog */}
       {showEdit && <NewEventDialog onClose={() => setShowEdit(false)} event={event} />}
+
+      {/* Comments drawer */}
+      {showComments && (
+        <EventCommentsPanel eventId={event.id} onClose={() => setShowComments(false)} />
+      )}
+
+      {/* Post-mortem dialog */}
+      {showRetro && <EventRetroDialog event={event} onClose={() => setShowRetro(false)} />}
 
       {/* Delete confirmation */}
       {showDeleteConfirm && (
