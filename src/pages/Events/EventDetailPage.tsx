@@ -18,13 +18,16 @@ import {
   ShoppingCart,
   MessageSquare,
   ClipboardList,
+  Share2,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { countdownLabel } from '@/lib/eventHelpers'
-import type { Event } from '@/types'
+import { useEventRole, canEditEvent } from '@/hooks/useEventRole'
+import { AvatarStack } from '@/components/AvatarStack'
+import type { Event, EventMemberWithProfile } from '@/types'
 import NewEventDialog from './NewEventDialog'
 import InviteesTab from './tabs/InviteesTab'
 import EquipmentTab from './tabs/EquipmentTab'
@@ -32,6 +35,7 @@ import RecipesTab from './tabs/RecipesTab'
 import ShoppingTab from './tabs/ShoppingTab'
 import EventCommentsPanel from './EventCommentsPanel'
 import EventRetroDialog from './EventRetroDialog'
+import { ShareEventDialog } from './ShareEventDialog'
 
 // ─── Tab definitions ─────────────────────────────────────────────────────────
 
@@ -57,7 +61,20 @@ export default function EventDetailPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showComments, setShowComments] = useState(false)
   const [showRetro, setShowRetro] = useState(false)
+  const [showShare, setShowShare] = useState(false)
   const [activeTab, setActiveTab] = useState<TabId>('invitees')
+
+  const { data: role } = useEventRole(id)
+
+  const { data: members = [] } = useQuery<EventMemberWithProfile[]>({
+    queryKey: ['event_members', id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_event_members', { p_event_id: id! })
+      if (error) throw error
+      return (data ?? []) as EventMemberWithProfile[]
+    },
+    enabled: !!id,
+  })
 
   const { data: event, isLoading } = useQuery<Event>({
     queryKey: ['event', id],
@@ -104,6 +121,7 @@ export default function EventDetailPage() {
   }
 
   const isOwner = event.owner_id === user?.id
+  const canEdit = canEditEvent(role) || isOwner
   const isPastEvent = new Date(event.date).getTime() < Date.now()
   const countdown = countdownLabel(event.date)
   const dateStr = format(
@@ -122,22 +140,41 @@ export default function EventDetailPage() {
           <ArrowLeft className="h-4 w-4" /> {t('title')}
         </Link>
 
-        {isOwner && (
-          <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          {members.length > 0 && (
             <button
-              onClick={() => setShowEdit(true)}
-              className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+              onClick={() => isOwner && setShowShare(true)}
+              disabled={!isOwner}
+              className={isOwner ? 'cursor-pointer' : 'cursor-default'}
+              aria-label={isOwner ? t('sharing.shareButton') : undefined}
             >
-              <Pencil className="h-4 w-4" />
+              <AvatarStack members={members} size={28} />
             </button>
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              className="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-500 dark:text-gray-400 dark:hover:bg-red-900/20"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-          </div>
-        )}
+          )}
+          {isOwner && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setShowShare(true)}
+                className="rounded-lg p-2 text-gray-500 hover:bg-purple-50 hover:text-purple-500 dark:text-gray-400 dark:hover:bg-purple-900/20"
+                aria-label={t('sharing.shareButton')}
+              >
+                <Share2 className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setShowEdit(true)}
+                className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-500 dark:text-gray-400 dark:hover:bg-red-900/20"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Comments + Post-mortem buttons */}
@@ -229,13 +266,13 @@ export default function EventDetailPage() {
 
       {/* Tab content */}
       <div className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-900">
-        {activeTab === 'invitees' && <InviteesTab eventId={id!} isOwner={isOwner} />}
-        {activeTab === 'equipment' && <EquipmentTab eventId={id!} isOwner={isOwner} />}
+        {activeTab === 'invitees' && <InviteesTab eventId={id!} isOwner={canEdit} />}
+        {activeTab === 'equipment' && <EquipmentTab eventId={id!} isOwner={canEdit} />}
         {activeTab === 'recipes' && (
-          <RecipesTab eventId={id!} eventTitle={event.title} isOwner={isOwner} totalPeople={0} />
+          <RecipesTab eventId={id!} eventTitle={event.title} isOwner={canEdit} totalPeople={0} />
         )}
         {activeTab === 'shopping' && (
-          <ShoppingTab eventId={id!} eventTitle={event.title} isOwner={isOwner} />
+          <ShoppingTab eventId={id!} eventTitle={event.title} isOwner={canEdit} />
         )}
       </div>
 
@@ -249,6 +286,9 @@ export default function EventDetailPage() {
 
       {/* Post-mortem dialog */}
       {showRetro && <EventRetroDialog event={event} onClose={() => setShowRetro(false)} />}
+
+      {/* Share dialog */}
+      {showShare && <ShareEventDialog eventId={event.id} onClose={() => setShowShare(false)} />}
 
       {/* Delete confirmation */}
       {showDeleteConfirm && (

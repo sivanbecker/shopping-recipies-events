@@ -606,6 +606,32 @@ export type Database = {
         Args: { p_list_id: string }
         Returns: 'owner' | 'editor' | 'viewer' | null
       }
+      event_member_role: {
+        Args: { p_event_id: string }
+        Returns: 'owner' | 'editor' | 'viewer' | null
+      }
+      get_event_members: {
+        Args: { p_event_id: string }
+        Returns: {
+          id: string
+          event_id: string
+          user_id: string
+          role: 'owner' | 'editor' | 'viewer'
+          display_name: string | null
+          avatar_url: string | null
+        }[]
+      }
+      get_all_event_members_for_user: {
+        Args: Record<string, never>
+        Returns: {
+          id: string
+          event_id: string
+          user_id: string
+          role: 'owner' | 'editor' | 'viewer'
+          display_name: string | null
+          avatar_url: string | null
+        }[]
+      }
       purge_trashed_lists: {
         Args: Record<string, never>
         Returns: number

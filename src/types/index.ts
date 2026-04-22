@@ -55,6 +55,11 @@ export type ListMemberWithProfile = ListMember & {
   avatar_url: string | null
 }
 
+export type EventMemberWithProfile = EventMember & {
+  display_name: string | null
+  avatar_url: string | null
+}
+
 export type Language = 'he' | 'en'
 export type UnitCategory = 'weight' | 'volume' | 'count' | 'cooking'
 export type ListRole = 'owner' | 'editor' | 'viewer'
