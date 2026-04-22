@@ -1010,8 +1010,16 @@ export default function ListDetailPage() {
       if (error) throw error
       return data
     },
-    onMutate: ({ itemId }) => {
+    onMutate: async ({ itemId, checked }) => {
       setTogglingIds(s => new Set(s).add(itemId))
+      await queryClient.cancelQueries({ queryKey: ['shopping_items', id] })
+      const prev = queryClient.getQueryData<ShoppingItemWithProduct[]>(['shopping_items', id])
+      queryClient.setQueryData<ShoppingItemWithProduct[]>(
+        ['shopping_items', id],
+        old =>
+          old?.map(item => (item.id === itemId ? { ...item, is_checked: checked } : item)) ?? []
+      )
+      return { prev }
     },
     onSuccess: (data, { itemId, checked, updatedAt }) => {
       showUndoToast(
@@ -1033,10 +1041,14 @@ export default function ListDetailPage() {
         next.delete(itemId)
         return next
       })
-      queryClient.invalidateQueries({ queryKey: ['shopping_items', id] })
       broadcastChange(id!, 'items-changed')
     },
-    onError: () => toast.error('Failed to update item'),
+    onError: (_err, _vars, context) => {
+      if (context?.prev) {
+        queryClient.setQueryData(['shopping_items', id], context.prev)
+      }
+      toast.error('Failed to update item')
+    },
   })
 
   const removeMutation = useMutation({
