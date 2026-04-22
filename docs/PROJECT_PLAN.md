@@ -1014,41 +1014,41 @@ The `ContactPicker` component required for list/event sharing is specified in **
 > **Estimated time:** 4–5 days
 > Each sub-stage below is shipped as its own PR.
 
-### 9.1 — Photo Album Link on Event Cards (PR #1)
-- [ ] On `/events`, each `EventCard` shows a compact "Album" chip when `photo_album_url` is set
-- [ ] Chip is a clickable link (opens in a new tab, `rel="noopener noreferrer"`)
-- [ ] `stopPropagation` / `preventDefault` so clicking the chip doesn't trigger card navigation
-- [ ] Only rendered for valid `http(s)` URLs (reuse the same validation used in `EventDetailPage`)
-- [ ] Reuses existing i18n keys (`events:detail.photoAlbum`, `events:detail.openAlbum`)
-- [ ] Icon: `ImageIcon` or `ExternalLink` from `lucide-react` for consistency with the detail page
+### 9.1 — Photo Album Link on Event Cards (PR #79) — COMPLETE
+- [x] On `/events`, each `EventCard` shows a compact "Album" chip when `photo_album_url` is set
+- [x] Chip is a clickable link (opens in a new tab, `rel="noopener noreferrer"`)
+- [x] `stopPropagation` / `preventDefault` so clicking the chip doesn't trigger card navigation
+- [x] Only rendered for valid `http(s)` URLs (reuse the same validation used in `EventDetailPage`)
+- [x] Reuses existing i18n keys (`events:detail.photoAlbum`, `events:detail.openAlbum`)
+- [x] Icon: `ImageIcon` or `ExternalLink` from `lucide-react` for consistency with the detail page
 
-### 9.2 — Event Sharing (mirror Lists) (PR #2)
-- [ ] New `ShareEventDialog` modeled on `ShareListDialog`
-- [ ] Reuses the existing `event_members` table (migration 019) — roles: `owner | editor | viewer`
-- [ ] Verify / extend RLS so event members can read the event and its children (invitees, equipment, recipes, shopping lists)
-- [ ] Add share button to `EventDetailPage` header
-- [ ] `useEventRole` hook paralleling `useListRole`
-- [ ] `AvatarStack` on event cards and event detail header (same component used for lists)
-- [ ] Integrate `ContactPicker` (Stage 4.7) for share-by-contact
-- [ ] Events page query returns events where user is owner **or** member
+### 9.2 — Event Sharing (mirror Lists) (PR #81) — COMPLETE
+- [x] New `ShareEventDialog` modeled on `ShareListDialog`
+- [x] Reuses the existing `event_members` table (migration 019) — roles: `owner | editor | viewer`
+- [x] Verify / extend RLS so event members can read the event and its children (invitees, equipment, recipes, shopping lists) — **migration 032**
+- [x] Add share button to `EventDetailPage` header
+- [x] `useEventRole` hook paralleling `useListRole`
+- [x] `AvatarStack` on event cards and event detail header (same component used for lists)
+- [x] Integrate `ContactPicker` (Stage 4.7) for share-by-contact
+- [x] Events page query returns events where user is owner **or** member
 
 ### 9.3 — Email Notifications for Shares (deferred — post-MVP)
 > Parked by owner on 2026-04-22. Will revisit. Covers lists, events, and future recipes.
 > When picked up: Supabase Edge Function + transactional provider (Resend / Postmark / SendGrid).
 
-### 9.4 — Event Comments & Post-Mortem (PR #3)
-- [ ] New migration: `event_comments` table
+### 9.4 — Event Comments & Post-Mortem (PR #80) — COMPLETE
+- [x] New migration: `event_comments` table (migrations **030** + **031** for updated_at trigger)
   - Fields: `id`, `event_id FK`, `user_id FK`, `body TEXT`, `created_at`, `updated_at`
   - RLS: event owner + members can read/insert; author can update/delete their own comment
-- [ ] `EventDetailPage` header: two new buttons at the top — **Comments** and **Post-mortem**
-- [ ] **Comments** button always enabled — opens a comments panel/drawer
+- [x] `EventDetailPage` header: two new buttons at the top — **Comments** and **Post-mortem**
+- [x] **Comments** button always enabled — opens a comments panel/drawer
   - List of comments (author avatar + display name + timestamp + body)
   - Textarea + Send button at the bottom
   - Realtime subscription on `event_comments` for the open event
-- [ ] **Post-mortem** button enabled only when `new Date(event.date) < now` — otherwise greyed out with tooltip
+- [x] **Post-mortem** button enabled only when `new Date(event.date) < now` — otherwise greyed out with tooltip
   - Opens an editor for existing `retro_*` fields (migration 019): `retro_enough_food`, `retro_what_went_wrong`, `retro_what_went_well`, `retro_remember_next_time`
   - Editable by owner + editors
-- [ ] i18n keys in both `en` and `he` for all new labels
+- [x] i18n keys in both `en` and `he` for all new labels
 
 #### Stage 9 Manual Testing Checklist
 - [ ] Event with `photo_album_url` shows an Album chip on the card; clicking opens the album in a new tab without navigating to the event detail
@@ -1067,6 +1067,75 @@ The `ContactPicker` component required for list/event sharing is specified in **
 
 ---
 
+## STAGE 10 — Performance Optimization
+> **Goal:** Mobile responsiveness polish — reduce re-renders, debounce input, eliminate N+1 queries, add DB indexes, lazy-load routes, and tighten realtime filters.
+> **Status:** PRs 1–3 complete; PRs 4–6 pending.
+> **Context:** The app feels sluggish on mobile. Root causes: (1) heavy derived-state recomputation with no memoization, (2) search inputs re-rendering on every keystroke, (3) N+1 query on the Lists page, (4) Supabase free-tier cold starts (unrelated, infra-bound). Work is split across 6 small, independently revertable PRs.
+
+### 10.1 — React quick wins (PR #76) — COMPLETE
+**Branch:** `perf/react-quick-wins` | **Risk:** Low (pure frontend)
+- [x] `useMemo` for `uncheckedItems`, `checkedItems`, and `groupByCategory` result in `ListDetailPage` — prevents `groupByCategory` rebuilding a Map on every `togglingIds` state change
+- [x] New `src/hooks/useDebounce.ts` (200ms default)
+- [x] Debounced search in `ProductsPage`, `RecipesPage`, and `AddItemSheet` (ListDetailPage)
+- [x] `useMemo` for `grouped` / `uncategorized` in `ProductsPage` (replaces O(n × categories) inline filter/some)
+- [x] `React.memo` on `AvatarStack` + memoized sort
+
+### 10.2 — Optimistic toggle for shopping items (PR #77) — COMPLETE
+**Branch:** `perf/optimistic-toggle` | **Risk:** Low (bounded to one mutation)
+- [x] `toggleMutation` in `ListDetailPage` adds `onMutate`: `cancelQueries`, snapshot, optimistic `is_checked` patch, add to `togglingIds`
+- [x] Rollback in `onError` restores the snapshot and shows error toast
+- [x] Removed `invalidateQueries` from `onSettled` — realtime + broadcast reconcile on the happy path
+- [x] Undo toast path in `onSuccess` unchanged
+
+### 10.3 — N+1 fix for ListsPage (PR #78) — COMPLETE
+**Branch:** `perf/lists-n-plus-1` | **Risk:** Medium (new RPC)
+- [x] Migration **029** — `get_all_list_members_for_user()` RPC returns all members across all caller's owned + shared lists in one query, joined with profile data
+- [x] `ListsPage` uses a single `useQuery(['all_list_members', user.id])`; builds `Map<listId, members[]>` with `useMemo`; passes `members` as prop to each `ListCard`
+- [x] Removed the per-card `useQuery(['list_members', list.id])` → 10 lists now = 1 query instead of 11
+
+### 10.4 — DB indexes — NOT STARTED
+**Branch:** `perf/db-indexes` | **Risk:** Very low (SQL-only)
+**New migration:** `supabase/migrations/NNN_perf_indexes.sql`
+```sql
+-- Composite for ListDetailPage items query (list_id + is_checked + sort_order)
+create index if not exists shopping_items_list_checked_idx
+  on public.shopping_items (list_id, is_checked, sort_order, created_at);
+
+-- Product lookup on items (used in AddItemSheet existingItem check)
+create index if not exists shopping_items_product_idx
+  on public.shopping_items (product_id);
+
+-- Partial index for active (non-deleted) lists query
+create index if not exists shopping_lists_active_idx
+  on public.shopping_lists (owner_id, is_archived, created_at)
+  where deleted_at is null;
+```
+
+### 10.5 — Route lazy loading — NOT STARTED
+**Branch:** `perf/route-lazy-loading` | **Risk:** Medium (affects initial load + Suspense behavior)
+- [ ] Convert all page imports in `src/App.tsx` to `React.lazy(() => import(...))` — `ListsPage`, `ListDetailPage`, `ProductsPage`, `RecipesPage`, `RecipeDetailPage`, `RecipeFormPage`, `EventsPage`, `EventDetailPage`, `ContactsPage`, `ProfilePage`, `TrashPage`
+- [ ] Wrap `<Routes>` in `<Suspense fallback={<Loader2 className="animate-spin" />}>`
+- [ ] Keep `AuthPage` eager (first paint)
+
+### 10.6 — Realtime server-side filter — NOT STARTED
+**Branch:** `perf/realtime-filter` | **Risk:** Low (but touches realtime, keep isolated)
+- [ ] In `ListDetailPage`, add `filter: \`list_id=eq.${id}\`` to the `postgres_changes` subscription for `shopping_items` — currently filters client-side after receiving all events
+
+### Deferred (not in this batch)
+- **Memoize `ItemRow` callbacks** — high impact at 50+ items but requires a non-trivial refactor; revisit after profiling PR #76
+- **Virtual scrolling** (`@tanstack/react-virtual`) — only if a user has 200+ products or 100+ list items; measure first
+- **Prefetch on hover/touch** in `ListCard` — UX polish; revisit after core perf PRs
+- **Supabase Pro tier upgrade** — eliminates cold starts; code fixes only improve warm performance
+
+### Per-PR verification (quality gates)
+1. `npm test` — all Vitest tests green
+2. `npm run lint` — zero errors
+3. `npm run format` — no diffs
+4. `supabase migration list` — for PRs that add migrations, confirm applied
+5. Manual smoke test on the affected page
+
+---
+
 ## Stage Summary & Timeline
 
 | Stage | Name | Estimated Days |
@@ -1082,7 +1151,8 @@ The `ContactPicker` component required for list/event sharing is specified in **
 | 7 | PWA & Polish | 3–4 |
 | 8 | QA & Launch | 2–3 |
 | 9 | Events Enhancements | 4–5 |
-| **Total** | | **~34–46 working days** |
+| 10 | Performance Optimization | 2–3 |
+| **Total** | | **~36–49 working days** |
 
 > **Quick wins:** Stages 0–4 deliver a fully functional shared shopping list app in approximately **2 weeks** of focused work.
 > The full app (shopping + recipes + events) is achievable in **4–6 weeks**.
@@ -1102,4 +1172,4 @@ The `ContactPicker` component required for list/event sharing is specified in **
 
 ---
 
-*Generated: April 2026 | Contact: sivanbecker@gmail.com*
+*Generated: April 2026*

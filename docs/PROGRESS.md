@@ -1,5 +1,117 @@
 # Project Progress
 
+> Last major update: 2026-04-22. Entries are ordered roughly newest-first within each stage. Completed stages are retained below for historical context.
+
+---
+
+## Stage 9 — Events Enhancements — COMPLETE (merged to `main`)
+
+### 9.1 — Photo Album Chip on Event Cards — COMPLETE (PR #79, commit `b5b36cb`)
+- `EventCard` on `/events` shows a compact "Album" chip when `photo_album_url` is a valid `http(s)` URL
+- Chip opens the album in a new tab (`rel="noopener noreferrer"`); `stopPropagation` prevents triggering card navigation
+- Reuses existing `events:detail.photoAlbum` / `events:detail.openAlbum` i18n keys and `ImageIcon` from `lucide-react`
+
+### 9.4 — Event Comments & Post-Mortem — COMPLETE (PR #80, commit `f08d03c`)
+- **Migration 030** — `event_comments` table (`id`, `event_id`, `user_id`, `body`, `created_at`, `updated_at`) with RLS: event owner + members can read/insert; author can update/delete
+- **Migration 031** — `updated_at` trigger on `event_comments`
+- **`EventCommentsPanel.tsx`** — drawer with scrollable comment list (avatar + display name + timestamp + body), textarea + send, realtime subscription on `event_comments` filtered by the open event
+- **`EventRetroDialog.tsx`** — editor for the four `retro_*` fields already on `events` (migration 019): `retro_enough_food`, `retro_what_went_wrong`, `retro_what_went_well`, `retro_remember_next_time`
+- **`EventDetailPage` header** — two new buttons: Comments (always enabled) and Post-mortem (enabled only when event date is in the past, greyed out with tooltip otherwise)
+- i18n: added 39 new keys in both `en/events.json` and `he/events.json`
+
+### 9.2 — Event Sharing — COMPLETE (PR #81, commit `ead53b9`)
+- **Migration 032** — extends RLS on events + child tables (invitees, equipment, recipes, shopping lists) so event members can read/edit per role; event shows for owner **or** members in list query
+- **`ShareEventDialog.tsx`** — mirrors `ShareListDialog`: member list with role picker (editor/viewer), invite via email, `ContactPicker` integration for share-by-contact
+- **`useEventRole` hook** — parallels `useListRole`, returns `owner | editor | viewer | null`
+- **Share button** added to `EventDetailPage` header; gated by `useEventRole`
+- **`AvatarStack`** on event cards (`EventsPage`) and on the event detail header — same component as lists
+- Events page query now returns events where user is owner OR member (via `event_members`)
+
+### 9.3 — Email Notifications for Shares — DEFERRED
+Parked 2026-04-22 per project plan. Revisit post-MVP.
+
+---
+
+## Performance Optimization — PARTIAL (merged to `main`)
+
+See Stage 10 in `PROJECT_PLAN.md` for the full 6-PR plan.
+
+### PR 1 — React quick wins — COMPLETE (PR #76, commit `18265af`)
+- `useDebounce` hook added (`src/hooks/useDebounce.ts`, 200ms default)
+- `useMemo` for `uncheckedItems`, `checkedItems`, and `groupByCategory` result in `ListDetailPage`
+- Debounced search applied in `ProductsPage`, `RecipesPage`, and `AddItemSheet` (ListDetailPage)
+- `useMemo` for `grouped` / `uncategorized` in `ProductsPage`
+- `AvatarStack` wrapped with `React.memo`, member sort memoized
+- Bugfix follow-up (`c9cff12`) after merge
+
+### PR 2 — Optimistic toggle — COMPLETE (PR #77, commit `9aa179b`)
+- `toggleMutation` in `ListDetailPage` now patches `is_checked` in the cache via `onMutate` so items jump to the "done" section instantly
+- Snapshot + rollback on error; `invalidateQueries` removed from `onSettled` (realtime + broadcast reconcile)
+- Undo toast path unchanged
+
+### PR 3 — N+1 fix on ListsPage — COMPLETE (PR #78, commit `3aefcd8`)
+- **Migration 029** — `get_all_list_members_for_user()` RPC returns all members across all of caller's owned + shared lists in one query
+- `ListsPage` uses a single `useQuery(['all_list_members', user.id])`; builds `Map<listId, members[]>` with `useMemo`; passes `members` to each `ListCard` as a prop
+- Removed the per-card `useQuery(['list_members', list.id])` → 10 lists now = 1 query instead of 11
+
+### PR 4 — DB indexes — NOT STARTED
+Plan lives in `PROJECT_PLAN.md` Stage 10 (new migration adding `shopping_items_list_checked_idx`, `shopping_items_product_idx`, partial `shopping_lists_active_idx`).
+
+### PR 5 — Route lazy loading — NOT STARTED
+
+### PR 6 — Realtime server-side filter — NOT STARTED
+
+---
+
+## Voice Search & Shopping List UX — COMPLETE (merged to `main`)
+
+### Voice input across the app
+- **`useVoiceInput` hook** (`src/hooks/useVoiceInput.ts`) — Web Speech API wrapper with Hebrew/English support, mobile-tolerant auto-stop, interim-result handling
+- **ProductDialog** — voice mic button next to Hebrew and English name fields (`ac0f865`); clear buttons, char filtering, strict voice-to-field binding (`bc16205`); TS build-error fixes for Web Speech API (`544f471`)
+- **AddItemSheet** — voice mic button on the search input (`103c984`)
+- **ProductsPage** — voice search on the top search bar (`f862cd5`)
+- Mobile Hebrew stability fixes: final transcript flush on `onend` (`ec98cf7`), interimResults disabled for ProductDialog (`80601fb`), simplified ProductDialog voice to match list search (`4933dbc`), auto-stop timeouts tuned (1s then 2s — `bbb93fa`, `af608d5`), filled-field fix (`3e27485`)
+- Interim results enabled for faster search response on ProductsPage/AddItemSheet (`23b8591`)
+
+### Shopping list UX improvements
+- **Category grouping with collapsible sections** in `ListDetailPage` (`4b1f20b`) — items group under category headers that can be expanded/collapsed
+- **Mark-category-done** (`9a048f9`) — checkbox on each category header marks all items in that category as checked; swipe-right gesture on the header does the same on mobile
+- **Enlarged category headers** for mobile readability (`1617867`, `d9fa958`)
+- **Full product creation modal from shopping list** (`0fef813`) — "Create new product" flow in `AddItemSheet` now opens the real `ProductDialog` with AI suggest, not a stripped-down inline form; extracted `ProductDialog.tsx` as a shared component used by both `ProductsPage` and `ListDetailPage`
+- **AI suggest button in edit product modal** (`bfacf1f`) — sparkle button now available on existing products, not just when adding
+- **Inline quantity + unit editing on list items** (`cf1052b`) — tap quantity/unit on an item row to edit in place; undo support
+- **Countdown bar on undo toast** (`f0ada74`) — visual countdown of the 10s undo window; new `UndoToastContent.tsx` component
+- **Inline list name editing** (`fa309fb`) — owners and editors can rename the list from the detail header
+- **Hide action button labels on mobile** in list detail header (`8ed8a99`)
+
+---
+
+## Collaboration & Permissions — Follow-up fixes — COMPLETE
+
+- **NotificationBell refactor** (`00dda3e`) — `useNotifications` lifted to `NotificationBell` to avoid duplicate Realtime channel (panel was opening a second channel)
+- **Auth token fix in notifications** (`b2357ff`) — `supabase.realtime.setAuth` called in the `useNotifications` effect so notifications work on `INITIAL_SESSION` page reloads
+- **Auth guard in delete/leave flows** (`04ddf67`) — `CollaboratorsDialog` and `DeleteListDialog` verify user auth before mutating
+- **Access-loss redirect** (`5e04b53`) — `ListDetailPage` redirects to `/lists` with a toast when the list returns 0 rows (user was removed as a member)
+- **Migration 028** — `find_user_by_email` `p_list_id` parameter made optional so share flows still work outside a list context (`a826972`)
+
+---
+
+## Supabase API Key Migration — COMPLETE (PR #74, commit `46fb99c`)
+
+- Migrated from the legacy `anon` key to the new Supabase `VITE_SUPABASE_PUBLISHABLE_KEY`
+- Updated: `.env.example`, `.github/workflows/ci.yml`, `README.md`, `docs/SETUP.md`, `src/lib/supabase.ts`
+- Old key retained as fallback for backwards compatibility during rollout
+
+---
+
+## CI & Tooling
+
+- **Snyk scan non-blocking** (`7d9f292`) — Snyk job no longer fails the pipeline; security review can still see findings
+- **Ignore OWASP scan artifacts** (`a0d837b`) — `.gitignore` entry for local OWASP scan output
+- **`ideadd` skill** (`fdd3191`, `cf412e3`, `81f71e9`) — skill automates committing manual edits to `BRAINDUMP.md` and opening/merging a PR; now waits for PR checks before merging
+
+---
+
 ## Stage 2.8 — AI Auto-Suggest for Product Fields — IN PROGRESS (branch: `feat/ai-product-suggest`)
 
 ### What's implemented
