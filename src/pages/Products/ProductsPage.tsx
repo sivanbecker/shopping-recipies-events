@@ -668,7 +668,7 @@ export default function ProductsPage() {
 
   // ── Filter + group ─────────────────────────────────────────────────────────
 
-  const { grouped, uncategorized } = useMemo(() => {
+  const { grouped, uncategorized, filteredCount } = useMemo(() => {
     const filtered = filterProducts(products, debouncedSearch).filter(p =>
       selectedCategory ? p.category_id === selectedCategory : true
     )
@@ -680,7 +680,7 @@ export default function ProductsPage() {
         products: filtered.filter(p => p.category_id === c.id),
       }))
     const uncategorized = filtered.filter(p => !p.category_id)
-    return { grouped, uncategorized }
+    return { grouped, uncategorized, filteredCount: filtered.length }
   }, [products, debouncedSearch, selectedCategory, categories])
 
   // ── Import mutation ────────────────────────────────────────────────────────
@@ -858,7 +858,7 @@ export default function ProductsPage() {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-6 w-6 animate-spin text-brand-500" />
           </div>
-        ) : filtered.length === 0 ? (
+        ) : filteredCount === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
               <Package className="h-7 w-7 text-gray-400" />
