@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
@@ -161,6 +161,10 @@ export default function ListsPage() {
   const [showDialog, setShowDialog] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
   const lang = i18n.language
+
+  useEffect(() => {
+    void import('./ListDetailPage')
+  }, [])
 
   const { data: activeLists = [], isLoading } = useQuery<ListWithCount[]>({
     queryKey: ['shopping_lists', 'active', user?.id],

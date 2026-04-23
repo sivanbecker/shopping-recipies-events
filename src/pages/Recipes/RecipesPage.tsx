@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -152,6 +152,10 @@ export default function RecipesPage() {
 
   const { t: tCommon } = useTranslation()
   const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    void import('./RecipeDetailPage')
+  }, [])
   const debouncedSearch = useDebounce(search)
   const [selectedTool, setSelectedTool] = useState<string | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
