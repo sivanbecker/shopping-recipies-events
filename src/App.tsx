@@ -41,37 +41,43 @@ export default function App() {
   }, [isDarkMode])
 
   return (
-    <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-orange-500" /></div>}>
-    <Routes>
-      {/* Public */}
-      <Route path="/auth" element={<AuthPage />} />
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+        </div>
+      }
+    >
+      <Routes>
+        {/* Public */}
+        <Route path="/auth" element={<AuthPage />} />
 
-      {/* Protected — wrapped in shared layout */}
-      <Route
-        element={
-          <ProtectedRoute>
-            <AppLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="/lists" element={<ListsPage />} />
-        <Route path="/lists/trash" element={<TrashPage />} />
-        <Route path="/lists/:id" element={<ListDetailPage />} />
-        <Route path="/products" element={<ProductsPage />} />
-        <Route path="/recipes" element={<RecipesPage />} />
-        <Route path="/recipes/new" element={<RecipeFormPage />} />
-        <Route path="/recipes/:id/edit" element={<RecipeFormPage />} />
-        <Route path="/recipes/:id" element={<RecipeDetailPage />} />
-        <Route path="/events" element={<EventsPage />} />
-        <Route path="/events/:id" element={<EventDetailPage />} />
-        <Route path="/contacts" element={<ContactsPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-      </Route>
+        {/* Protected — wrapped in shared layout */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/lists" element={<ListsPage />} />
+          <Route path="/lists/trash" element={<TrashPage />} />
+          <Route path="/lists/:id" element={<ListDetailPage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/recipes" element={<RecipesPage />} />
+          <Route path="/recipes/new" element={<RecipeFormPage />} />
+          <Route path="/recipes/:id/edit" element={<RecipeFormPage />} />
+          <Route path="/recipes/:id" element={<RecipeDetailPage />} />
+          <Route path="/events" element={<EventsPage />} />
+          <Route path="/events/:id" element={<EventDetailPage />} />
+          <Route path="/contacts" element={<ContactsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Route>
 
-      {/* Default redirect */}
-      <Route path="/" element={<Navigate to="/lists" replace />} />
-      <Route path="*" element={<Navigate to="/lists" replace />} />
-    </Routes>
+        {/* Default redirect */}
+        <Route path="/" element={<Navigate to="/lists" replace />} />
+        <Route path="*" element={<Navigate to="/lists" replace />} />
+      </Routes>
     </Suspense>
   )
 }
