@@ -1,24 +1,27 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
+import { Loader2 } from 'lucide-react'
 import { useAppStore } from './store/useAppStore'
 
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AppLayout } from './components/layout/AppLayout'
 
-// Pages
+// AuthPage stays eager — first paint
 import AuthPage from './pages/Auth/AuthPage'
-import ListsPage from './pages/Lists/ListsPage'
-import ListDetailPage from './pages/Lists/ListDetailPage'
-import ProductsPage from './pages/Products/ProductsPage'
-import RecipesPage from './pages/Recipes/RecipesPage'
-import RecipeDetailPage from './pages/Recipes/RecipeDetailPage'
-import RecipeFormPage from './pages/Recipes/RecipeFormPage'
-import EventsPage from './pages/Events/EventsPage'
-import EventDetailPage from './pages/Events/EventDetailPage'
-import ContactsPage from './pages/Events/ContactsPage'
-import ProfilePage from './pages/Profile/ProfilePage'
-import TrashPage from './pages/Lists/TrashPage'
+
+// All other pages lazy-loaded
+const ListsPage = lazy(() => import('./pages/Lists/ListsPage'))
+const ListDetailPage = lazy(() => import('./pages/Lists/ListDetailPage'))
+const TrashPage = lazy(() => import('./pages/Lists/TrashPage'))
+const ProductsPage = lazy(() => import('./pages/Products/ProductsPage'))
+const RecipesPage = lazy(() => import('./pages/Recipes/RecipesPage'))
+const RecipeDetailPage = lazy(() => import('./pages/Recipes/RecipeDetailPage'))
+const RecipeFormPage = lazy(() => import('./pages/Recipes/RecipeFormPage'))
+const EventsPage = lazy(() => import('./pages/Events/EventsPage'))
+const EventDetailPage = lazy(() => import('./pages/Events/EventDetailPage'))
+const ContactsPage = lazy(() => import('./pages/Events/ContactsPage'))
+const ProfilePage = lazy(() => import('./pages/Profile/ProfilePage'))
 
 export default function App() {
   const { i18n } = useTranslation()
@@ -38,6 +41,7 @@ export default function App() {
   }, [isDarkMode])
 
   return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-orange-500" /></div>}>
     <Routes>
       {/* Public */}
       <Route path="/auth" element={<AuthPage />} />
@@ -68,5 +72,6 @@ export default function App() {
       <Route path="/" element={<Navigate to="/lists" replace />} />
       <Route path="*" element={<Navigate to="/lists" replace />} />
     </Routes>
+    </Suspense>
   )
 }
