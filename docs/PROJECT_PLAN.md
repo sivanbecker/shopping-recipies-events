@@ -1219,6 +1219,158 @@ create index if not exists shopping_lists_active_idx
 
 ---
 
+## STAGE 12 — Android App & "Quick Add Missing Item" Widget
+> **Goal:** Ship a debug-installable Android APK containing the existing web app running in a native WebView shell, plus a first home-screen widget that launches a minimal quick-add screen and writes into the user's Missing Items list.
+> **Estimated time:** 4–6 days
+> **Scope:** One widget + scaffolding to add more later. Play Store publishing is out of scope.
+
+### Decisions (locked in with user)
+
+- **Backend path:** Capacitor-wrapped web app + new Supabase Edge Function `add-missing-item` that atomically finds/creates the missing list, finds/creates the product, and inserts the shopping item.
+- **Widget UX:** Tap opens a minimal in-app quick-add screen (search + recents + voice mic + "create new"), **not** an inline RemoteViews EditText. Works on Android 8+ without relying on RemoteViews text input.
+- **Min SDK:** 26 (Android 8+). Raising later is a one-line change in `android/app/build.gradle` — unlocks inline-EditText widgets at API 31+ without breaking existing flow.
+- **Product access:** The quick-add screen lets the user search their **full** product catalog (shared + own, enforced by existing RLS on `products`) and falls back to "create new [typed text]" when nothing matches.
+
+### Architectural Shape
+
+```
+┌─────────────────────────┐           ┌──────────────────────┐
+│ Android home screen     │           │ Existing web app     │
+│  [Widget: + Missing]    │  tap ──▶  │ (Capacitor WebView)  │
+└─────────────────────────┘           │                      │
+                                      │  /quick-add route    │
+                                      │   ├─ search input    │
+                                      │   ├─ recents (5)     │
+                                      │   ├─ matching prods  │
+                                      │   └─ "create new X"  │
+                                      └──────────┬───────────┘
+                                                 │ supabase.functions.invoke
+                                                 ▼
+                                      ┌──────────────────────┐
+                                      │ Edge Function        │
+                                      │ add-missing-item     │
+                                      │  1. find/create      │
+                                      │     missing list     │
+                                      │  2. upsert product   │
+                                      │  3. insert item      │
+                                      └──────────────────────┘
+```
+
+Why this shape:
+- **One codebase.** The quick-add screen is a normal React route; the native widget is a ~60-line Kotlin shell.
+- **No auth duplication.** The Capacitor WebView shares `localStorage` with the web app, so the supabase-js session is reused. The widget itself does **not** talk to Supabase directly.
+- **Atomic writes.** The Edge Function centralizes the three-step rule (find-or-create missing list, find-or-create product, insert item) so the widget path stays simple and RLS-safe.
+
+### 12.1 — Edge Function `add-missing-item` (new)
+**Branch:** `feat/stage-12-add-missing-item-fn` | **Risk:** Low (pure additive, reuses existing tables)
+
+- [ ] New file: `supabase/functions/add-missing-item/index.ts`. Accepts **either**:
+  - `{ product_id: uuid }` — pick an existing product (validated under caller's JWT so RLS enforces visibility), **or**
+  - `{ name_he: string, name_en?: string }` — find-or-create by name.
+- [ ] Logic (all under the caller's JWT; no service-role escalation):
+  1. Find-or-create the user's active missing list (`is_missing_list = true AND is_archived = false`). Mirrors `src/pages/Lists/ListsPage.tsx:181-200`.
+  2. Resolve product: by id (verify visibility) or by case-insensitive `name_he` match; create if none found with `{ name_he, name_en, created_by, is_shared: false }`.
+  3. Insert into `shopping_items { list_id, product_id, added_by, quantity: 1, unit_id: products.default_unit_id }`.
+- [ ] Response: `{ list_id, item_id, product_id, created_new_product: boolean }`.
+- [ ] Unit tests (Deno) covering: no missing list exists, missing list exists, product by id, product by name (existing), product by name (new).
+- [ ] Smoke test via `supabase functions serve` against local DB.
+
+### 12.2 — `/quick-add` route (new page)
+**Branch:** `feat/stage-12-quick-add-page` | **Risk:** Low (new isolated route)
+
+- [ ] New route in `src/App.tsx`: `/quick-add` mounting `<QuickAddPage />`, auth-guarded like other pages.
+- [ ] New page `src/pages/QuickAdd/QuickAddPage.tsx`:
+  - Auto-focused search input filtering the user's full product catalog (visible via existing RLS: `is_shared = true OR created_by = auth.uid()`).
+  - Results list — each row tap fires `supabase.functions.invoke('add-missing-item', { body: { product_id } })`, then toast + close.
+  - "Create new [typed text]" row appears when there's no exact match (mirrors behavior in `src/pages/Lists/ListDetailPage.tsx:758-834`). Tap → function call with `{ name_he }` → creates product + adds in one step.
+  - **Recents row** above search — top 5 products from the user's recent `shopping_items` (by `added_by` + `created_at desc`) for one-tap repeat adds.
+  - Voice mic button using existing `src/hooks/useVoiceInput.ts` — dictated text drives search-as-you-type.
+  - On success: toast "Added to Missing Items"; if running under Capacitor → `App.exitApp()`; otherwise navigate to `/lists`.
+- [ ] Tests: render, search filter, invoke calls with correct body shape, voice button focuses input.
+
+### 12.3 — Capacitor scaffolding
+**Branch:** `feat/stage-12-capacitor` | **Risk:** Medium (adds native toolchain, new deps)
+
+- [ ] Install deps: `@capacitor/core`, `@capacitor/cli`, `@capacitor/android`, `@capacitor/app`.
+- [ ] Root `capacitor.config.ts` — `appId: com.sbecker.shoppingrecipesevents`, `webDir: dist`.
+- [ ] Generate `android/` via `npx cap add android`; commit the full directory.
+- [ ] `.gitignore`: add `android/app/build/`, `android/.gradle/`, `android/local.properties`, `android/app/release/`.
+- [ ] `package.json` scripts:
+  - `"cap:sync": "npm run build && cap sync android"`
+  - `"cap:open": "cap open android"`
+  - `"android:debug": "npm run cap:sync && cd android && ./gradlew assembleDebug"`
+- [ ] New `src/lib/deepLink.ts` (~20 lines): listens to Capacitor `App` plugin URL events; on URLs matching `/quick-add`, navigates via the React router. Registered from `src/main.tsx`.
+- [ ] Verify `./gradlew assembleDebug` succeeds locally. No widget yet — app just runs as a native WebView.
+
+### 12.4 — Missing Item widget (native Kotlin)
+**Branch:** `feat/stage-12-android-widget` | **Risk:** Medium (native surface)
+
+- [ ] `android/app/src/main/java/.../MissingItemWidget.kt` — `AppWidgetProvider` that builds a `RemoteViews` with a single tap target firing a `PendingIntent`.
+- [ ] `android/app/src/main/java/.../QuickAddActivity.kt` — thin `Activity` that launches the Capacitor `BridgeActivity` with Intent data `app://quick-add`.
+- [ ] `android/app/src/main/res/xml/missing_item_widget_info.xml` — metadata (min width/height, `widgetCategory="home_screen"`, `initialLayout`, preview image).
+- [ ] `android/app/src/main/res/layout/widget_missing_item.xml` — 2×1 layout: icon + "Add missing item" label.
+- [ ] `android/app/src/main/res/drawable/widget_preview.png` — flat preview image.
+- [ ] `AndroidManifest.xml` — register `MissingItemWidget` receiver and `QuickAddActivity`.
+- [ ] Deep-link flow verified end-to-end: widget tap → `QuickAddActivity` → `BridgeActivity` with URI → `deepLink.ts` → React router → `/quick-add`.
+
+### 12.5 — Database
+- [ ] **No schema changes.** All required tables (`shopping_lists`, `products`, `shopping_items`) already have the right columns and RLS:
+  - `shopping_lists.is_missing_list` already present.
+  - `products` INSERT policy: `created_by = auth.uid()`.
+  - `shopping_items` INSERT policy: `list_member_role(list_id) in ('owner','editor')` via migration 026.
+  - Server-side attribution (`added_by`, `updated_at`, `last_edited_by`) handled by the `shopping_items_stamp_edit` trigger.
+
+### 12.6 — CI & Docs
+- [ ] **No Android build in CI yet.** Local-only `./gradlew assembleDebug` for now. Revisit if/when we want signed builds or Play Store artifacts.
+- [ ] `docs/PROGRESS.md` — add Stage 12 entry per PR.
+- [ ] No changes to existing workflows in `.github/workflows/` for this stage.
+
+### Stage 12 Manual Testing Checklist
+
+**Mobile browser (no Android needed — after PR 12.1 + 12.2):**
+- [ ] Sign in on phone, visit `https://<app>/quick-add`.
+- [ ] Search part of an existing product name → tap row → item lands in Missing Items with correct product (no duplicate product row).
+- [ ] Type a brand-new name → tap "Create new X" → product created and added in one step.
+- [ ] Tap a product in the Recents row → one-tap add works.
+- [ ] Voice-dictate a known product name → search narrows to it.
+- [ ] Delete the auto-created Missing Items list in the main app → repeat quick-add → edge function recreates it.
+- [ ] A **shared** product (`is_shared = true`, created by another household member) appears in results and is added without being cloned.
+
+**Android device or emulator (after PR 12.3 + 12.4):**
+- [ ] `npm run android:debug` succeeds.
+- [ ] `adb install android/app/build/outputs/apk/debug/app-debug.apk` installs.
+- [ ] First launch: sign in; confirm session persists after force-close and relaunch.
+- [ ] Long-press home screen → Widgets → "Quick Add Missing" appears with preview image.
+- [ ] Drop widget on home screen → tap → QuickAddPage opens within ~1s.
+- [ ] Add an item → toast shown → confirm it's visible in the Missing Items list on the desktop web app (cross-device).
+- [ ] Airplane mode → tap widget → graceful error (no crash). Offline queueing is explicitly out of scope.
+
+### Automated Tests
+- [ ] Unit (Deno): `add-missing-item` edge function — no missing list, missing list exists, product-by-id, product-by-name-existing, product-by-name-new.
+- [ ] Unit (Vitest): `QuickAddPage` renders, search filters, submit calls `functions.invoke` with correct body, voice mic focuses input.
+- [ ] Typecheck + lint + format clean across all new files.
+
+### Non-goals (documented to prevent scope creep)
+- Offline queueing from the widget (would require Room DB + a sync worker).
+- Additional widgets (shopping list glance, recipe of the day, next event countdown) — future stages.
+- iOS widget (WidgetKit) — future stage.
+- Play Store publishing, signing, release pipeline.
+
+### Raising Android Min SDK later
+
+User asked whether upgrading to a later Android version is possible. Yes — edit `android/app/build.gradle`:
+
+```gradle
+defaultConfig {
+  minSdk 26   // ← raise to 31 or 34 later
+  targetSdk 34
+}
+```
+
+Raising to API 31+ unlocks `RemoteViews` with inline `EditText`, rounded corners, and dynamic colors — useful for a v2 widget that accepts input directly without opening an Activity. The current Activity-based flow keeps working on all API levels, so this change is purely additive.
+
+---
+
 ## Stage Summary & Timeline
 
 | Stage | Name | Estimated Days |
@@ -1236,7 +1388,8 @@ create index if not exists shopping_lists_active_idx
 | 9 | Events Enhancements | 4–5 |
 | 10 | Performance Optimization | 2–3 |
 | 11 | Theming & Appearance | 3–4 |
-| **Total** | | **~39–53 working days** |
+| 12 | Android App & Widget (Quick Add) | 4–6 |
+| **Total** | | **~43–59 working days** |
 
 > **Quick wins:** Stages 0–4 deliver a fully functional shared shopping list app in approximately **2 weeks** of focused work.
 > The full app (shopping + recipes + events) is achievable in **4–6 weeks**.
