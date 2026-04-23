@@ -178,6 +178,10 @@
   },
   "appearance": {
     "title": "Appearance",
+    "modeBasic": "Basic",
+    "modeAdvanced": "Advanced",
+    "customColor": "Accent color",
+    "customColorHint": "Pick a color to replace the preset accent across all buttons and highlights.",
     "preset": {
       "label": "Theme",
       "classic": "Classic",
@@ -194,7 +198,14 @@
       "label": "Background",
       "white": "White",
       "aero": "Aero",
-      "blobs": "Blobs"
+      "blobs": "Blobs",
+      "gradientSunset": "Sunset",
+      "gradientForest": "Forest",
+      "gradientOcean": "Ocean",
+      "gradientCandy": "Candy",
+      "gradientDusk": "Dusk",
+      "noiseWarm": "Sand",
+      "noiseCool": "Mist"
     },
     "textSize": {
       "label": "Text size",

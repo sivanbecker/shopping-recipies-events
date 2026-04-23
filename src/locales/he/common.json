@@ -178,6 +178,10 @@
   },
   "appearance": {
     "title": "מראה",
+    "modeBasic": "בסיסי",
+    "modeAdvanced": "מתקדם",
+    "customColor": "צבע הדגשה",
+    "customColorHint": "בחר צבע שיחליף את צבע ברירת המחדל בכפתורים ובהדגשות.",
     "preset": {
       "label": "ערכת נושא",
       "classic": "קלאסי",
@@ -194,7 +198,14 @@
       "label": "רקע",
       "white": "לבן",
       "aero": "אוויר",
-      "blobs": "כתמים"
+      "blobs": "כתמים",
+      "gradientSunset": "שקיעה",
+      "gradientForest": "יער",
+      "gradientOcean": "ים",
+      "gradientCandy": "ממתק",
+      "gradientDusk": "דמדומים",
+      "noiseWarm": "חול",
+      "noiseCool": "ערפל"
     },
     "textSize": {
       "label": "גודל טקסט",

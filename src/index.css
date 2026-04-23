@@ -125,22 +125,50 @@
 
 /* ── Background styles ────────────────────────────────────────────────── */
 html[data-background='aero'],
-html[data-background='blobs'] {
+html[data-background='blobs'],
+html[data-background='gradient-sunset'],
+html[data-background='gradient-forest'],
+html[data-background='gradient-ocean'],
+html[data-background='gradient-candy'],
+html[data-background='gradient-dusk'],
+html[data-background='noise-warm'],
+html[data-background='noise-cool'] {
   background-color: transparent;
 }
 
 html[data-background='aero'] body,
-html[data-background='blobs'] body {
+html[data-background='blobs'] body,
+html[data-background='gradient-sunset'] body,
+html[data-background='gradient-forest'] body,
+html[data-background='gradient-ocean'] body,
+html[data-background='gradient-candy'] body,
+html[data-background='gradient-dusk'] body,
+html[data-background='noise-warm'] body,
+html[data-background='noise-cool'] body {
   background-color: transparent;
 }
 
 html[data-background='aero'] .app-layout,
-html[data-background='blobs'] .app-layout {
+html[data-background='blobs'] .app-layout,
+html[data-background='gradient-sunset'] .app-layout,
+html[data-background='gradient-forest'] .app-layout,
+html[data-background='gradient-ocean'] .app-layout,
+html[data-background='gradient-candy'] .app-layout,
+html[data-background='gradient-dusk'] .app-layout,
+html[data-background='noise-warm'] .app-layout,
+html[data-background='noise-cool'] .app-layout {
   background-color: transparent;
 }
 
 html[data-background='aero'] body::before,
-html[data-background='blobs'] body::before {
+html[data-background='blobs'] body::before,
+html[data-background='gradient-sunset'] body::before,
+html[data-background='gradient-forest'] body::before,
+html[data-background='gradient-ocean'] body::before,
+html[data-background='gradient-candy'] body::before,
+html[data-background='gradient-dusk'] body::before,
+html[data-background='noise-warm'] body::before,
+html[data-background='noise-cool'] body::before {
   content: '';
   position: fixed;
   inset: 0;
@@ -162,6 +190,41 @@ html[data-background='blobs'] body::before {
     radial-gradient(circle 40vw at 70% 75%, hsla(160, 55%, 80%, 0.45) 0%, transparent 70%),
     radial-gradient(circle 25vw at 10% 80%, hsla(340, 65%, 82%, 0.5) 0%, transparent 65%),
     #faf5ff;
+}
+
+html[data-background='gradient-sunset'] body::before {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ffa94d 45%, #ffd43b 100%);
+}
+
+html[data-background='gradient-forest'] body::before {
+  background: linear-gradient(135deg, #1b4332 0%, #52b788 50%, #b7e4c7 100%);
+}
+
+html[data-background='gradient-ocean'] body::before {
+  background: linear-gradient(135deg, #023e8a 0%, #0096c7 50%, #90e0ef 100%);
+}
+
+html[data-background='gradient-candy'] body::before {
+  background: linear-gradient(135deg, #f72585 0%, #b5179e 30%, #7209b7 60%, #4cc9f0 100%);
+}
+
+html[data-background='gradient-dusk'] body::before {
+  background: linear-gradient(135deg, #3730a3 0%, #7c3aed 40%, #db2777 100%);
+}
+
+/* SVG noise texture via inline data URI — no image assets required */
+html[data-background='noise-warm'] body::before {
+  background-color: #fdf6ec;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+}
+
+html[data-background='noise-cool'] body::before {
+  background-color: #f1f5f9;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
 }
 
 @keyframes undo-countdown {
