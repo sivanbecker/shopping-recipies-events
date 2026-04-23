@@ -22,18 +22,26 @@
     />
 
     <title>Shopping · Recipes · Events</title>
-    <!-- FOUC prevention: apply dark class before first paint -->
+    <!-- FOUC prevention: apply theme attributes before first paint -->
     <script>
       ;(function () {
-        var stored = localStorage.getItem('app-store')
-        var dark = false
-        if (stored) {
-          try { dark = JSON.parse(stored).state.isDarkMode } catch (e) {}
-        }
-        if (typeof dark !== 'boolean') {
-          dark = window.matchMedia('(prefers-color-scheme: dark)').matches
-        }
-        if (dark) document.documentElement.classList.add('dark')
+        var state = {}
+        try { state = JSON.parse(localStorage.getItem('app-store') || '{}').state || {} } catch (e) {}
+        var html = document.documentElement
+
+        // Preset
+        html.setAttribute('data-preset', state.uiPreset || 'classic')
+
+        // Background
+        html.setAttribute('data-background', state.appBackground || 'white')
+
+        // Text scale
+        html.setAttribute('data-text-scale', state.textScale || 'md')
+
+        // Dark mode
+        var mode = state.themeMode || (state.isDarkMode === true ? 'dark' : 'system')
+        var dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        if (dark) html.classList.add('dark')
       })()
     </script>
   </head>
