@@ -257,7 +257,10 @@ export default function ListsPage() {
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div
+              key={i}
+              className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+            >
               <Skeleton className="mb-2 h-4 w-2/3" />
               <Skeleton className="h-3 w-1/3" />
             </div>
@@ -306,7 +309,10 @@ export default function ListsPage() {
           {isLoadingArchived ? (
             <div className="space-y-3 py-2">
               {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                <div
+                  key={i}
+                  className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+                >
                   <Skeleton className="mb-2 h-4 w-2/3" />
                   <Skeleton className="h-3 w-1/3" />
                 </div>

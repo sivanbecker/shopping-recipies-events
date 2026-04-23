@@ -223,7 +223,10 @@ export default function EventsPage() {
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div
+              key={i}
+              className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+            >
               <div className="flex items-center gap-2">
                 <Skeleton className="h-5 w-1/2" />
                 <Skeleton className="h-4 w-16 rounded-full" />

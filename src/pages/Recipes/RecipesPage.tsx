@@ -265,7 +265,10 @@ export default function RecipesPage() {
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div
+              key={i}
+              className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+            >
               <Skeleton className="mb-3 h-5 w-3/4" />
               <Skeleton className="mb-2 h-3 w-full" />
               <Skeleton className="h-3 w-1/2" />
