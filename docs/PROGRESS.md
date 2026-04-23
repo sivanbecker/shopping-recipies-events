@@ -1,6 +1,35 @@
 # Project Progress
 
-> Last major update: 2026-04-22. Entries are ordered roughly newest-first within each stage. Completed stages are retained below for historical context.
+> Last major update: 2026-04-23. Entries are ordered roughly newest-first within each stage. Completed stages are retained below for historical context.
+
+---
+
+## Stage 11.8 — Advanced Appearance Mode — COMPLETE (PRs #101, #102, merged to `main`)
+
+- **PR #101** — Full advanced appearance UI: Basic/Advanced toggle in AppearancePanel, 24-color accent palette grid, extended background picker (10 options: white, aero, blobs + 7 new gradients/noise), `AppearanceMode` type, `applyCustomAccent`/`clearCustomAccent` helpers, `hexToHsl` conversion, Zustand store fields + persistence, DB migration 035 (`appearance_mode`, `custom_accent_color`, expanded `app_background` CHECK constraint), i18n keys in both `he` and `en`.
+- **PR #102 (bugfix)** — `App.tsx` was only passing 4 of 6 theme fields to `applyTheme` on mount, clearing custom accent on every page load. Fixed by subscribing to and passing `appearanceMode` + `customAccentColor`. Also fixed `theme.ts` and `useAppStore.ts` which were missing the new types/fields on the `main` branch (the stage-11.8 branch had them but they hadn't landed in `main` yet).
+
+---
+
+## Stage 11.9 — Contact Invitations — PLANNED
+
+> Full plan in `docs/PROJECT_PLAN.md` § Stage 11.9. Not yet started.
+
+**Key design decisions recorded (2026-04-23):**
+- Invite button on Contacts page → email field + label picker (Family/Friend/None) → email sent via Gmail SMTP (`shop-cook-host@gmail.com`, configured as Supabase Custom SMTP)
+- Invitee gets a branded email with a 24-hour magic link → `/invite/accept?token=…` landing page
+- Landing page shows inviter name + label, Sign up / Log in if unauthenticated, Accept / Decline if authenticated
+- On accept: mutual contact rows created on both sides with the same label; upserts if either already had the other as a contact
+- Invitations expire after 24 hours; invitee can decline; inviter can revoke pending invites from Contacts page
+- QR codes deferred
+
+**New artifacts to build:**
+- DB migration 036: `contact_invitations` table + `peek_invitation` RPC + `revoke_invitation` RPC
+- Edge function `send-contact-invitation` (nodemailer via Gmail SMTP)
+- Edge function `accept-contact-invitation` (creates mutual contact rows)
+- New public route `/invite/accept` → `InviteAcceptPage.tsx`
+- `InviteContactDialog` on ContactsPage + pending invitations section
+- i18n keys, `database.ts` types
 
 ---
 
