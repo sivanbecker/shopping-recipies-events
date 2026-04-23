@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
@@ -166,6 +166,10 @@ export default function EventsPage() {
   const { user } = useAuth()
   const [showDialog, setShowDialog] = useState(false)
   const [showPast, setShowPast] = useState(false)
+
+  useEffect(() => {
+    void import('./EventDetailPage')
+  }, [])
 
   const {
     data: allEvents = [],
