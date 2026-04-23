@@ -33,6 +33,18 @@
     --density-row: 0.875rem;
     --density-gap: 1rem;
     --font-size-base: 1rem;
+    /* brand = orange */
+    --brand-50:  #fff7ed;
+    --brand-100: #ffedd5;
+    --brand-200: #fed7aa;
+    --brand-300: #fdba74;
+    --brand-400: #fb923c;
+    --brand-500: #f97316;
+    --brand-600: #ea580c;
+    --brand-700: #c2410c;
+    --brand-800: #9a3412;
+    --brand-900: #7c2d12;
+    --brand-950: #431407;
   }
 
   /* ── Minimal preset (neutral, sharp, professional) ──────────────────── */
@@ -44,6 +56,18 @@
     --density-row: 0.625rem;
     --density-gap: 0.75rem;
     --font-size-base: 1rem;
+    /* brand = slate */
+    --brand-50:  #f8fafc;
+    --brand-100: #f1f5f9;
+    --brand-200: #e2e8f0;
+    --brand-300: #cbd5e1;
+    --brand-400: #94a3b8;
+    --brand-500: #64748b;
+    --brand-600: #475569;
+    --brand-700: #334155;
+    --brand-800: #1e293b;
+    --brand-900: #0f172a;
+    --brand-950: #020617;
   }
 
   /* ── Warm preset (earthy, soft, hospitable terracotta) ──────────────── */
@@ -55,6 +79,18 @@
     --density-row: 1rem;
     --density-gap: 1.25rem;
     --font-size-base: 1rem;
+    /* brand = terracotta */
+    --brand-50:  #fdf4f0;
+    --brand-100: #fbe5db;
+    --brand-200: #f7cab7;
+    --brand-300: #f1a688;
+    --brand-400: #e97a55;
+    --brand-500: #e05a30;
+    --brand-600: #c2410c;
+    --brand-700: #9a3412;
+    --brand-800: #7c2d12;
+    --brand-900: #6b2410;
+    --brand-950: #3a1208;
   }
 
   /* ── Text scale ─────────────────────────────────────────────────────── */
