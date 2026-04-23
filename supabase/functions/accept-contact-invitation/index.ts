@@ -25,12 +25,14 @@ Deno.serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  // Support both legacy key names and the new (2026) key names
+  const secretKey = Deno.env.get('SUPABASE_SECRET_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const publishableKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY')!
 
-  const serviceClient = createClient(supabaseUrl, supabaseKey)
+  const serviceClient = createClient(supabaseUrl, secretKey)
 
   // Resolve calling user from their JWT
-  const anonClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+  const anonClient = createClient(supabaseUrl, publishableKey, {
     global: { headers: { Authorization: authHeader } },
   })
   const { data: { user }, error: userError } = await anonClient.auth.getUser()
