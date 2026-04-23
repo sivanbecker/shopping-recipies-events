@@ -28,9 +28,10 @@ Deno.serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  // Support both legacy key names and the new (2026) key names
-  const secretKey = Deno.env.get('SUPABASE_SECRET_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const publishableKey = Deno.env.get('SUPABASE_PUBLISHABLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY')!
+  // APP_SERVICE_KEY holds the new Supabase secret key (replaces legacy service_role key)
+  // APP_PUBLISHABLE_KEY holds the new Supabase publishable key (replaces legacy anon key)
+  const secretKey = Deno.env.get('APP_SERVICE_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const publishableKey = Deno.env.get('APP_PUBLISHABLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY')!
   const appUrl = Deno.env.get('APP_URL') ?? 'https://shopping-recipies-events.vercel.app'
   const smtpPassword = Deno.env.get('GMAIL_SMTP_PASSWORD')
 
