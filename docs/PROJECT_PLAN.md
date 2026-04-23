@@ -937,7 +937,7 @@ The `ContactPicker` component required for list/event sharing is specified in **
 - [ ] Screen reader tested (VoiceOver on iOS / NVDA on Windows)
 
 #### 7.4 — UX Polish
-- [ ] Skeleton loaders for all data-fetching states
+- [x] Skeleton loaders for all data-fetching states (PR #93)
 - [ ] Empty states with friendly inline SVG illustrations
 - [ ] Error boundaries per page section
 - [ ] Pull-to-refresh on mobile (lists overview page)
@@ -1057,10 +1057,10 @@ The background theme picker has been folded into **Stage 11 — Theming & Appear
 
 ---
 
-## STAGE 10 — Performance Optimization
+## STAGE 10 — Performance Optimization ✅ COMPLETE
 > **Goal:** Mobile responsiveness polish — reduce re-renders, debounce input, eliminate N+1 queries, add DB indexes, lazy-load routes, and tighten realtime filters.
-> **Status:** PRs 1–3 complete; PRs 4–6 pending.
-> **Context:** The app feels sluggish on mobile. Root causes: (1) heavy derived-state recomputation with no memoization, (2) search inputs re-rendering on every keystroke, (3) N+1 query on the Lists page, (4) Supabase free-tier cold starts (unrelated, infra-bound). Work is split across 6 small, independently revertable PRs.
+> **Status:** All 6 PRs merged to `main`.
+> **Context:** The app feels sluggish on mobile. Root causes: (1) heavy derived-state recomputation with no memoization, (2) search inputs re-rendering on every keystroke, (3) N+1 query on the Lists page, (4) Supabase free-tier cold starts (unrelated, infra-bound). Work was split across 6 small, independently revertable PRs.
 
 ### 10.1 — React quick wins (PR #76) — COMPLETE
 **Branch:** `perf/react-quick-wins` | **Risk:** Low (pure frontend)
@@ -1083,33 +1083,21 @@ The background theme picker has been folded into **Stage 11 — Theming & Appear
 - [x] `ListsPage` uses a single `useQuery(['all_list_members', user.id])`; builds `Map<listId, members[]>` with `useMemo`; passes `members` as prop to each `ListCard`
 - [x] Removed the per-card `useQuery(['list_members', list.id])` → 10 lists now = 1 query instead of 11
 
-### 10.4 — DB indexes — NOT STARTED
+### 10.4 — DB indexes (PR #90) — COMPLETE
 **Branch:** `perf/db-indexes` | **Risk:** Very low (SQL-only)
-**New migration:** `supabase/migrations/NNN_perf_indexes.sql`
-```sql
--- Composite for ListDetailPage items query (list_id + is_checked + sort_order)
-create index if not exists shopping_items_list_checked_idx
-  on public.shopping_items (list_id, is_checked, sort_order, created_at);
+- [x] Migration **033** — `shopping_items_list_checked_idx` (list_id, is_checked, sort_order, created_at)
+- [x] Migration **033** — `shopping_items_product_idx` (product_id)
+- [x] Migration **033** — partial `shopping_lists_active_idx` (owner_id, is_archived, created_at) WHERE deleted_at IS NULL
 
--- Product lookup on items (used in AddItemSheet existingItem check)
-create index if not exists shopping_items_product_idx
-  on public.shopping_items (product_id);
-
--- Partial index for active (non-deleted) lists query
-create index if not exists shopping_lists_active_idx
-  on public.shopping_lists (owner_id, is_archived, created_at)
-  where deleted_at is null;
-```
-
-### 10.5 — Route lazy loading — NOT STARTED
+### 10.5 — Route lazy loading (PR #91) — COMPLETE
 **Branch:** `perf/route-lazy-loading` | **Risk:** Medium (affects initial load + Suspense behavior)
-- [ ] Convert all page imports in `src/App.tsx` to `React.lazy(() => import(...))` — `ListsPage`, `ListDetailPage`, `ProductsPage`, `RecipesPage`, `RecipeDetailPage`, `RecipeFormPage`, `EventsPage`, `EventDetailPage`, `ContactsPage`, `ProfilePage`, `TrashPage`
-- [ ] Wrap `<Routes>` in `<Suspense fallback={<Loader2 className="animate-spin" />}>`
-- [ ] Keep `AuthPage` eager (first paint)
+- [x] All page imports in `src/App.tsx` converted to `React.lazy(() => import(...))` — `ListsPage`, `ListDetailPage`, `ProductsPage`, `RecipesPage`, `RecipeDetailPage`, `RecipeFormPage`, `EventsPage`, `EventDetailPage`, `ContactsPage`, `ProfilePage`, `TrashPage`
+- [x] `<Routes>` wrapped in `<Suspense>` with skeleton fallback
+- [x] `AuthPage` kept eager (first paint)
 
-### 10.6 — Realtime server-side filter — NOT STARTED
+### 10.6 — Realtime server-side filter (PR #92) — COMPLETE
 **Branch:** `perf/realtime-filter` | **Risk:** Low (but touches realtime, keep isolated)
-- [ ] In `ListDetailPage`, add `filter: \`list_id=eq.${id}\`` to the `postgres_changes` subscription for `shopping_items` — currently filters client-side after receiving all events
+- [x] In `ListDetailPage`, `filter: \`list_id=eq.${id}\`` added to the `postgres_changes` subscription for `shopping_items` — eliminates client-side filtering of all-table events
 
 ### Deferred (not in this batch)
 - **Memoize `ItemRow` callbacks** — high impact at 50+ items but requires a non-trivial refactor; revisit after profiling PR #76
