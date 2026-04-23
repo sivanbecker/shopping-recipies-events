@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import Avatar from 'boring-avatars'
 import { cn } from '@/lib/utils'
+import { PRESET_TO_AVATAR_VARIANT } from '@/lib/theme'
+import { useAppStore } from '@/store/useAppStore'
 
 interface UserAvatarProps {
   userId: string
@@ -21,6 +23,8 @@ export function UserAvatar({
 }: UserAvatarProps) {
   const [imgFailed, setImgFailed] = useState(false)
   const showImage = Boolean(avatarUrl) && !imgFailed
+  const uiPreset = useAppStore(s => s.uiPreset)
+  const avatarVariant = PRESET_TO_AVATAR_VARIANT[uiPreset]
 
   return (
     <div
@@ -45,7 +49,7 @@ export function UserAvatar({
           onError={() => setImgFailed(true)}
         />
       ) : (
-        <Avatar name={userId} variant="beam" size={size} />
+        <Avatar name={userId} variant={avatarVariant as 'beam' | 'marble' | 'sunset'} size={size} />
       )}
     </div>
   )

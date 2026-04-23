@@ -175,5 +175,32 @@
         "unchanged": "אין שינוי"
       }
     }
+  },
+  "appearance": {
+    "title": "מראה",
+    "preset": {
+      "label": "ערכת נושא",
+      "classic": "קלאסי",
+      "minimal": "מינימלי",
+      "warm": "חמים"
+    },
+    "mode": {
+      "label": "מצב תצוגה",
+      "light": "בהיר",
+      "dark": "כהה",
+      "system": "לפי המכשיר"
+    },
+    "background": {
+      "label": "רקע",
+      "white": "לבן",
+      "aero": "אוויר",
+      "blobs": "כתמים"
+    },
+    "textSize": {
+      "label": "גודל טקסט",
+      "sm": "ק",
+      "md": "ב",
+      "lg": "ג"
+    }
   }
 }

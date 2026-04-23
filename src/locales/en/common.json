@@ -175,5 +175,32 @@
         "unchanged": "No changes"
       }
     }
+  },
+  "appearance": {
+    "title": "Appearance",
+    "preset": {
+      "label": "Theme",
+      "classic": "Classic",
+      "minimal": "Minimal",
+      "warm": "Warm"
+    },
+    "mode": {
+      "label": "Color mode",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "background": {
+      "label": "Background",
+      "white": "White",
+      "aero": "Aero",
+      "blobs": "Blobs"
+    },
+    "textSize": {
+      "label": "Text size",
+      "sm": "S",
+      "md": "M",
+      "lg": "L"
+    }
   }
 }
