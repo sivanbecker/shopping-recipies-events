@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Releases from v0.10.0 onward are generated automatically by [release-please](https://github.com/googleapis/release-please) from Conventional Commit messages.
 
+## [0.9.2](https://github.com/sivanbecker/shopping-recipies-events/compare/shopping-recipes-events-v0.9.1...shopping-recipes-events-v0.9.2) (2026-04-23)
+
+
+### Features
+
+* **ux:** replace spinner placeholders with skeleton loaders across all pages ([1810e6f](https://github.com/sivanbecker/shopping-recipies-events/commit/1810e6f7451d0963a477a4a35802edcccef2e0fe))
+* **ux:** replace spinner placeholders with skeleton loaders across all pages ([a2f1df6](https://github.com/sivanbecker/shopping-recipies-events/commit/a2f1df60e0166f023cb80d1e6c582a04830468f3))
+* **ux:** show app version in profile dropdown menu ([b0ba587](https://github.com/sivanbecker/shopping-recipies-events/commit/b0ba587d624bb432edb4a8fd479bf1ba64cc7e19))
+* **ux:** show app version in profile dropdown menu ([92e8fc2](https://github.com/sivanbecker/shopping-recipies-events/commit/92e8fc273411fa071f8e83d988bf6fa1ae2d7899))
+* **ux:** show item count per category in shopping list ([f0bde4f](https://github.com/sivanbecker/shopping-recipies-events/commit/f0bde4fdba84887753f3126b3dd3dc1f49853228))
+* **ux:** show item count per category in shopping list ([67fc2bf](https://github.com/sivanbecker/shopping-recipies-events/commit/67fc2bfb208d8037eb8117b2e8d992c624e0cd3b))
+
+
+### Performance
+
+* **db:** add indexes for list items, product lookups, and active lists (stage 10.4) ([24f45dd](https://github.com/sivanbecker/shopping-recipies-events/commit/24f45ddc503dd3a34249a6b7628f77f80ecc365e))
+* **db:** add indexes for list items, product lookups, and active lists (stage 10.4) ([2d6e363](https://github.com/sivanbecker/shopping-recipies-events/commit/2d6e36329aa40b163ed11bd267c61c9a42ad7cc8))
+* **realtime:** add server-side filter to shopping_items subscription (stage 10.6) ([bb2ff62](https://github.com/sivanbecker/shopping-recipies-events/commit/bb2ff6240e0bb3fd90725e2287e6c5e199e270b9))
+* **realtime:** add server-side filter to shopping_items subscription (stage 10.6) ([1628888](https://github.com/sivanbecker/shopping-recipies-events/commit/162888860d36a817fb6c33aed0b38754af1fe748))
+* **routes:** lazy-load all page components for faster initial bundle (stage 10.5) ([a134ee8](https://github.com/sivanbecker/shopping-recipies-events/commit/a134ee8c1bea750c3bd8a2206a785f08f00101ff))
+* **routes:** lazy-load all page components for faster initial bundle (stage 10.5) ([6986754](https://github.com/sivanbecker/shopping-recipies-events/commit/6986754d20f6942fefc3b405d87720f0da6f069d))
+* **routes:** prefetch detail page chunks on list/events page mount ([a08b3e5](https://github.com/sivanbecker/shopping-recipies-events/commit/a08b3e5d20097b44425d2d0c34eff8077a845b36))
+* **routes:** prefetch RecipeDetailPage chunk on RecipesPage mount ([63203d1](https://github.com/sivanbecker/shopping-recipies-events/commit/63203d128b31ff8a9ca787c8759c898d113c0c1a))
+
+
+### Documentation
+
+* add PR [#96](https://github.com/sivanbecker/shopping-recipies-events/issues/96) app version in profile menu to plan and progress ([35ae920](https://github.com/sivanbecker/shopping-recipies-events/commit/35ae92075abd5916fa77c6714886f328e93352b7))
+* add Stage 11 — Theming & Appearance to project plan ([#86](https://github.com/sivanbecker/shopping-recipies-events/issues/86)) ([e28ac15](https://github.com/sivanbecker/shopping-recipies-events/commit/e28ac15698219f3c0e2cebecf3dc7fa57f6a5318))
+* add Stage 12 — Android App & Quick Add Missing Item widget to project plan ([#88](https://github.com/sivanbecker/shopping-recipies-events/issues/88)) ([12c603d](https://github.com/sivanbecker/shopping-recipies-events/commit/12c603d3def5944e514117ca58e1674f93f3a9af))
+* default PR merges to --merge (true merge commits) ([c50c900](https://github.com/sivanbecker/shopping-recipies-events/commit/c50c900acd9977c533d141a8b0edfcd068a4c604))
+* default PR merges to --merge (true merge commits) in CLAUDE.md ([70e9732](https://github.com/sivanbecker/shopping-recipies-events/commit/70e973216061158229596cf4da3b81da303c1dbd))
+* mark stage 10 complete and update skeleton loaders + category count progress ([a33ab2d](https://github.com/sivanbecker/shopping-recipies-events/commit/a33ab2da653f9e323a23ea10ee958e4d2976dd38))
+* mark stage 10 complete, skeleton loaders done, category count progress ([3e525b1](https://github.com/sivanbecker/shopping-recipies-events/commit/3e525b1e2a4726fb6a4abdc16964273cece319f5))
+
 ## [0.9.1](https://github.com/sivanbecker/shopping-recipies-events/compare/shopping-recipes-events-v0.9.0...shopping-recipes-events-v0.9.1) (2026-04-22)
 
 
