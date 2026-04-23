@@ -1,7 +1,7 @@
 -- contact_invitations table
 CREATE TABLE contact_invitations (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  token         text UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(32), 'hex'),
+  token         text UNIQUE NOT NULL DEFAULT encode(uuid_send(gen_random_uuid()) || uuid_send(gen_random_uuid()), 'hex'),
   inviter_id    uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   invitee_email text NOT NULL,
   label         text CHECK (label IN ('family', 'friend')) DEFAULT NULL,
