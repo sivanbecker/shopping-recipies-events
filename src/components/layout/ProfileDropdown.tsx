@@ -107,6 +107,10 @@ export function ProfileDropdown() {
             <LogOut className="h-4 w-4 shrink-0" />
             {t('auth.logout')}
           </DropdownMenu.Item>
+
+          <div className="px-3 pt-1 pb-1.5 text-center text-xs text-gray-400 dark:text-gray-600">
+            v{__APP_VERSION__}
+          </div>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
