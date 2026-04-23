@@ -5,6 +5,7 @@ import {
   type ThemeMode,
   type TextScale,
   type AppBackground,
+  type AppearanceMode,
   applyTheme,
 } from '@/lib/theme'
 
@@ -26,6 +27,12 @@ interface AppState {
   setThemeMode: (mode: ThemeMode) => void
   setTextScale: (scale: TextScale) => void
   setAppBackground: (bg: AppBackground) => void
+
+  // Advanced appearance
+  appearanceMode: AppearanceMode
+  customAccentColor: string | null
+  setAppearanceMode: (mode: AppearanceMode) => void
+  setCustomAccentColor: (color: string | null) => void
 
   // Legacy — kept so existing ProfilePage dark-mode toggle still compiles
   isDarkMode: boolean
@@ -63,6 +70,17 @@ export const useAppStore = create<AppState>()(
         applyTheme({ ...get(), appBackground })
       },
 
+      appearanceMode: 'basic',
+      customAccentColor: null,
+      setAppearanceMode: appearanceMode => {
+        set({ appearanceMode })
+        applyTheme({ ...get(), appearanceMode })
+      },
+      setCustomAccentColor: customAccentColor => {
+        set({ customAccentColor })
+        applyTheme({ ...get(), customAccentColor })
+      },
+
       // Legacy dark mode — bridges existing ProfilePage toggle until Stage 11.5 replaces it
       isDarkMode: window.matchMedia('(prefers-color-scheme: dark)').matches,
       toggleDarkMode: () => {
@@ -81,6 +99,8 @@ export const useAppStore = create<AppState>()(
         themeMode: state.themeMode,
         textScale: state.textScale,
         appBackground: state.appBackground,
+        appearanceMode: state.appearanceMode,
+        customAccentColor: state.customAccentColor,
       }),
     }
   )

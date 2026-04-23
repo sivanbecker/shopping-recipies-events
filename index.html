@@ -42,6 +42,30 @@
         var mode = state.themeMode || (state.isDarkMode === true ? 'dark' : 'system')
         var dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
         if (dark) html.classList.add('dark')
+
+        // Advanced mode: inject custom accent ramp before first paint
+        if (state.appearanceMode === 'advanced' && state.customAccentColor) {
+          var hex = state.customAccentColor.replace('#', '')
+          if (hex.length === 6) {
+            var r = parseInt(hex.slice(0, 2), 16) / 255
+            var g = parseInt(hex.slice(2, 4), 16) / 255
+            var b = parseInt(hex.slice(4, 6), 16) / 255
+            var max = Math.max(r, g, b), min = Math.min(r, g, b)
+            var l = (max + min) / 2
+            var s = max === min ? 0 : l > 0.5 ? (max - min) / (2 - max - min) : (max - min) / (max + min)
+            var h = 0
+            if (max !== min) {
+              if (max === r) h = ((g - b) / (max - min) + (g < b ? 6 : 0)) / 6
+              else if (max === g) h = ((b - r) / (max - min) + 2) / 6
+              else h = ((r - g) / (max - min) + 4) / 6
+            }
+            var hDeg = Math.round(h * 360), sPct = Math.round(s * 100)
+            var stops = [['50',97],['100',93],['200',85],['300',75],['400',63],['500',52],['600',43],['700',35],['800',27],['900',20],['950',13]]
+            for (var i = 0; i < stops.length; i++) {
+              html.style.setProperty('--brand-' + stops[i][0], 'hsl(' + hDeg + ' ' + sPct + '% ' + stops[i][1] + '%)')
+            }
+          }
+        }
       })()
     </script>
   </head>

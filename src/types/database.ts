@@ -21,7 +21,19 @@ export type Database = {
           ui_preset: 'classic' | 'minimal' | 'warm'
           theme_mode: 'light' | 'dark' | 'system'
           text_scale: 'sm' | 'md' | 'lg'
-          app_background: 'white' | 'aero' | 'blobs'
+          app_background:
+            | 'white'
+            | 'aero'
+            | 'blobs'
+            | 'gradient-sunset'
+            | 'gradient-forest'
+            | 'gradient-ocean'
+            | 'gradient-candy'
+            | 'gradient-dusk'
+            | 'noise-warm'
+            | 'noise-cool'
+          appearance_mode: 'basic' | 'advanced'
+          custom_accent_color: string | null
         }
         Insert: {
           id?: string
@@ -33,7 +45,19 @@ export type Database = {
           ui_preset?: 'classic' | 'minimal' | 'warm'
           theme_mode?: 'light' | 'dark' | 'system'
           text_scale?: 'sm' | 'md' | 'lg'
-          app_background?: 'white' | 'aero' | 'blobs'
+          app_background?:
+            | 'white'
+            | 'aero'
+            | 'blobs'
+            | 'gradient-sunset'
+            | 'gradient-forest'
+            | 'gradient-ocean'
+            | 'gradient-candy'
+            | 'gradient-dusk'
+            | 'noise-warm'
+            | 'noise-cool'
+          appearance_mode?: 'basic' | 'advanced'
+          custom_accent_color?: string | null
         }
         Update: {
           display_name?: string | null
@@ -42,7 +66,19 @@ export type Database = {
           ui_preset?: 'classic' | 'minimal' | 'warm'
           theme_mode?: 'light' | 'dark' | 'system'
           text_scale?: 'sm' | 'md' | 'lg'
-          app_background?: 'white' | 'aero' | 'blobs'
+          app_background?:
+            | 'white'
+            | 'aero'
+            | 'blobs'
+            | 'gradient-sunset'
+            | 'gradient-forest'
+            | 'gradient-ocean'
+            | 'gradient-candy'
+            | 'gradient-dusk'
+            | 'noise-warm'
+            | 'noise-cool'
+          appearance_mode?: 'basic' | 'advanced'
+          custom_accent_color?: string | null
         }
         Relationships: []
       }
