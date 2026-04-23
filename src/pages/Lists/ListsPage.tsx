@@ -16,6 +16,7 @@ import { format } from 'date-fns'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { AvatarStack } from '@/components/AvatarStack'
+import { Skeleton } from '@/components/Skeleton'
 import type { ShoppingList, ListMemberWithProfile } from '@/types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -254,8 +255,16 @@ export default function ListsPage() {
 
       {/* Active lists */}
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-brand-400" />
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+            >
+              <Skeleton className="mb-2 h-4 w-2/3" />
+              <Skeleton className="h-3 w-1/3" />
+            </div>
+          ))}
         </div>
       ) : activeLists.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -298,8 +307,16 @@ export default function ListsPage() {
       {showArchived && (
         <div className="space-y-3">
           {isLoadingArchived ? (
-            <div className="flex justify-center py-6">
-              <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+            <div className="space-y-3 py-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+                >
+                  <Skeleton className="mb-2 h-4 w-2/3" />
+                  <Skeleton className="h-3 w-1/3" />
+                </div>
+              ))}
             </div>
           ) : archivedLists.length === 0 ? (
             <p className="py-4 text-center text-sm text-gray-400">{t('lists.emptyArchive')}</p>

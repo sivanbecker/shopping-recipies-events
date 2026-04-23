@@ -27,6 +27,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { countdownLabel } from '@/lib/eventHelpers'
 import { useEventRole, canEditEvent } from '@/hooks/useEventRole'
 import { AvatarStack } from '@/components/AvatarStack'
+import { Skeleton } from '@/components/Skeleton'
 import type { Event, EventMemberWithProfile } from '@/types'
 import NewEventDialog from './NewEventDialog'
 import InviteesTab from './tabs/InviteesTab'
@@ -100,8 +101,24 @@ export default function EventDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
+      <div className="space-y-4 p-4">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-8 w-8 rounded-full" />
+          <Skeleton className="h-6 w-1/2" />
+        </div>
+        <Skeleton className="h-4 w-1/3" />
+        <Skeleton className="h-4 w-1/4" />
+        <Skeleton className="mt-2 h-10 w-full rounded-xl" />
+        <div className="flex gap-2 pt-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 flex-1 rounded-xl" />
+          ))}
+        </div>
+        <div className="space-y-3 pt-2">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-14 w-full rounded-2xl" />
+          ))}
+        </div>
       </div>
     )
   }

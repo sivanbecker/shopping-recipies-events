@@ -9,7 +9,6 @@ import {
   ChevronUp,
   ExternalLink,
   Image as ImageIcon,
-  Loader2,
   MapPin,
   Trash2,
   Users,
@@ -21,6 +20,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { countdownLabel, isUpcoming } from '@/lib/eventHelpers'
 import { AvatarStack } from '@/components/AvatarStack'
 import type { Event, EventInvitee, EventMemberWithProfile } from '@/types'
+import { Skeleton } from '@/components/Skeleton'
 
 type EventWithInvitees = Event & { event_invitees: Pick<EventInvitee, 'party_size'>[] }
 import NewEventDialog from './NewEventDialog'
@@ -221,8 +221,20 @@ export default function EventsPage() {
 
       {/* Upcoming events */}
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+            >
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-1/2" />
+                <Skeleton className="h-4 w-16 rounded-full" />
+              </div>
+              <Skeleton className="mt-2 h-3 w-1/3" />
+              <Skeleton className="mt-1.5 h-3 w-1/4" />
+            </div>
+          ))}
         </div>
       ) : isError ? (
         <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
