@@ -18,6 +18,10 @@ export type Database = {
           preferred_language: 'he' | 'en'
           avatar_url: string | null
           created_at: string
+          ui_preset: 'classic' | 'minimal' | 'warm'
+          theme_mode: 'light' | 'dark' | 'system'
+          text_scale: 'sm' | 'md' | 'lg'
+          app_background: 'white' | 'aero' | 'blobs'
         }
         Insert: {
           id?: string
@@ -26,11 +30,19 @@ export type Database = {
           preferred_language?: 'he' | 'en'
           avatar_url?: string | null
           created_at?: string
+          ui_preset?: 'classic' | 'minimal' | 'warm'
+          theme_mode?: 'light' | 'dark' | 'system'
+          text_scale?: 'sm' | 'md' | 'lg'
+          app_background?: 'white' | 'aero' | 'blobs'
         }
         Update: {
           display_name?: string | null
           preferred_language?: 'he' | 'en'
           avatar_url?: string | null
+          ui_preset?: 'classic' | 'minimal' | 'warm'
+          theme_mode?: 'light' | 'dark' | 'system'
+          text_scale?: 'sm' | 'md' | 'lg'
+          app_background?: 'white' | 'aero' | 'blobs'
         }
         Relationships: []
       }

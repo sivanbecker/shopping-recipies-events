@@ -3,16 +3,14 @@
 @tailwind utilities;
 
 @layer base {
+  /* ── Shared semantic tokens (unchanged by preset) ───────────────────── */
   :root {
-    --radius: 0.75rem;
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 24.6 95% 53.1%;
-    --primary-foreground: 60 9.1% 97.8%;
     --secondary: 60 4.8% 95.9%;
     --secondary-foreground: 24 9.8% 10%;
     --muted: 60 4.8% 95.9%;
@@ -23,16 +21,54 @@
     --destructive-foreground: 60 9.1% 97.8%;
     --border: 20 5.9% 90%;
     --input: 20 5.9% 90%;
-    --ring: 24.6 95% 53.1%;
   }
 
+  /* ── Classic preset (default / Bring!-inspired warm orange) ─────────── */
+  :root,
+  [data-preset='classic'] {
+    --primary: 24.6 95% 53.1%;
+    --primary-foreground: 60 9.1% 97.8%;
+    --ring: 24.6 95% 53.1%;
+    --radius: 0.75rem;
+    --density-row: 0.875rem;
+    --density-gap: 1rem;
+    --font-size-base: 1rem;
+  }
+
+  /* ── Minimal preset (neutral, sharp, professional) ──────────────────── */
+  [data-preset='minimal'] {
+    --primary: 215.4 16.3% 46.9%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 215.4 16.3% 46.9%;
+    --radius: 0.25rem;
+    --density-row: 0.625rem;
+    --density-gap: 0.75rem;
+    --font-size-base: 1rem;
+  }
+
+  /* ── Warm preset (earthy, soft, hospitable terracotta) ──────────────── */
+  [data-preset='warm'] {
+    --primary: 16 85% 40%;
+    --primary-foreground: 60 9.1% 97.8%;
+    --ring: 16 85% 40%;
+    --radius: 1.25rem;
+    --density-row: 1rem;
+    --density-gap: 1.25rem;
+    --font-size-base: 1rem;
+  }
+
+  /* ── Text scale ─────────────────────────────────────────────────────── */
+  [data-text-scale='sm'] { --font-size-base: 0.875rem; }
+  [data-text-scale='md'] { --font-size-base: 1rem; }
+  [data-text-scale='lg'] { --font-size-base: 1.125rem; }
+
+  /* ── Dark mode overrides (orthogonal to preset) ─────────────────────── */
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
   }
 
   * {
-    /* Use raw CSS value here — @apply border-border can't resolve before Tailwind builds */
     border-color: hsl(var(--border));
   }
 
@@ -40,15 +76,40 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-family: 'Rubik', system-ui, sans-serif;
+    font-size: var(--font-size-base);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Ensure RTL works smoothly */
   [dir='rtl'] {
     text-align: right;
   }
+}
+
+/* ── Background styles ────────────────────────────────────────────────── */
+html[data-background='aero'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 120% 80% at 20% 10%, hsla(210, 80%, 85%, 0.45) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 60% at 80% 90%, hsla(190, 70%, 80%, 0.35) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+html[data-background='blobs'] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle 35vw at 15% 20%, hsla(280, 60%, 85%, 0.4) 0%, transparent 70%),
+    radial-gradient(circle 28vw at 80% 15%, hsla(40, 80%, 80%, 0.35) 0%, transparent 65%),
+    radial-gradient(circle 40vw at 70% 75%, hsla(160, 55%, 80%, 0.3) 0%, transparent 70%),
+    radial-gradient(circle 25vw at 10% 80%, hsla(340, 65%, 82%, 0.35) 0%, transparent 65%);
+  pointer-events: none;
 }
 
 @keyframes undo-countdown {
@@ -57,7 +118,6 @@
 }
 
 @layer utilities {
-  /* Safe area for mobile bottom nav */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }

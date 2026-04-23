@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useEffect, lazy, Suspense } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useAppStore } from './store/useAppStore'
+import { applyTheme } from './lib/theme'
 
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AppLayout } from './components/layout/AppLayout'
@@ -25,7 +26,12 @@ const ProfilePage = lazy(() => import('./pages/Profile/ProfilePage'))
 
 export default function App() {
   const { i18n } = useTranslation()
-  const isDarkMode = useAppStore(s => s.isDarkMode)
+  const { uiPreset, themeMode, textScale, appBackground } = useAppStore(s => ({
+    uiPreset: s.uiPreset,
+    themeMode: s.themeMode,
+    textScale: s.textScale,
+    appBackground: s.appBackground,
+  }))
 
   // Keep <html> dir and lang in sync with the active language
   useEffect(() => {
@@ -35,10 +41,10 @@ export default function App() {
     document.documentElement.dir = isHebrew ? 'rtl' : 'ltr'
   }, [i18n.language])
 
-  // Keep <html> dark class in sync with dark mode preference
+  // Apply full theme (preset + mode + scale + background) whenever any value changes
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDarkMode)
-  }, [isDarkMode])
+    applyTheme({ uiPreset, themeMode, textScale, appBackground })
+  }, [uiPreset, themeMode, textScale, appBackground])
 
   return (
     <Suspense
