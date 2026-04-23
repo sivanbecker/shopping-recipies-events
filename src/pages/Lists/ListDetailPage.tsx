@@ -923,6 +923,7 @@ export default function ListDetailPage() {
           event: '*',
           schema: 'public',
           table: 'shopping_items',
+          filter: `list_id=eq.${id}`,
         },
         (
           payload: RealtimePostgresChangesPayload<
