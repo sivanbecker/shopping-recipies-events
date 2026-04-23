@@ -1209,6 +1209,81 @@ The background theme picker has been folded into **Stage 11 — Theming & Appear
 
 ---
 
+## STAGE 11.8 — Advanced Appearance Mode
+
+> **Goal:** Extend the Basic appearance panel with an opt-in Advanced mode that lets users freely pick an accent color and choose from a richer set of backgrounds, replacing the 3-preset constraint.
+> **Estimated time:** 1–2 days
+> **Prerequisite:** Stage 11 (PRs #97, #99, #100) fully merged to `main`.
+
+### Model
+
+- **Basic mode** (current) — 3 preset cards + 3 background swatches. Simple, opinionated.
+- **Advanced mode** — toggled by a "Advanced" pill/switch in the Appearance card. Reveals:
+  - A **hue slider + saturation grid** (or a curated 24-color palette grid) for picking a custom accent color
+  - A richer **background picker** — 10–12 options including plain, gradients, and multi-stop blobs
+
+When advanced mode is active the preset picker is hidden (a custom accent overrides it). Switching back to Basic resets to the last-used preset.
+
+### 11.8.1 — DB migration 035
+- [ ] Add two columns to `profiles`:
+  ```sql
+  ALTER TABLE profiles
+    ADD COLUMN appearance_mode text DEFAULT 'basic' CHECK (appearance_mode IN ('basic', 'advanced')),
+    ADD COLUMN custom_accent_color text DEFAULT NULL;  -- hex e.g. '#6366f1'
+  ```
+- [ ] Extend `app_background` CHECK constraint to include the new background values (or store as free text and validate in app):
+  `'white' | 'aero' | 'blobs' | 'gradient-sunset' | 'gradient-forest' | 'gradient-ocean' | 'gradient-candy' | 'gradient-dusk' | 'noise-warm' | 'noise-cool'`
+- [ ] No backfill needed — defaults keep current behaviour.
+
+### 11.8.2 — Custom accent ramp generation (`src/lib/theme.ts`)
+- [ ] Add `applyCustomAccent(hex: string)` — derives a 10-stop `--brand-*` ramp from the picked hue using HSL lightness steps, injects them as inline styles on `<html>`. No preset CSS block needed.
+- [ ] Add `clearCustomAccent()` — removes the inline style overrides so the active preset's CSS vars take over again.
+- [ ] Extend `AppBackground` union type with the new background values.
+- [ ] Extend `applyTheme()` to call `applyCustomAccent` / `clearCustomAccent` based on `appearanceMode`.
+
+### 11.8.3 — New background styles (`src/index.css`)
+Add `body::before` rules for each new background value:
+- [ ] `gradient-sunset` — coral → amber → yellow horizontal gradient
+- [ ] `gradient-forest` — deep green → sage → mint
+- [ ] `gradient-ocean` — deep blue → teal → cyan
+- [ ] `gradient-candy` — pink → lavender → sky
+- [ ] `gradient-dusk` — indigo → purple → rose
+- [ ] `noise-warm` — warm off-white with subtle SVG noise texture (inline data URI, no image assets)
+- [ ] `noise-cool` — cool gray with subtle SVG noise texture
+
+### 11.8.4 — Zustand + persistence
+- [ ] Add `appearanceMode: 'basic' | 'advanced'` and `customAccentColor: string | null` to `useAppStore`.
+- [ ] Add `setAppearanceMode` and `setCustomAccentColor` setters; each calls `applyTheme()` after updating state.
+- [ ] Persist both to localStorage; hydrate from `profiles` on login (same pattern as existing theme fields).
+- [ ] Update FOUC script in `index.html` to read `appearanceMode` and `customAccentColor` from localStorage and call `applyCustomAccent` before first paint if advanced mode is active.
+
+### 11.8.5 — Advanced Appearance UI (`AppearancePanel.tsx`)
+- [ ] Add a **Basic / Advanced** segmented toggle at the top of the Appearance card.
+- [ ] **Basic mode** — existing preset + mode + background + text-size controls (no change).
+- [ ] **Advanced mode** — replaces preset picker with:
+  - **Color palette grid** — 24 curated swatches (6 columns × 4 rows) covering a full hue wheel. Tapping a swatch sets `customAccentColor` and calls `applyCustomAccent`.
+  - **Hue slider** (optional, below the grid) — fine-tune the hue; updates the same custom accent.
+  - **Background picker** — expanded grid showing all 10 options with gradient preview swatches.
+- [ ] Switching back to Basic clears `customAccentColor` and re-applies the last preset.
+- [ ] Debounce-save to `profiles` on every change (same 800ms pattern).
+
+### 11.8.6 — i18n
+- [ ] Add keys to `en/common.json` and `he/common.json` under `appearance.*`:
+  - `modeBasic`, `modeAdvanced`, `customColor`, `customColorHint`
+  - New background names: `background.gradientSunset`, `background.gradientForest`, `background.gradientOcean`, `background.gradientCandy`, `background.gradientDusk`, `background.noiseWarm`, `background.noiseCool`
+
+### Manual Testing Checklist — Stage 11.8
+- [ ] Basic / Advanced toggle appears at top of Appearance card
+- [ ] Switching to Advanced hides preset picker, shows color palette + extended background grid
+- [ ] Tapping a color swatch changes all brand-colored elements instantly (buttons, active states, badges)
+- [ ] Hue slider (if implemented) fine-tunes the accent live
+- [ ] All 10 background options render correctly on Lists / Recipes / Events pages
+- [ ] Switching back to Basic clears custom color and restores last preset
+- [ ] Settings persist after page refresh and across devices
+- [ ] No FOUC — custom accent applied before first paint when advanced mode is stored
+
+---
+
 ## STAGE 12 — Android App & "Quick Add Missing Item" Widget
 > **Goal:** Ship a debug-installable Android APK containing the existing web app running in a native WebView shell, plus a first home-screen widget that launches a minimal quick-add screen and writes into the user's Missing Items list.
 > **Estimated time:** 4–6 days
