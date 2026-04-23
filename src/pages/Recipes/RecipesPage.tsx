@@ -19,6 +19,7 @@ import { toast } from 'sonner'
 import { useAuth } from '@/hooks/useAuth'
 import { useDebounce } from '@/hooks/useDebounce'
 import { supabase } from '@/lib/supabase'
+import { Skeleton } from '@/components/Skeleton'
 import type { Recipe } from '@/types'
 
 const TOOL_ICONS: Record<string, React.ReactNode> = {
@@ -262,7 +263,15 @@ export default function RecipesPage() {
 
       {/* Content */}
       {isLoading ? (
-        <div className="py-8 text-center text-gray-500 dark:text-gray-400">Loading...</div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+              <Skeleton className="mb-3 h-5 w-3/4" />
+              <Skeleton className="mb-2 h-3 w-full" />
+              <Skeleton className="h-3 w-1/2" />
+            </div>
+          ))}
+        </div>
       ) : filteredRecipes.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">

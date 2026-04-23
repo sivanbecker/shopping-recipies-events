@@ -32,6 +32,7 @@ import { useVoiceInput } from '@/hooks/useVoiceInput'
 import { useDebounce } from '@/hooks/useDebounce'
 import { ProductDialog } from '@/components/ProductDialog'
 import type { ProductFormData } from '@/components/ProductDialog'
+import { Skeleton } from '@/components/Skeleton'
 
 // ─── ProductCard ──────────────────────────────────────────────────────────────
 
@@ -855,8 +856,20 @@ export default function ProductsPage() {
       {/* Main content */}
       <div className="flex-1 px-4 pt-5">
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-brand-500" />
+          <div className="space-y-6">
+            {Array.from({ length: 3 }).map((_, gi) => (
+              <div key={gi}>
+                <Skeleton className="mb-3 h-5 w-32" />
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="rounded-2xl border border-gray-100 bg-white p-3 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                      <Skeleton className="mb-2 h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         ) : filteredCount === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
