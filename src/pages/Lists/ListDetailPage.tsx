@@ -127,6 +127,7 @@ function ProgressBar({ done, total }: ProgressBarProps) {
 interface CategoryHeaderProps {
   categoryName: string
   icon?: string | null
+  itemCount: number
   isCollapsed: boolean
   allDone: boolean
   isToggling: boolean
@@ -138,6 +139,7 @@ interface CategoryHeaderProps {
 function CategoryHeader({
   categoryName,
   icon,
+  itemCount,
   isCollapsed,
   allDone,
   isToggling,
@@ -218,7 +220,12 @@ function CategoryHeader({
           className="flex flex-1 items-center gap-2 text-xl font-semibold uppercase tracking-wide text-gray-400 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200 border-b border-gray-700/50 dark:border-gray-600/40 shadow-sm"
         >
           {icon && <span className="text-2xl">{icon}</span>}
-          <span className="flex-1 text-start">{categoryName}</span>
+          <span className="flex-1 text-start">
+            {categoryName}
+            <span className="ms-1.5 text-sm font-normal normal-case tracking-normal text-gray-400">
+              ({itemCount})
+            </span>
+          </span>
           <ChevronDown
             className={`h-4 w-4 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`}
           />
@@ -1563,6 +1570,7 @@ export default function ListDetailPage() {
                 <CategoryHeader
                   categoryName={categoryName}
                   icon={category?.icon}
+                  itemCount={groupItems.length}
                   isCollapsed={isCollapsed}
                   allDone={allDone}
                   isToggling={isCategoryToggling}
@@ -1680,6 +1688,7 @@ export default function ListDetailPage() {
                 <CategoryHeader
                   categoryName={categoryName}
                   icon={category?.icon}
+                  itemCount={groupItems.length}
                   isCollapsed={isCollapsed}
                   allDone={allDone}
                   isToggling={isCategoryToggling}

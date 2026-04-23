@@ -421,6 +421,7 @@ Skipped rows are downloadable as a CSV for correction and re-import.
 - [ ] "Add Item" search bar at the top — search products, tap to add
 - [ ] If product not found: inline "Create new product" option
 - [ ] Items grouped by category (matching Bring! visual style)
+- [ ] Category section title shows the item count for that category (e.g. "Dairy (3)")
 - [ ] Each item row: product name, quantity + unit, check button
 - [ ] Checked items move to a "In Cart" section at the bottom — visually dimmed
 - [ ] Tap quantity to edit inline; swipe or long-press for delete
