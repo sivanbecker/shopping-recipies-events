@@ -153,7 +153,9 @@ export default function RecipesPage() {
   const { t: tCommon } = useTranslation()
   const [search, setSearch] = useState('')
 
-  useEffect(() => { void import('./RecipeDetailPage') }, [])
+  useEffect(() => {
+    void import('./RecipeDetailPage')
+  }, [])
   const debouncedSearch = useDebounce(search)
   const [selectedTool, setSelectedTool] = useState<string | null>(null)
   const [deleteId, setDeleteId] = useState<string | null>(null)
