@@ -6,8 +6,12 @@ import { toast } from 'sonner'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { UserAvatar } from '@/components/UserAvatar'
+import { AppearancePanel } from '@/components/Appearance/AppearancePanel'
 import { supabase } from '@/lib/supabase'
+import { useAppStore } from '@/store/useAppStore'
+import { applyTheme } from '@/lib/theme'
 import type { HostInventoryItem } from '@/types'
+import type { UiPreset, ThemeMode, TextScale, AppBackground } from '@/lib/theme'
 
 const HOST_ITEMS = [
   { type: 'chair', labelKey: 'profile.hostInventory.chair' },
@@ -23,6 +27,13 @@ export default function ProfilePage() {
   const { user, profile, signOut, updateProfile } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+
+  const { setUiPreset, setThemeMode, setTextScale, setAppBackground } = useAppStore(s => ({
+    setUiPreset: s.setUiPreset,
+    setThemeMode: s.setThemeMode,
+    setTextScale: s.setTextScale,
+    setAppBackground: s.setAppBackground,
+  }))
 
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState('')
@@ -48,6 +59,21 @@ export default function ProfilePage() {
   useEffect(() => {
     setNameValue(profile?.display_name ?? '')
   }, [profile?.display_name])
+
+  // Hydrate theme store from profile so settings persist across devices
+  useEffect(() => {
+    if (!profile) return
+    const preset = (profile.ui_preset as UiPreset | undefined) ?? 'classic'
+    const mode = (profile.theme_mode as ThemeMode | undefined) ?? 'system'
+    const scale = (profile.text_scale as TextScale | undefined) ?? 'md'
+    const bg = (profile.app_background as AppBackground | undefined) ?? 'white'
+    setUiPreset(preset)
+    setThemeMode(mode)
+    setTextScale(scale)
+    setAppBackground(bg)
+    applyTheme({ uiPreset: preset, themeMode: mode, textScale: scale, appBackground: bg })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id])
 
   // Sync form state when host inventory loads
   useEffect(() => {
@@ -211,6 +237,14 @@ export default function ProfilePage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Appearance */}
+      <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
+        <p className="mb-4 text-sm font-medium text-gray-700 dark:text-gray-300">
+          {t('appearance.title')}
+        </p>
+        <AppearancePanel />
       </div>
 
       {/* Host Equipment */}
