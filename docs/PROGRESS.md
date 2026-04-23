@@ -32,9 +32,7 @@ Parked 2026-04-22 per project plan. Revisit post-MVP.
 
 ---
 
-## Performance Optimization — PARTIAL (merged to `main`)
-
-See Stage 10 in `PROJECT_PLAN.md` for the full 6-PR plan.
+## Stage 10 — Performance Optimization — COMPLETE (all 6 PRs merged to `main`)
 
 ### PR 1 — React quick wins — COMPLETE (PR #76, commit `18265af`)
 - `useDebounce` hook added (`src/hooks/useDebounce.ts`, 200ms default)
@@ -54,12 +52,29 @@ See Stage 10 in `PROJECT_PLAN.md` for the full 6-PR plan.
 - `ListsPage` uses a single `useQuery(['all_list_members', user.id])`; builds `Map<listId, members[]>` with `useMemo`; passes `members` to each `ListCard` as a prop
 - Removed the per-card `useQuery(['list_members', list.id])` → 10 lists now = 1 query instead of 11
 
-### PR 4 — DB indexes — NOT STARTED
-Plan lives in `PROJECT_PLAN.md` Stage 10 (new migration adding `shopping_items_list_checked_idx`, `shopping_items_product_idx`, partial `shopping_lists_active_idx`).
+### PR 4 — DB indexes — COMPLETE (PR #90)
+- **Migration 033** — three new indexes: `shopping_items_list_checked_idx` (list_id, is_checked, sort_order, created_at), `shopping_items_product_idx` (product_id), partial `shopping_lists_active_idx` (owner_id, is_archived, created_at) WHERE deleted_at IS NULL
 
-### PR 5 — Route lazy loading — NOT STARTED
+### PR 5 — Route lazy loading — COMPLETE (PR #91)
+- All page components in `src/App.tsx` converted to `React.lazy(() => import(...))`; `<Routes>` wrapped in `<Suspense>` with skeleton fallback; `AuthPage` kept eager for first paint
 
-### PR 6 — Realtime server-side filter — NOT STARTED
+### PR 6 — Realtime server-side filter — COMPLETE (PR #92)
+- `filter: \`list_id=eq.${id}\`` added to the `postgres_changes` subscription for `shopping_items` in `ListDetailPage` — eliminates client-side filtering of all-table change events
+
+---
+
+## Stage 7 (partial) — UX Polish
+
+### Skeleton loaders — COMPLETE (PR #93)
+- All data-fetching states across every page now show skeleton placeholders instead of spinners
+- Covers: `ListsPage`, `ListDetailPage`, `ProductsPage`, `RecipesPage`, `RecipeDetailPage`, `EventsPage`, `EventDetailPage`, `ProfilePage`, `ContactsPage`, `TrashPage`
+
+### Category item count — COMPLETE (PR #94)
+- Each category section header in `ListDetailPage` now shows the number of unchecked items it contains, e.g. "DAIRY (3)" — applies to both normal and shopping mode views
+
+### App version in profile menu — COMPLETE (PR #96)
+- App version from `package.json` injected at build time via Vite `define` as `__APP_VERSION__`; displayed as `v0.9.1` at the bottom of the profile dropdown, below Sign Out
+- `src/vite-env.d.ts` updated with `declare const __APP_VERSION__: string`
 
 ---
 
