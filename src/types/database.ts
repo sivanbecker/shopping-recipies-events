@@ -621,6 +621,39 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_invitations: {
+        Row: {
+          id: string
+          token: string
+          inviter_id: string
+          invitee_email: string
+          label: 'family' | 'friend' | null
+          status: 'pending' | 'accepted' | 'declined' | 'revoked' | 'expired'
+          created_at: string
+          expires_at: string
+          accepted_at: string | null
+          invitee_id: string | null
+        }
+        Insert: {
+          id?: string
+          token?: string
+          inviter_id: string
+          invitee_email: string
+          label?: 'family' | 'friend' | null
+          status?: 'pending' | 'accepted' | 'declined' | 'revoked' | 'expired'
+          created_at?: string
+          expires_at?: string
+          accepted_at?: string | null
+          invitee_id?: string | null
+        }
+        Update: {
+          label?: 'family' | 'friend' | null
+          status?: 'pending' | 'accepted' | 'declined' | 'revoked' | 'expired'
+          accepted_at?: string | null
+          invitee_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -683,6 +716,19 @@ export type Database = {
       purge_trashed_lists: {
         Args: Record<string, never>
         Returns: number
+      }
+      peek_invitation: {
+        Args: { p_token: string }
+        Returns: {
+          inviter_name: string
+          label: string | null
+          status: string
+          expires_at: string
+        }[]
+      }
+      revoke_invitation: {
+        Args: { p_token: string }
+        Returns: void
       }
     }
     Enums: Record<string, never>
