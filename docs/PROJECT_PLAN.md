@@ -938,6 +938,7 @@ The `ContactPicker` component required for list/event sharing is specified in **
 
 #### 7.4 — UX Polish
 - [x] Skeleton loaders for all data-fetching states (PR #93)
+- [x] App version shown in profile dropdown menu (PR #96)
 - [ ] Empty states with friendly inline SVG illustrations
 - [ ] Error boundaries per page section
 - [ ] Pull-to-refresh on mobile (lists overview page)

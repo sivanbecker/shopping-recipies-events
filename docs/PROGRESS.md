@@ -72,6 +72,10 @@ Parked 2026-04-22 per project plan. Revisit post-MVP.
 ### Category item count — COMPLETE (PR #94)
 - Each category section header in `ListDetailPage` now shows the number of unchecked items it contains, e.g. "DAIRY (3)" — applies to both normal and shopping mode views
 
+### App version in profile menu — COMPLETE (PR #96)
+- App version from `package.json` injected at build time via Vite `define` as `__APP_VERSION__`; displayed as `v0.9.1` at the bottom of the profile dropdown, below Sign Out
+- `src/vite-env.d.ts` updated with `declare const __APP_VERSION__: string`
+
 ---
 
 ## Voice Search & Shopping List UX — COMPLETE (merged to `main`)
