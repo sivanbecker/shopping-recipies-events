@@ -26,12 +26,15 @@ const ProfilePage = lazy(() => import('./pages/Profile/ProfilePage'))
 
 export default function App() {
   const { i18n } = useTranslation()
-  const { uiPreset, themeMode, textScale, appBackground } = useAppStore(s => ({
-    uiPreset: s.uiPreset,
-    themeMode: s.themeMode,
-    textScale: s.textScale,
-    appBackground: s.appBackground,
-  }))
+  const { uiPreset, themeMode, textScale, appBackground, appearanceMode, customAccentColor } =
+    useAppStore(s => ({
+      uiPreset: s.uiPreset,
+      themeMode: s.themeMode,
+      textScale: s.textScale,
+      appBackground: s.appBackground,
+      appearanceMode: s.appearanceMode,
+      customAccentColor: s.customAccentColor,
+    }))
 
   // Keep <html> dir and lang in sync with the active language
   useEffect(() => {
@@ -41,10 +44,10 @@ export default function App() {
     document.documentElement.dir = isHebrew ? 'rtl' : 'ltr'
   }, [i18n.language])
 
-  // Apply full theme (preset + mode + scale + background) whenever any value changes
+  // Apply full theme (preset + mode + scale + background + accent) whenever any value changes
   useEffect(() => {
-    applyTheme({ uiPreset, themeMode, textScale, appBackground })
-  }, [uiPreset, themeMode, textScale, appBackground])
+    applyTheme({ uiPreset, themeMode, textScale, appBackground, appearanceMode, customAccentColor })
+  }, [uiPreset, themeMode, textScale, appBackground, appearanceMode, customAccentColor])
 
   return (
     <Suspense
