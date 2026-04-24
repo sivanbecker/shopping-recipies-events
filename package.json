@@ -15,7 +15,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "release": "gh pr merge $(gh pr list --label 'autorelease: pending' --json number -q '.[0].number') --squash --auto",
+    "release": "gh pr merge $(gh pr list --label 'autorelease: pending' --json number -q '.[0].number') --merge --auto",
     "release:status": "gh pr list --label 'autorelease: pending'",
     "prepare": "husky"
   },
