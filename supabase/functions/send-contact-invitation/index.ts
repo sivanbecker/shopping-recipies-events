@@ -28,20 +28,16 @@ Deno.serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  // APP_SERVICE_KEY holds the new Supabase secret key (replaces legacy service_role key)
-  // APP_PUBLISHABLE_KEY holds the new Supabase publishable key (replaces legacy anon key)
-  const secretKey = Deno.env.get('APP_SERVICE_KEY') ?? Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const publishableKey = Deno.env.get('APP_PUBLISHABLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY')!
+  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
   const appUrl = Deno.env.get('APP_URL') ?? 'https://shopping-recipies-events.vercel.app'
   const smtpPassword = Deno.env.get('GMAIL_SMTP_PASSWORD')
 
-  const supabase = createClient(supabaseUrl, secretKey)
-
-  // Resolve calling user from their JWT
-  const anonClient = createClient(supabaseUrl, publishableKey, {
+  // Use the caller's JWT for all DB operations — RLS is scoped to auth.uid() so no service role needed
+  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     global: { headers: { Authorization: authHeader } },
   })
-  const { data: { user }, error: userError } = await anonClient.auth.getUser()
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError || !user) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -82,7 +78,6 @@ Deno.serve(async (req) => {
       .maybeSingle()
 
     if (existing) {
-      // Idempotent: return existing invitation token
       return new Response(JSON.stringify({ ok: true, token: existing.token }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
