@@ -1,13 +1,34 @@
--- Extend notification enums to include contact events
-ALTER TYPE notification_entity_type ADD VALUE IF NOT EXISTS 'contact';
-ALTER TYPE notification_type      ADD VALUE IF NOT EXISTS 'contact_added';
+-- notifications uses text CHECK constraints, not Postgres enum types.
+-- Drop and recreate both constraints to add the contact values.
+
+ALTER TABLE notifications
+  DROP CONSTRAINT IF EXISTS notifications_entity_type_check,
+  ADD CONSTRAINT notifications_entity_type_check
+    CHECK (entity_type IN ('shopping_item', 'shopping_list', 'list_member', 'contact'));
+
+ALTER TABLE notifications
+  DROP CONSTRAINT IF EXISTS notifications_notification_type_check,
+  ADD CONSTRAINT notifications_notification_type_check
+    CHECK (notification_type IN (
+      'item_added',
+      'item_completed',
+      'item_uncompleted',
+      'item_quantity_changed',
+      'list_renamed',
+      'list_deleted',
+      'list_restored',
+      'member_added',
+      'member_removed',
+      'role_changed',
+      'member_left',
+      'contact_added'
+    ));
 
 -- Trigger function: fires when accept_invitation inserts the contact row for the inviter.
--- We only notify the inviter (owner_id) — the invitee row they see immediately in the UI.
+-- Only fires for rows with a linked_user_id (i.e. created via invitation accept).
 CREATE OR REPLACE FUNCTION notify_contact_added()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
-  -- Only fire for rows that have a linked_user_id (i.e. created via invitation accept)
   IF NEW.linked_user_id IS NULL THEN
     RETURN NEW;
   END IF;
