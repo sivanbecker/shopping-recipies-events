@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { LogOut, Pencil, Check, X, Loader2, Users, ChevronRight, Palette, Home } from 'lucide-react'
+import { LogOut, Pencil, Check, X, Loader2, Users, Palette, Home } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { UserAvatar } from '@/components/UserAvatar'
 import { AppearancePanel } from '@/components/Appearance/AppearancePanel'
+import { ContactsContent } from '@/pages/Events/ContactsPage'
 import { supabase } from '@/lib/supabase'
 import { useAppStore } from '@/store/useAppStore'
 import { applyTheme } from '@/lib/theme'
@@ -257,19 +258,8 @@ export default function ProfilePage() {
       )}
 
       {activeTab === 'contacts' && (
-        <div className="rounded-2xl bg-white shadow-sm dark:bg-gray-900">
-          <button
-            onClick={() => navigate('/contacts')}
-            className="flex w-full items-center justify-between p-5 transition hover:bg-gray-50 dark:hover:bg-gray-800 rounded-2xl"
-          >
-            <div className="flex items-center gap-3">
-              <Users className="h-5 w-5 text-brand-500" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('events:contacts.manage')}
-              </span>
-            </div>
-            <ChevronRight className="h-4 w-4 text-gray-400" />
-          </button>
+        <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
+          <ContactsContent />
         </div>
       )}
 

@@ -661,9 +661,9 @@ function ContactRow({ contact, onEdit }: { contact: Contact; onEdit: (c: Contact
   )
 }
 
-// ─── ContactsPage ────────────────────────────────────────────────────────────
+// ─── ContactsContent ─────────────────────────────────────────────────────────
 
-export default function ContactsPage() {
+export function ContactsContent() {
   const { t } = useTranslation('events')
   const { user } = useAuth()
   const [showForm, setShowForm] = useState(false)
@@ -703,39 +703,26 @@ export default function ContactsPage() {
   ]
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Link
-            to="/profile"
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">
-            {t('contacts.title')}
-          </h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowInvite(true)}
-            className="flex items-center gap-1.5 rounded-xl border border-purple-200 px-3 py-2 text-sm font-medium text-purple-600 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-400 dark:hover:bg-purple-900/20"
-          >
-            <Send className="h-3.5 w-3.5" />
-            {t('contacts.invite.invite')}
-          </button>
-          <button
-            onClick={() => {
-              setEditingContact(undefined)
-              setShowForm(true)
-            }}
-            className="flex items-center gap-1.5 rounded-xl bg-purple-500 px-3 py-2 text-sm font-semibold text-white hover:bg-purple-600"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            {t('contacts.add')}
-          </button>
-        </div>
+    <div className="space-y-4">
+      {/* Action buttons */}
+      <div className="flex items-center justify-end gap-2">
+        <button
+          onClick={() => setShowInvite(true)}
+          className="flex items-center gap-1.5 rounded-xl border border-purple-200 px-3 py-2 text-sm font-medium text-purple-600 hover:bg-purple-50 dark:border-purple-800 dark:text-purple-400 dark:hover:bg-purple-900/20"
+        >
+          <Send className="h-3.5 w-3.5" />
+          {t('contacts.invite.invite')}
+        </button>
+        <button
+          onClick={() => {
+            setEditingContact(undefined)
+            setShowForm(true)
+          }}
+          className="flex items-center gap-1.5 rounded-xl bg-purple-500 px-3 py-2 text-sm font-semibold text-white hover:bg-purple-600"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          {t('contacts.add')}
+        </button>
       </div>
 
       {/* Pending invitations */}
@@ -781,19 +768,35 @@ export default function ContactsPage() {
         </div>
       )}
 
-      {/* FAB */}
-      <button
-        onClick={() => {
-          setEditingContact(undefined)
-          setShowForm(true)
-        }}
-        className="fixed bottom-20 end-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-purple-500 text-white shadow-lg hover:bg-purple-600 active:scale-95"
-      >
-        <Plus className="h-6 w-6" />
-      </button>
-
       {showForm && <ContactForm onClose={handleClose} contact={editingContact} />}
       {showInvite && <InviteContactDialog onClose={() => setShowInvite(false)} />}
+    </div>
+  )
+}
+
+// ─── ContactsPage ────────────────────────────────────────────────────────────
+
+export default function ContactsPage() {
+  const { t } = useTranslation('events')
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Link
+            to="/profile"
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">
+            {t('contacts.title')}
+          </h1>
+        </div>
+      </div>
+
+      <ContactsContent />
     </div>
   )
 }
