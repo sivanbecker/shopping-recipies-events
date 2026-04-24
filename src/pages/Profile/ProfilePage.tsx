@@ -27,9 +27,9 @@ const TABS = ['appearance', 'contacts', 'home'] as const
 type TabId = (typeof TABS)[number]
 
 const TAB_ICONS: Record<TabId, React.ReactNode> = {
-  appearance: <Palette className="h-4 w-4" />,
-  contacts: <Users className="h-4 w-4" />,
-  home: <Home className="h-4 w-4" />,
+  appearance: <Palette className="h-5 w-5" />,
+  contacts: <Users className="h-5 w-5" />,
+  home: <Home className="h-5 w-5" />,
 }
 
 export default function ProfilePage() {
@@ -238,14 +238,14 @@ export default function ProfilePage() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition ${
+            className={`flex flex-1 items-center justify-center rounded-lg px-3 py-2.5 transition ${
               activeTab === tab
                 ? 'bg-white text-brand-600 shadow-sm dark:bg-gray-700 dark:text-brand-400'
                 : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
             }`}
+            aria-label={t(`profile.tabs.${tab}`)}
           >
             {TAB_ICONS[tab]}
-            {t(`profile.tabs.${tab}`)}
           </button>
         ))}
       </div>
