@@ -87,7 +87,19 @@
       "declineSuccess": "ההזמנה נדחתה.",
       "viewContacts": "צפה באנשי הקשר שלך",
       "emailMismatchTitle": "חשבון שגוי",
-      "emailMismatchBody": "ההזמנה נשלחה לכתובת אימייל אחרת. התחבר/י עם החשבון שקיבל את ההזמנה."
+      "emailMismatchBody": "ההזמנה נשלחה לכתובת אימייל אחרת. התחבר/י עם החשבון שקיבל את ההזמנה.",
+      "invite": "הזמן/י",
+      "inviteTitle": "הזמנה להתחבר",
+      "inviteEmail": "כתובת אימייל",
+      "inviteSend": "שלח הזמנה",
+      "inviteSent": "ההזמנה נשלחה!",
+      "inviteCopyLink": "העתק קישור",
+      "inviteSelfError": "אי אפשר להזמין את עצמך",
+      "inviteSpamError": "יותר מדי הזמנות ממתינות (מקסימום 5)",
+      "pendingInvites": "הזמנות ממתינות",
+      "pendingExpiresIn": "פג תוקף {{time}}",
+      "pendingRevoke": "בטל",
+      "pendingRevokeSuccess": "ההזמנה בוטלה"
     }
   },
   "invitees": {

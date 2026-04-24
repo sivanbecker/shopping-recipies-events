@@ -87,7 +87,19 @@
       "declineSuccess": "Invitation declined.",
       "viewContacts": "View your contacts",
       "emailMismatchTitle": "Wrong account",
-      "emailMismatchBody": "This invitation was sent to a different email address. Please sign in with the account that received the invitation."
+      "emailMismatchBody": "This invitation was sent to a different email address. Please sign in with the account that received the invitation.",
+      "invite": "Invite",
+      "inviteTitle": "Invite to Connect",
+      "inviteEmail": "Email address",
+      "inviteSend": "Send Invitation",
+      "inviteSent": "Invitation sent!",
+      "inviteCopyLink": "Copy link",
+      "inviteSelfError": "You can't invite yourself",
+      "inviteSpamError": "Too many pending invitations (max 5)",
+      "pendingInvites": "Pending Invitations",
+      "pendingExpiresIn": "Expires {{time}}",
+      "pendingRevoke": "Revoke",
+      "pendingRevokeSuccess": "Invitation revoked"
     }
   },
   "invitees": {
