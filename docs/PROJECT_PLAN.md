@@ -1284,219 +1284,79 @@ Add `body::before` rules for each new background value:
 
 ---
 
-## STAGE 11.9 — Contact Invitations
+## STAGE 11.9 — Contact Invitations — COMPLETE (PR #106, branch `feat/stage-11.9-contacts-ui`)
 
 > **Goal:** Let users invite someone to connect as a contact via email. The invitee receives a branded email with a 24-hour magic link, lands on an acceptance page, authenticates (sign-up or log-in), and both parties automatically appear in each other's contacts list with the same relationship label (Family / Friend / None) the inviter chose.
-> **Estimated time:** 2–3 days
-> **Prerequisites:** Stage 11.8 merged. Gmail SMTP configured in Supabase dashboard (see 11.9.0).
 
-### Design decisions (locked in with user)
+### Design decisions (as built)
 
-- **Invitation origin:** Contacts page only — dedicated "Invite" button alongside "Add Contact".
+- **Invitation origin:** Contacts page — "Invite" button in header alongside "Add Contact".
 - **Label:** Inviter picks Family / Friend / None at invite time. Both sides get the same label.
-- **Already has account:** Still goes through email so the invitee is explicitly aware. Clicking the link just shows a confirmation screen instead of a sign-up form.
-- **Expiry:** 24 hours. Invitee can decline. Inviter can revoke before acceptance.
-- **Mutual contacts:** On acceptance, a contact row is created on **both sides** with the same label. If either party already had the other as a contact, the existing row is updated (label + `linked_user_id` set) rather than duplicating.
-- **Email delivery:** Gmail SMTP (`shop-cook-host@gmail.com`) configured as Supabase Custom SMTP — no third-party provider. Same credentials reused by an edge function for invitation emails.
-- **QR codes:** Out of scope for this stage.
+- **Expiry:** 24 hours. Invitee can decline. Inviter can revoke pending invites.
+- **Mutual contacts:** On acceptance, a contact row is created on **both sides** with the same label via `accept_invitation` SECURITY DEFINER RPC (upserts on `owner_id + linked_user_id`).
+- **Email delivery:** Gmail SMTP (`shopcookhost@gmail.com`) via nodemailer in the edge function. App Password stored as `GMAIL_SMTP_PASSWORD` Supabase secret.
+- **Accept flow performance:** `InviteAcceptPage` calls the `accept_invitation` RPC directly (not through the edge function), removing one HTTP hop.
+- **Post-auth redirect:** `AuthPage` reads `inviteToken` from `location.state` (email/password login) or `?invite_token=` in the OAuth `redirectTo` URL (Google), redirecting to `/invite/accept?token=...` after sign-in.
+- **QR codes:** Out of scope.
 
-### 11.9.0 — One-time infrastructure setup (manual, not code)
+### What was built
 
-- [ ] In Supabase Dashboard → Authentication → SMTP Settings:
-  - Enable custom SMTP
-  - Host: `smtp.gmail.com`, Port: `587`, User: `shop-cook-host@gmail.com`
-  - Password: Gmail App Password (generate in Google Account → Security → App Passwords)
-  - Sender name: `Shop Cook Host`, Sender email: `shop-cook-host@gmail.com`
-- [ ] Store `GMAIL_SMTP_PASSWORD` as a Supabase secret: `supabase secrets set GMAIL_SMTP_PASSWORD=<app-password>`
-- [ ] Add `VITE_APP_URL` env var in Vercel (e.g. `https://shopping-recipies-events.vercel.app`) — used to construct invitation links.
+#### DB migrations
+- **036** — `contact_invitations` table + RLS (`inviter_access` policy) + indexes
+- **037** — `accept_invitation` SECURITY DEFINER RPC + unique constraint `contacts(owner_id, linked_user_id)`; `peek_invitation` RPC (no auth required); `revoke_invitation` RPC
+- **038** — Extended `peek_invitation` to also return `invitee_email` (needed for email-mismatch validation on the accept page)
+- **039** — Extended `notification_entity_type` enum with `'contact'`; extended `notification_type` enum with `'contact_added'`; `notify_contact_added` trigger fires `AFTER INSERT ON contacts` when `linked_user_id IS NOT NULL`, inserting a notification for the inviter; `NotificationsPanel` navigates to `/contacts` on click
 
-### 11.9.1 — DB migration 036
+#### Edge function: `send-contact-invitation`
+- Validates JWT; guards: self-invite → `self_invite`, max 5 pending → `spam_limit`, idempotent re-invite → returns existing token
+- Inserts `contact_invitations` row; sends HTML email via nodemailer (Gmail SMTP)
+- Returns `{ ok: true, token }` for re-invites, `{ ok: true }` for fresh invites
 
-```sql
-CREATE TABLE contact_invitations (
-  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  token         text UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(32), 'hex'),
-  inviter_id    uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  invitee_email text NOT NULL,
-  label         text CHECK (label IN ('family', 'friend')) DEFAULT NULL,
-  status        text NOT NULL DEFAULT 'pending'
-                  CHECK (status IN ('pending', 'accepted', 'declined', 'revoked', 'expired')),
-  created_at    timestamptz NOT NULL DEFAULT now(),
-  expires_at    timestamptz NOT NULL DEFAULT now() + interval '24 hours',
-  accepted_at   timestamptz,
-  invitee_id    uuid REFERENCES auth.users(id) ON DELETE SET NULL
-);
+#### Edge function: `accept-contact-invitation`
+- Thin pass-through to `accept_invitation` RPC via PostgREST (kept for future extensibility)
+- Note: client now calls `accept_invitation` RPC directly for better latency; edge function no longer used by the UI
 
--- Indexes
-CREATE INDEX contact_invitations_inviter_idx ON contact_invitations(inviter_id);
-CREATE INDEX contact_invitations_token_idx   ON contact_invitations(token);
-CREATE INDEX contact_invitations_email_idx   ON contact_invitations(invitee_email);
+#### `src/pages/Invite/InviteAcceptPage.tsx`
+- Public route `/invite/accept`; reads `?token=`
+- State machine: `loading → invalid | expired | already_responded | email_mismatch | unauthenticated | pending | success | declined`
+- `unauthenticated` state: Sign up / Log in buttons navigate to `/auth` with `{ state: { inviteToken } }`
+- Calls `accept_invitation` RPC directly (not through edge function)
 
--- RLS
-ALTER TABLE contact_invitations ENABLE ROW LEVEL SECURITY;
--- Inviter can see and manage their own invitations
-CREATE POLICY "inviter_access" ON contact_invitations
-  FOR ALL USING (inviter_id = auth.uid());
--- Invitee can read (for acceptance page) and update status — via SECURITY DEFINER RPC only
--- (no direct RLS SELECT for invitee because they may not be authenticated yet)
-```
+#### `src/pages/Auth/AuthPage.tsx`
+- Reads `inviteToken` from `location.state` or `?invite_token=` query param
+- After email/password login or register: redirects to `/invite/accept?token=...` if token present
+- Google OAuth: encodes token as `?invite_token=` in `redirectTo` URL so it survives the OAuth callback
 
-- [ ] No backfill needed.
-- [ ] `contact_invitations` row is created by the edge function (SECURITY DEFINER), not by direct client insert.
+#### `src/pages/Events/ContactsPage.tsx`
+- **Invite button** in header (outline, Send icon)
+- **`InviteContactDialog`**: email field + label pill toggle; calls edge function; success state with "Invitation sent!" + copy-link button; error toasts for `self_invite` and `spam_limit`
+- **`PendingInvitationsCard`**: collapsible amber card; queries pending non-expired invitations; each row shows email, label badge, `formatDistanceToNow(expires_at)`, Revoke button
 
-### 11.9.2 — Edge function `send-contact-invitation`
+#### i18n
+- 13 new keys under `contacts.invite` in `en/events.json` and `he/events.json`: `invite`, `inviteTitle`, `inviteEmail`, `inviteSend`, `inviteSent`, `inviteCopyLink`, `inviteSelfError`, `inviteSpamError`, `pendingInvites`, `pendingExpiresIn`, `pendingRevoke`, `pendingRevokeSuccess`
+- `contact_added` notification type string added to `en/common.json` and `he/common.json`
 
-**File:** `supabase/functions/send-contact-invitation/index.ts`
-
-- [ ] Accepts (under caller's JWT): `{ invitee_email: string, label: 'family' | 'friend' | null }`.
-- [ ] Guards:
-  - Inviter cannot invite themselves.
-  - Max 5 pending invitations per inviter (anti-spam).
-  - If an active (pending, non-expired) invitation to this email already exists for this inviter → return the existing token (idempotent).
-- [ ] Inserts a `contact_invitations` row (token auto-generated by Postgres default).
-- [ ] Sends the invitation email via Gmail SMTP using `nodemailer` (available as an npm module importable in Deno via `npm:nodemailer`):
-  - Subject: `[Name] invited you to connect on Shop Cook Host`
-  - Body (HTML):
-    ```
-    [Name] wants to add you as a [Family / Friend / Contact] on Shop Cook Host.
-
-    [Accept Invitation]  ←  links to {APP_URL}/invite/accept?token={token}
-
-    This invitation expires in 24 hours.
-    If you didn't expect this, you can safely ignore it.
-    ```
-- [ ] Returns `{ ok: true }`.
-- [ ] Unit tests (Deno): self-invite guard, spam guard, idempotent re-invite, email sent with correct token.
-
-### 11.9.3 — Edge function `accept-contact-invitation` (SECURITY DEFINER)
-
-**File:** `supabase/functions/accept-contact-invitation/index.ts`
-
-Called by the acceptance page after the user authenticates. Runs under the **invitee's JWT**.
-
-- [ ] Accepts: `{ token: string, action: 'accept' | 'decline' }`.
-- [ ] Validates:
-  - Token exists and status is `'pending'`.
-  - `expires_at > now()` — if expired, update status to `'expired'` and return error.
-  - Invitee is the authenticated user (email matches `invitee_email`, or if invitee already had an account, same user).
-- [ ] On **decline**: update `status = 'declined'`. Return `{ ok: true }`.
-- [ ] On **accept**:
-  1. Update `contact_invitations`: `status = 'accepted'`, `accepted_at = now()`, `invitee_id = auth.uid()`.
-  2. Upsert invitee → inviter's contacts (create or update existing row):
-     - `owner_id = inviter_id`, `name = invitee's display_name`, `email = invitee_email`, `label = invitation.label`, `linked_user_id = invitee's auth.uid()`.
-  3. Upsert inviter → invitee's contacts (symmetric):
-     - `owner_id = invitee_id`, `name = inviter's display_name`, `email = inviter's email`, `label = invitation.label`, `linked_user_id = inviter_id`.
-  4. For both upserts: if a row with the same `owner_id` + `linked_user_id` already exists, update `label` and `email` rather than inserting a duplicate.
-- [ ] Returns `{ ok: true, inviter_name: string }` so the UI can show *"You're now connected with [Name]!"*.
-- [ ] Unit tests (Deno): expired token, decline path, accept path (both contact rows created), already-connected upsert (no duplicate).
-
-### 11.9.4 — New route `/invite/accept`
-
-**File:** `src/pages/Invite/InviteAcceptPage.tsx`  
-**Route:** added to `src/App.tsx` as a **public** route (not behind `ProtectedRoute`) — `/invite/accept`.
-
-- [ ] Reads `?token=` from the URL query string.
-- [ ] **State machine:**
-  - `loading` — calls a public RPC `peek_invitation(token)` (SECURITY DEFINER, no auth required) that returns `{ inviter_name, label, status, expires_at }` without exposing other data. Shows skeleton.
-  - `invalid` — token not found or already used: friendly error message.
-  - `expired` — shows "This invitation has expired. Ask [Name] to send a new one."
-  - `declined` / `accepted` — "This invitation has already been responded to."
-  - `unauthenticated` — shows the branded landing card:
-    - *"[Inviter Name] invited you to connect as a [Family / Friend / Contact]."*
-    - Two buttons: **Sign up** / **Log in** — both navigate to `/auth` passing the token in state (or a `?next=/invite/accept?token=...` redirect param) so the page is resumed after auth.
-  - `authenticated + pending` — shows the acceptance card:
-    - *"[Inviter Name] wants to add you as a [Family / Friend / Contact]."*
-    - Two buttons: **Accept** / **Decline** — call `accept-contact-invitation` edge function.
-  - `success` — "You're now connected with [Name]! View your contacts." with a link to `/contacts`.
-- [ ] If the user is already authenticated when they land, skip straight to `authenticated + pending`.
-
-### 11.9.5 — `peek_invitation` RPC (SECURITY DEFINER, no auth required)
-
-Added to the migration (or a separate migration 037):
-
-```sql
-CREATE OR REPLACE FUNCTION peek_invitation(p_token text)
-RETURNS TABLE(inviter_name text, label text, status text, expires_at timestamptz)
-LANGUAGE sql SECURITY DEFINER AS $$
-  SELECT p.display_name, ci.label, ci.status, ci.expires_at
-  FROM contact_invitations ci
-  JOIN profiles p ON p.user_id = ci.inviter_id
-  WHERE ci.token = p_token;
-$$;
-```
-
-- [ ] Returns one row or zero rows (token not found). Exposes only safe display data.
-
-### 11.9.6 — Contacts page UI changes
-
-**File:** `src/pages/Events/ContactsPage.tsx`
-
-- [ ] Add **"Invite"** button in the page header (next to "Add Contact"), with a mail/link icon.
-- [ ] **`InviteContactDialog`** — bottom sheet / modal:
-  - Email field (required).
-  - Label picker: None / Family / Friend (same pill toggle as ContactForm).
-  - Submit calls `send-contact-invitation` edge function.
-  - Success state: *"Invitation sent to [email]!"* with a copy-link option (for manual sharing via WhatsApp etc.).
-  - Error states: self-invite, spam limit, already pending.
-- [ ] **Pending invitations section** — collapsible card at the top of the Contacts page (only shown when there are pending invitations):
-  - Shows each pending invite: email, label, time remaining ("expires in 18 hours").
-  - **Revoke** button per invite — calls a `revoke_invitation(token)` RPC (updates status to `'revoked'`).
-  - Auto-hides when all are accepted/declined/expired.
-- [ ] Pending invitations fetched via `useQuery(['contact_invitations', user.id])` — select from `contact_invitations` where `inviter_id = auth.uid() AND status = 'pending' AND expires_at > now()`.
-
-### 11.9.7 — `revoke_invitation` RPC
-
-```sql
-CREATE OR REPLACE FUNCTION revoke_invitation(p_token text)
-RETURNS void LANGUAGE sql SECURITY DEFINER AS $$
-  UPDATE contact_invitations
-  SET status = 'revoked'
-  WHERE token = p_token AND inviter_id = auth.uid() AND status = 'pending';
-$$;
-```
-
-- [ ] Added to migration 036 or 037.
-
-### 11.9.8 — i18n
-
-Keys to add under `events.contacts.*` (both `he` and `en`):
-
-```
-invite, inviteTitle, inviteEmail, inviteLabel, inviteSend, inviteSent,
-inviteCopyLink, inviteSelfError, inviteSpamError, invitePendingAlready,
-pendingInvites, pendingExpiresIn, pendingRevoke, pendingRevokeSuccess,
-acceptTitle, acceptSubtitle, acceptButton, declineButton,
-acceptSuccess, declineSuccess, expiredTitle, expiredBody,
-invalidTitle, invalidBody, alreadyRespondedTitle
-```
-
-### 11.9.9 — `database.ts` types
-
-- [ ] Add `contact_invitations` table Row / Insert / Update types.
-- [ ] Add `peek_invitation` and `revoke_invitation` to the `Functions` block.
+#### `src/types/database.ts`
+- `contact_invitations` Row / Insert / Update types
+- `peek_invitation`, `revoke_invitation`, `accept_invitation` added to `Functions` block
+- `notification_entity_type` extended with `'contact'`; `notification_type` extended with `'contact_added'`
 
 ### Manual Testing Checklist — Stage 11.9
 
-- [ ] Gmail SMTP configured in Supabase dashboard — auth emails (password reset) arrive from `shop-cook-host@gmail.com`
-- [ ] Invitation email arrives within ~30 seconds of clicking Invite
-- [ ] Invitation link in email opens the branded landing page showing inviter's name and label
-- [ ] Unauthenticated invitee sees Sign up / Log in buttons; after auth, lands back on acceptance page
-- [ ] Already-authenticated invitee lands directly on Accept / Decline screen
-- [ ] Accept → both users appear in each other's Contacts with the correct label
-- [ ] Decline → invitation marked declined; neither contact row created
-- [ ] Expired link (after 24h) → friendly "expired" message
-- [ ] Revoke → pending invite disappears from Contacts page; link now shows "already responded" error
-- [ ] Inviting yourself → error shown inline, no email sent
-- [ ] Inviting an already-connected contact → existing contact row updated (no duplicate), label refreshed
-- [ ] Pending invitations section visible on Contacts page with correct expiry countdown
-- [ ] Copy-link button copies invitation URL to clipboard
-
-### Automated Tests
-
-- [ ] Deno unit: `send-contact-invitation` — self-invite, spam guard, idempotent re-invite
-- [ ] Deno unit: `accept-contact-invitation` — expired, decline, accept (both rows), already-connected upsert
-- [ ] Vitest unit: `InviteAcceptPage` state machine — loading, invalid, expired, unauthenticated, authenticated
-- [ ] Vitest unit: pending invitations list renders correctly, revoke mutation fires correct RPC
+- [x] Invitation email arrives from `shopcookhost@gmail.com` within ~30 seconds of clicking Invite
+- [x] Invitation link opens the branded landing page with inviter's name and label
+- [x] Unauthenticated invitee → Sign up / Log in → lands back on acceptance page with token preserved
+- [x] Google OAuth redirect also preserves the token through the OAuth callback
+- [x] Already-authenticated invitee lands directly on Accept / Decline screen
+- [x] Accept → both users appear in each other's Contacts with the correct label
+- [x] Inviter receives a realtime `contact_added` notification; clicking it navigates to `/contacts`
+- [x] Decline → invitation marked declined; neither contact row created
+- [x] Revoke → pending invite disappears from Contacts page
+- [x] Inviting yourself → "You can't invite yourself" error toast
+- [x] Spam limit (>5 pending) → "Too many pending invitations" error toast
+- [x] Idempotent re-invite → same token returned, copy-link button shows correct URL
+- [x] Pending invitations section visible on Contacts page with correct expiry countdown
+- [x] Copy-link button copies `/invite/accept?token=...` to clipboard
 
 ---
 

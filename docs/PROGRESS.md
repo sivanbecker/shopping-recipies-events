@@ -11,25 +11,32 @@
 
 ---
 
-## Stage 11.9 — Contact Invitations — PLANNED
+## Stage 11.9 — Contact Invitations — COMPLETE (PR #106, merged to `main`)
 
-> Full plan in `docs/PROJECT_PLAN.md` § Stage 11.9. Not yet started.
+### DB migrations
+- **036** — `contact_invitations` table (token, inviter_id, invitee_email, label, status, expires_at, accepted_at, invitee_id) + RLS + indexes
+- **037** — `accept_invitation` SECURITY DEFINER RPC (upserts mutual contact rows, enforces email match, handles accept/decline); unique constraint `contacts(owner_id, linked_user_id)`; `peek_invitation` RPC (no auth, safe public data only); `revoke_invitation` RPC
+- **038** — Extended `peek_invitation` to return `invitee_email` for email-mismatch validation
+- **039** — Extended `notification_entity_type` enum + `notification_type` enum with contact values; `notify_contact_added` trigger fires `AFTER INSERT ON contacts` (when `linked_user_id IS NOT NULL`) to notify the inviter; `NotificationsPanel` navigates to `/contacts` on click
 
-**Key design decisions recorded (2026-04-23):**
-- Invite button on Contacts page → email field + label picker (Family/Friend/None) → email sent via Gmail SMTP (`shop-cook-host@gmail.com`, configured as Supabase Custom SMTP)
-- Invitee gets a branded email with a 24-hour magic link → `/invite/accept?token=…` landing page
-- Landing page shows inviter name + label, Sign up / Log in if unauthenticated, Accept / Decline if authenticated
-- On accept: mutual contact rows created on both sides with the same label; upserts if either already had the other as a contact
-- Invitations expire after 24 hours; invitee can decline; inviter can revoke pending invites from Contacts page
-- QR codes deferred
+### Edge functions
+- **`send-contact-invitation`** — validates JWT; self-invite guard, spam-limit guard (max 5 pending), idempotent re-invite (returns existing token); inserts invitation row; sends HTML email via nodemailer (Gmail SMTP `shopcookhost@gmail.com`). Fresh invites return `{ ok: true }`, re-invites return `{ ok: true, token }`.
+- **`accept-contact-invitation`** — thin pass-through to `accept_invitation` RPC via PostgREST (kept for future use; UI now calls the RPC directly for lower latency)
 
-**New artifacts to build:**
-- DB migration 036: `contact_invitations` table + `peek_invitation` RPC + `revoke_invitation` RPC
-- Edge function `send-contact-invitation` (nodemailer via Gmail SMTP)
-- Edge function `accept-contact-invitation` (creates mutual contact rows)
-- New public route `/invite/accept` → `InviteAcceptPage.tsx`
-- `InviteContactDialog` on ContactsPage + pending invitations section
-- i18n keys, `database.ts` types
+### Frontend
+- **`InviteAcceptPage.tsx`** — public route `/invite/accept`; state machine: loading → invalid | expired | already_responded | email_mismatch | unauthenticated | pending | success | declined; calls `accept_invitation` RPC directly (not edge function) for faster response
+- **`AuthPage.tsx`** — reads `inviteToken` from `location.state` (email/password) or `?invite_token=` query param (Google OAuth `redirectTo`); redirects to `/invite/accept?token=...` after successful sign-in/register
+- **`ContactsPage.tsx`** — "Invite" button in header opens `InviteContactDialog` (email + label pill toggle; success state with copy-link button; `self_invite` / `spam_limit` error toasts); `PendingInvitationsCard` collapsible amber card with per-row expiry countdown and Revoke button
+
+### i18n
+- 13 keys under `contacts.invite` in both `en` and `he`: `invite`, `inviteTitle`, `inviteEmail`, `inviteSend`, `inviteSent`, `inviteCopyLink`, `inviteSelfError`, `inviteSpamError`, `pendingInvites`, `pendingExpiresIn`, `pendingRevoke`, `pendingRevokeSuccess`
+- `contact_added` notification string in `en/common.json` and `he/common.json`
+
+### Type system (`database.ts`)
+- `contact_invitations` Row / Insert / Update; `peek_invitation`, `revoke_invitation`, `accept_invitation` in Functions block; `notification_entity_type` and `notification_type` extended with contact values
+
+### ⚠️ Required before testing
+Run `supabase db push` to apply migrations 036–039. Set `GMAIL_SMTP_PASSWORD` secret to the App Password for `shopcookhost@gmail.com`.
 
 ---
 
