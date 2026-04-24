@@ -597,7 +597,7 @@ export type Database = {
           recipient_user_id: string
           actor_user_id: string | null
           list_id: string | null
-          entity_type: 'shopping_item' | 'shopping_list' | 'list_member'
+          entity_type: 'shopping_item' | 'shopping_list' | 'list_member' | 'contact'
           entity_id: string | null
           notification_type:
             | 'item_added'
@@ -611,6 +611,7 @@ export type Database = {
             | 'member_removed'
             | 'member_left'
             | 'role_changed'
+            | 'contact_added'
           payload: Record<string, unknown>
           created_at: string
           read_at: string | null
@@ -730,6 +731,10 @@ export type Database = {
       revoke_invitation: {
         Args: { p_token: string }
         Returns: void
+      }
+      accept_invitation: {
+        Args: { p_token: string; p_action: string }
+        Returns: Record<string, unknown>
       }
     }
     Enums: Record<string, never>

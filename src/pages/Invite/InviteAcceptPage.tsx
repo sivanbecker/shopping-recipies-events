@@ -80,15 +80,22 @@ export default function InviteAcceptPage() {
 
   async function handleAction(action: 'accept' | 'decline') {
     setActing(true)
-    const { data, error } = await supabase.functions.invoke('accept-contact-invitation', {
-      body: { token, action },
+    const { data, error } = await supabase.rpc('accept_invitation', {
+      p_token: token,
+      p_action: action,
     })
     setActing(false)
 
-    // Edge function always returns 200; business errors come back in data.error
-    if (error || data?.error) {
-      console.error('accept/decline error:', data?.error ?? error)
-      if (data?.error === 'email_mismatch') {
+    if (error) {
+      console.error('accept/decline error:', error)
+      setState({ kind: 'loading' })
+      return
+    }
+
+    const result = data as unknown as { ok?: boolean; error?: string; inviter_name?: string } | null
+    if (result?.error) {
+      console.error('accept/decline business error:', result.error)
+      if (result.error === 'email_mismatch') {
         setState({ kind: 'email_mismatch', inviteeEmail: '' })
         return
       }
@@ -97,7 +104,7 @@ export default function InviteAcceptPage() {
     }
 
     if (action === 'accept') {
-      setState({ kind: 'success', inviterName: data?.inviter_name ?? '' })
+      setState({ kind: 'success', inviterName: result?.inviter_name ?? '' })
     } else {
       setState({ kind: 'declined' })
     }
