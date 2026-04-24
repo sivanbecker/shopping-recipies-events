@@ -75,14 +75,14 @@ export default function InviteAcceptPage() {
     })
     setActing(false)
 
-    // error is a network/HTTP error; data.error is a business logic error from the RPC
+    // Edge function always returns 200; business errors come back in data.error
     if (error || data?.error) {
-      console.error('accept/decline error:', error ?? data?.error)
+      console.error('accept/decline error:', data?.error ?? error)
       if (data?.error === 'email_mismatch') {
-        setState({ kind: 'email_mismatch', inviteeEmail: state.kind === 'pending' ? '' : '' })
+        setState({ kind: 'email_mismatch', inviteeEmail: '' })
         return
       }
-      setState({ kind: 'loading' }) // re-peek to show updated status
+      setState({ kind: 'loading' })
       return
     }
 

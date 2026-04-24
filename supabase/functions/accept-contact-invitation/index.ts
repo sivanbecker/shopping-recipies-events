@@ -49,16 +49,17 @@ Deno.serve(async (req) => {
     // PostgREST returns the jsonb value directly — normalize to object
     const body = typeof result === 'object' && result !== null ? result : { ok: result }
 
-    if (!rpcRes.ok || body.error) {
-      console.error('RPC error:', body)
-      return new Response(JSON.stringify(body), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: rpcRes.ok ? 400 : rpcRes.status,
-      })
+    if (!rpcRes.ok) {
+      console.error('RPC HTTP error:', rpcRes.status, body)
+    }
+    if (body.error) {
+      console.error('RPC business error:', body.error)
     }
 
+    // Always return 200 with the body so supabase.functions.invoke puts it in data (not error)
     return new Response(JSON.stringify(body), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200,
     })
   } catch (err) {
     console.error('Caught error:', (err as Error).message)
