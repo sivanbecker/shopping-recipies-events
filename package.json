@@ -1,7 +1,7 @@
 {
   "name": "shopping-recipes-events",
   "private": true,
-  "version": "0.9.2",
+  "version": "0.9.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
