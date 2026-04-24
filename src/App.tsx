@@ -23,6 +23,7 @@ const EventsPage = lazy(() => import('./pages/Events/EventsPage'))
 const EventDetailPage = lazy(() => import('./pages/Events/EventDetailPage'))
 const ContactsPage = lazy(() => import('./pages/Events/ContactsPage'))
 const ProfilePage = lazy(() => import('./pages/Profile/ProfilePage'))
+const InviteAcceptPage = lazy(() => import('./pages/Invite/InviteAcceptPage'))
 
 export default function App() {
   const { i18n } = useTranslation()
@@ -60,6 +61,7 @@ export default function App() {
       <Routes>
         {/* Public */}
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/invite/accept" element={<InviteAcceptPage />} />
 
         {/* Protected — wrapped in shared layout */}
         <Route
