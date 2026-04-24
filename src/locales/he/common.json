@@ -63,6 +63,11 @@
   "profile": {
     "language": "שפה",
     "editName": "עריכת שם",
+    "tabs": {
+      "appearance": "מראה",
+      "contacts": "אנשי קשר",
+      "home": "הגדרות בית"
+    },
     "namePlaceholder": "השם שלך",
     "nameSaved": "השם נשמר בהצלחה",
     "darkMode": "מצב כהה",
