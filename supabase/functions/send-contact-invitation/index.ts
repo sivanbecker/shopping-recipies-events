@@ -125,35 +125,40 @@ Deno.serve(async (req) => {
     const acceptUrl = `${appUrl}/invite/accept?token=${invitation.token}`
 
     if (smtpPassword) {
-      const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        secure: false,
-        auth: {
-          user: 'shop-cook-host@gmail.com',
-          pass: smtpPassword,
-        },
-      })
+      try {
+        const transporter = nodemailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: 587,
+          secure: false,
+          auth: {
+            user: 'shop-cook-host@gmail.com',
+            pass: smtpPassword,
+          },
+        })
 
-      await transporter.sendMail({
-        from: '"Shop Cook Host" <shop-cook-host@gmail.com>',
-        to: normalizedEmail,
-        subject: `${inviterName} invited you to connect on Shop Cook Host`,
-        html: `
-          <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
-            <h2 style="color: #6366f1;">Shop Cook Host</h2>
-            <p>${inviterName} wants to add you as a <strong>${labelText}</strong> on Shop Cook Host.</p>
-            <p style="margin: 32px 0;">
-              <a href="${acceptUrl}"
-                 style="background:#6366f1;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">
-                Accept Invitation
-              </a>
-            </p>
-            <p style="color:#6b7280;font-size:14px;">This invitation expires in 24 hours.</p>
-            <p style="color:#6b7280;font-size:14px;">If you didn't expect this, you can safely ignore it.</p>
-          </div>
-        `,
-      })
+        await transporter.sendMail({
+          from: '"Shop Cook Host" <shop-cook-host@gmail.com>',
+          to: normalizedEmail,
+          subject: `${inviterName} invited you to connect on Shop Cook Host`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+              <h2 style="color: #6366f1;">Shop Cook Host</h2>
+              <p>${inviterName} wants to add you as a <strong>${labelText}</strong> on Shop Cook Host.</p>
+              <p style="margin: 32px 0;">
+                <a href="${acceptUrl}"
+                   style="background:#6366f1;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;">
+                  Accept Invitation
+                </a>
+              </p>
+              <p style="color:#6b7280;font-size:14px;">This invitation expires in 24 hours.</p>
+              <p style="color:#6b7280;font-size:14px;">If you didn't expect this, you can safely ignore it.</p>
+            </div>
+          `,
+        })
+      } catch (emailErr) {
+        // Log but don't fail — the invitation row exists and the link is still valid
+        console.error('Email send failed:', (emailErr as Error).message)
+      }
     } else {
       console.warn('GMAIL_SMTP_PASSWORD not set — skipping email send')
     }
