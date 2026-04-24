@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -22,15 +22,32 @@ export default function AuthPage() {
   const [loading, setLoading] = useState(false)
   const [forgotEmail, setForgotEmail] = useState('')
   const navigate = useNavigate()
+  const location = useLocation()
   const { t } = useTranslation()
   const { user } = useAuth()
+
+  const inviteToken =
+    (location.state as { inviteToken?: string } | null)?.inviteToken ??
+    new URLSearchParams(location.search).get('invite_token')
+
+  function postAuthRedirect() {
+    if (inviteToken) {
+      navigate(`/invite/accept?token=${inviteToken}`, { replace: true })
+    } else {
+      navigate('/lists', { replace: true })
+    }
+  }
 
   // Redirect to app once session is established (handles OAuth callback)
   useEffect(() => {
     if (user) {
-      navigate('/lists', { replace: true })
+      if (inviteToken) {
+        navigate(`/invite/accept?token=${inviteToken}`, { replace: true })
+      } else {
+        navigate('/lists', { replace: true })
+      }
     }
-  }, [user, navigate])
+  }, [user, inviteToken, navigate])
 
   const loginForm = useForm<LoginData>({ resolver: zodResolver(loginSchema) })
   const registerForm = useForm<RegisterData>({ resolver: zodResolver(registerSchema) })
@@ -45,7 +62,7 @@ export default function AuthPage() {
     if (error) {
       toast.error(t('auth.loginError'))
     } else {
-      navigate('/lists', { replace: true })
+      postAuthRedirect()
     }
   }
 
@@ -61,15 +78,18 @@ export default function AuthPage() {
       toast.error(t('auth.registerError'))
     } else {
       toast.success(t('auth.registerSuccess'))
-      navigate('/lists', { replace: true })
+      postAuthRedirect()
     }
   }
 
   async function handleGoogleLogin() {
     setLoading(true)
+    const redirectTo = inviteToken
+      ? `${window.location.origin}/auth?invite_token=${inviteToken}`
+      : `${window.location.origin}/auth`
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/auth' },
+      options: { redirectTo },
     })
     if (error) {
       toast.error(error.message)
