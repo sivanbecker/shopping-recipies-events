@@ -1360,6 +1360,23 @@ Add `body::before` rules for each new background value:
 
 ---
 
+## STAGE 11.10 — Profile Page Tab Redesign — COMPLETE (branch `feat/profile-tabs`)
+> **Goal:** Reorganize the flat profile page into a tabbed layout for better navigation, and surface the sign-out action in the top card for instant access.
+> **Estimated time:** 0.5 days
+
+### Changes
+
+- **Removed** the Language toggle card (language is set per-device, not surfaced in profile).
+- **Sign-out button** moved into the top profile card, as a compact icon button next to the avatar/email block — always visible without scrolling.
+- **Tab bar** added below the profile card with 3 tabs:
+  - **Appearance** — the existing `AppearancePanel` (theme presets, color mode, background, text scale, basic/advanced).
+  - **Contacts** — navigates to `/contacts` for managing friends/family contacts.
+  - **Home Settings** — the host equipment inventory (chairs, tables, plates, bowls, glasses, cups).
+- Tab bar follows the same pill-style pattern used in `EventDetailPage`.
+- i18n keys added: `profile.tabs.appearance`, `profile.tabs.contacts`, `profile.tabs.home` (English + Hebrew).
+
+---
+
 ## STAGE 12 — Android App & "Quick Add Missing Item" Widget
 > **Goal:** Ship a debug-installable Android APK containing the existing web app running in a native WebView shell, plus a first home-screen widget that launches a minimal quick-add screen and writes into the user's Missing Items list.
 > **Estimated time:** 4–6 days

@@ -63,6 +63,11 @@
   "profile": {
     "language": "Language",
     "editName": "Edit name",
+    "tabs": {
+      "appearance": "Appearance",
+      "contacts": "Contacts",
+      "home": "Home Settings"
+    },
     "namePlaceholder": "Your name",
     "nameSaved": "Name saved",
     "darkMode": "Dark mode",

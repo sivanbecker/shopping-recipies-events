@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate } from 'react-router-dom'
-import { LogOut, Pencil, Check, X, Loader2, Users, ChevronRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { LogOut, Pencil, Check, X, Loader2, Users, Palette, Home } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { UserAvatar } from '@/components/UserAvatar'
 import { AppearancePanel } from '@/components/Appearance/AppearancePanel'
+import { ContactsContent } from '@/pages/Events/ContactsPage'
 import { supabase } from '@/lib/supabase'
 import { useAppStore } from '@/store/useAppStore'
 import { applyTheme } from '@/lib/theme'
@@ -22,8 +23,17 @@ const HOST_ITEMS = [
   { type: 'hot_cup', labelKey: 'profile.hostInventory.hotCup' },
 ] as const
 
+const TABS = ['appearance', 'contacts', 'home'] as const
+type TabId = (typeof TABS)[number]
+
+const TAB_ICONS: Record<TabId, React.ReactNode> = {
+  appearance: <Palette className="h-5 w-5" />,
+  contacts: <Users className="h-5 w-5" />,
+  home: <Home className="h-5 w-5" />,
+}
+
 export default function ProfilePage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { user, profile, signOut, updateProfile } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -35,6 +45,7 @@ export default function ProfilePage() {
     setAppBackground: s.setAppBackground,
   }))
 
+  const [activeTab, setActiveTab] = useState<TabId>('appearance')
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState('')
   const [saving, setSaving] = useState(false)
@@ -146,14 +157,9 @@ export default function ProfilePage() {
     }
   }
 
-  async function changeLanguage(lang: 'he' | 'en') {
-    i18n.changeLanguage(lang)
-    await updateProfile({ preferred_language: lang })
-  }
-
   return (
     <div className="space-y-4">
-      {/* Profile card */}
+      {/* Profile card — avatar, name/email, sign-out */}
       <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
         <div className="flex items-center gap-4">
           <UserAvatar
@@ -214,159 +220,147 @@ export default function ProfilePage() {
               {user?.email}
             </p>
           </div>
+
+          {/* Sign out */}
+          <button
+            onClick={handleSignOut}
+            className="shrink-0 flex items-center justify-center rounded-xl p-2 text-red-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/40"
+            aria-label={t('auth.logout')}
+          >
+            <LogOut className="h-5 w-5" />
+          </button>
         </div>
       </div>
 
-      {/* Language toggle */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
-        <p className="mb-3 text-sm font-medium text-gray-700 dark:text-gray-300">
-          {t('profile.language')}
-        </p>
-        <div className="flex gap-2">
-          {(['he', 'en'] as const).map(lang => (
-            <button
-              key={lang}
-              onClick={() => changeLanguage(lang)}
-              className={`flex-1 rounded-xl py-2 text-sm font-medium transition ${
-                i18n.language === lang
-                  ? 'bg-brand-500 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-              }`}
-            >
-              {lang === 'he' ? 'עברית' : 'English'}
-            </button>
-          ))}
-        </div>
+      {/* Tab bar */}
+      <div className="flex gap-1 overflow-x-auto rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
+        {TABS.map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`flex flex-1 items-center justify-center rounded-lg px-3 py-2.5 transition ${
+              activeTab === tab
+                ? 'bg-white text-brand-600 shadow-sm dark:bg-gray-700 dark:text-brand-400'
+                : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+            aria-label={t(`profile.tabs.${tab}`)}
+          >
+            {TAB_ICONS[tab]}
+          </button>
+        ))}
       </div>
 
-      {/* Appearance */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
-        <p className="mb-4 text-sm font-medium text-gray-700 dark:text-gray-300">
-          {t('appearance.title')}
-        </p>
-        <AppearancePanel />
-      </div>
-
-      {/* Host Equipment */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {t('profile.hostInventory.title')}
-          </p>
-          {!editingHost && (
-            <button
-              onClick={() => setEditingHost(true)}
-              className="text-xs font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400"
-            >
-              {t('actions.edit')}
-            </button>
-          )}
+      {/* Tab content */}
+      {activeTab === 'appearance' && (
+        <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
+          <AppearancePanel />
         </div>
+      )}
 
-        {editingHost ? (
-          <>
-            <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
-              {t('profile.hostInventory.description')}
+      {activeTab === 'contacts' && (
+        <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
+          <ContactsContent />
+        </div>
+      )}
+
+      {activeTab === 'home' && (
+        <div className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-900">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('profile.hostInventory.title')}
             </p>
+            {!editingHost && (
+              <button
+                onClick={() => setEditingHost(true)}
+                className="text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
+              >
+                {t('actions.edit')}
+              </button>
+            )}
+          </div>
 
-            <div className="mb-4 grid grid-cols-2 gap-4">
-              {HOST_ITEMS.map(item => (
-                <div key={item.type} className="flex flex-col gap-2">
-                  <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                    {t(item.labelKey)}
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        setHostFormState(s => ({
-                          ...s,
-                          [item.type]: Math.max(0, (s[item.type] ?? 0) - 1),
-                        }))
-                      }
-                      disabled={saveMutation.isPending}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-                    >
-                      −
-                    </button>
-                    <span className="w-6 text-center text-sm font-semibold text-gray-800 dark:text-gray-100">
-                      {hostFormState[item.type] ?? 0}
-                    </span>
-                    <button
-                      onClick={() =>
-                        setHostFormState(s => ({
-                          ...s,
-                          [item.type]: (s[item.type] ?? 0) + 1,
-                        }))
-                      }
-                      disabled={saveMutation.isPending}
-                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-                    >
-                      +
-                    </button>
+          {editingHost ? (
+            <>
+              <p className="mb-4 text-xs text-gray-500 dark:text-gray-400">
+                {t('profile.hostInventory.description')}
+              </p>
+
+              <div className="mb-4 grid grid-cols-2 gap-4">
+                {HOST_ITEMS.map(item => (
+                  <div key={item.type} className="flex flex-col gap-2">
+                    <label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                      {t(item.labelKey)}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() =>
+                          setHostFormState(s => ({
+                            ...s,
+                            [item.type]: Math.max(0, (s[item.type] ?? 0) - 1),
+                          }))
+                        }
+                        disabled={saveMutation.isPending}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                      >
+                        −
+                      </button>
+                      <span className="w-6 text-center text-sm font-semibold text-gray-800 dark:text-gray-100">
+                        {hostFormState[item.type] ?? 0}
+                      </span>
+                      <button
+                        onClick={() =>
+                          setHostFormState(s => ({
+                            ...s,
+                            [item.type]: (s[item.type] ?? 0) + 1,
+                          }))
+                        }
+                        disabled={saveMutation.isPending}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
+                ))}
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => saveMutation.mutate()}
+                  disabled={saveMutation.isPending}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-600 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+                >
+                  {saveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {t('actions.save')}
+                </button>
+                <button
+                  onClick={() => setEditingHost(false)}
+                  disabled={saveMutation.isPending}
+                  className="flex-1 rounded-xl border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                >
+                  {t('actions.cancel')}
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {HOST_ITEMS.map(item => (
+                <div
+                  key={item.type}
+                  className="flex flex-col gap-1 rounded-lg bg-gray-50 p-3 dark:bg-gray-800"
+                >
+                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                    {t(item.labelKey)}
+                  </p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {hostInventory.find(h => h.item_type === item.type)?.quantity_owned ?? 0}
+                  </p>
                 </div>
               ))}
             </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => saveMutation.mutate()}
-                disabled={saveMutation.isPending}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-purple-600 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50"
-              >
-                {saveMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                {t('actions.save')}
-              </button>
-              <button
-                onClick={() => setEditingHost(false)}
-                disabled={saveMutation.isPending}
-                className="flex-1 rounded-xl border border-gray-200 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
-              >
-                {t('actions.cancel')}
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {HOST_ITEMS.map(item => (
-              <div
-                key={item.type}
-                className="flex flex-col gap-1 rounded-lg bg-gray-50 p-3 dark:bg-gray-800"
-              >
-                <p className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                  {t(item.labelKey)}
-                </p>
-                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  {hostInventory.find(h => h.item_type === item.type)?.quantity_owned ?? 0}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Manage Contacts */}
-      <Link
-        to="/contacts"
-        className="flex items-center justify-between rounded-2xl bg-white p-5 shadow-sm transition hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800"
-      >
-        <div className="flex items-center gap-3">
-          <Users className="h-5 w-5 text-purple-500" />
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            {t('events:contacts.manage')}
-          </span>
+          )}
         </div>
-        <ChevronRight className="h-4 w-4 text-gray-400" />
-      </Link>
-
-      {/* Sign out */}
-      <button
-        onClick={handleSignOut}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-white p-4 text-sm font-medium text-red-500 shadow-sm transition hover:bg-red-50 dark:bg-gray-900 dark:hover:bg-red-950"
-      >
-        <LogOut className="h-4 w-4" />
-        {t('auth.logout')}
-      </button>
+      )}
     </div>
   )
 }
