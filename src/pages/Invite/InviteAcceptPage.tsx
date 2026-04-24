@@ -11,8 +11,8 @@ type PageState =
   | { kind: 'expired'; inviterName: string }
   | { kind: 'already_responded'; status: string }
   | { kind: 'email_mismatch'; inviteeEmail: string }
-  | { kind: 'unauthenticated'; inviterName: string; label: string | null }
-  | { kind: 'pending'; inviterName: string; label: string | null }
+  | { kind: 'unauthenticated'; inviterName: string; label: string | null; inviteeEmail: string }
+  | { kind: 'pending'; inviterName: string; label: string | null; inviteeEmail: string }
   | { kind: 'success'; inviterName: string }
   | { kind: 'declined' }
 
@@ -61,9 +61,19 @@ export default function InviteAcceptPage() {
 
       // status is 'pending' and not expired
       if (!user) {
-        setState({ kind: 'unauthenticated', inviterName: inv.inviter_name, label: inv.label })
+        setState({
+          kind: 'unauthenticated',
+          inviterName: inv.inviter_name,
+          label: inv.label,
+          inviteeEmail: inv.invitee_email,
+        })
       } else {
-        setState({ kind: 'pending', inviterName: inv.inviter_name, label: inv.label })
+        setState({
+          kind: 'pending',
+          inviterName: inv.inviter_name,
+          label: inv.label,
+          inviteeEmail: inv.invitee_email,
+        })
       }
     })
   }, [token, user])
