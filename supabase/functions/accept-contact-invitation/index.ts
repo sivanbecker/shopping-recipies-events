@@ -44,16 +44,20 @@ Deno.serve(async (req) => {
     })
 
     const result = await rpcRes.json()
+    console.log('RPC result:', JSON.stringify(result), 'status:', rpcRes.status)
 
-    if (!rpcRes.ok || result.error) {
-      console.error('RPC error:', result)
-      return new Response(JSON.stringify(result), {
+    // PostgREST returns the jsonb value directly — normalize to object
+    const body = typeof result === 'object' && result !== null ? result : { ok: result }
+
+    if (!rpcRes.ok || body.error) {
+      console.error('RPC error:', body)
+      return new Response(JSON.stringify(body), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: rpcRes.ok ? 400 : rpcRes.status,
       })
     }
 
-    return new Response(JSON.stringify(result), {
+    return new Response(JSON.stringify(body), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err) {

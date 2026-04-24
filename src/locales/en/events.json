@@ -85,7 +85,9 @@
       "declineButton": "Decline",
       "acceptSuccess": "You're now connected with {{name}}!",
       "declineSuccess": "Invitation declined.",
-      "viewContacts": "View your contacts"
+      "viewContacts": "View your contacts",
+      "emailMismatchTitle": "Wrong account",
+      "emailMismatchBody": "This invitation was sent to a different email address. Please sign in with the account that received the invitation."
     }
   },
   "invitees": {

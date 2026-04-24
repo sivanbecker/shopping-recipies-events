@@ -10,6 +10,7 @@ type PageState =
   | { kind: 'invalid' }
   | { kind: 'expired'; inviterName: string }
   | { kind: 'already_responded'; status: string }
+  | { kind: 'email_mismatch'; inviteeEmail: string }
   | { kind: 'unauthenticated'; inviterName: string; label: string | null }
   | { kind: 'pending'; inviterName: string; label: string | null }
   | { kind: 'success'; inviterName: string }
@@ -74,14 +75,19 @@ export default function InviteAcceptPage() {
     })
     setActing(false)
 
-    if (error || !data?.ok) {
-      // Re-peek to show updated status
-      setState({ kind: 'loading' })
+    // error is a network/HTTP error; data.error is a business logic error from the RPC
+    if (error || data?.error) {
+      console.error('accept/decline error:', error ?? data?.error)
+      if (data?.error === 'email_mismatch') {
+        setState({ kind: 'email_mismatch', inviteeEmail: state.kind === 'pending' ? '' : '' })
+        return
+      }
+      setState({ kind: 'loading' }) // re-peek to show updated status
       return
     }
 
     if (action === 'accept') {
-      setState({ kind: 'success', inviterName: data.inviter_name })
+      setState({ kind: 'success', inviterName: data?.inviter_name ?? '' })
     } else {
       setState({ kind: 'declined' })
     }
@@ -127,6 +133,16 @@ export default function InviteAcceptPage() {
             <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
               {t('events:contacts.invite.alreadyRespondedTitle')}
             </h2>
+          </div>
+        )}
+
+        {state.kind === 'email_mismatch' && (
+          <div className="flex flex-col items-center gap-3 text-center">
+            <XCircle className="h-12 w-12 text-red-400" />
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
+              {t('events:contacts.invite.emailMismatchTitle')}
+            </h2>
+            <p className="text-sm text-gray-500">{t('events:contacts.invite.emailMismatchBody')}</p>
           </div>
         )}
 

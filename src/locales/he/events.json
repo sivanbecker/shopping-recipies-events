@@ -85,7 +85,9 @@
       "declineButton": "דחה",
       "acceptSuccess": "אתם מחוברים עם {{name}}!",
       "declineSuccess": "ההזמנה נדחתה.",
-      "viewContacts": "צפה באנשי הקשר שלך"
+      "viewContacts": "צפה באנשי הקשר שלך",
+      "emailMismatchTitle": "חשבון שגוי",
+      "emailMismatchBody": "ההזמנה נשלחה לכתובת אימייל אחרת. התחבר/י עם החשבון שקיבל את ההזמנה."
     }
   },
   "invitees": {
