@@ -98,6 +98,20 @@ export function applyTheme(settings: Partial<ThemeSettings>): void {
   } else {
     clearCustomAccent()
   }
+  syncThemeColorMeta()
+}
+
+function syncThemeColorMeta(): void {
+  // Read the resolved brand-500 from the DOM so it reflects preset + custom accent
+  const color = getComputedStyle(document.documentElement).getPropertyValue('--brand-500').trim()
+  if (!color) return
+  let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+  if (!meta) {
+    meta = document.createElement('meta')
+    meta.name = 'theme-color'
+    document.head.appendChild(meta)
+  }
+  meta.content = color
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
