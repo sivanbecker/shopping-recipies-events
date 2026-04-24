@@ -67,7 +67,28 @@
     "emailPlaceholder": "email@example.com",
     "linked": "מחובר",
     "linkSuccess": "חשבון מקושר",
-    "linkNotFound": "אין חשבון עם האימייל הזה עדיין"
+    "linkNotFound": "אין חשבון עם האימייל הזה עדיין",
+    "invite": {
+      "labelContact": "איש קשר",
+      "loading": "טוען הזמנה…",
+      "invalidTitle": "הזמנה לא תקינה",
+      "invalidBody": "קישור ההזמנה אינו תקין או שכבר נוצל.",
+      "expiredTitle": "ההזמנה פגה",
+      "expiredBody": "הזמנה זו מ-{{name}} פגה. בקש/י ממנו/ה לשלוח חדשה.",
+      "alreadyRespondedTitle": "כבר הגבת להזמנה זו.",
+      "acceptTitle": "{{name}} הזמין/ה אותך להתחבר",
+      "acceptSubtitle": "{{name}} רוצה להוסיף אותך כ{{label}} ב-Shop Cook Host.",
+      "signInPrompt": "התחבר/י או צור/י חשבון כדי לאשר.",
+      "signUp": "הרשמה",
+      "logIn": "התחברות",
+      "acceptButton": "אשר",
+      "declineButton": "דחה",
+      "acceptSuccess": "אתם מחוברים עם {{name}}!",
+      "declineSuccess": "ההזמנה נדחתה.",
+      "viewContacts": "צפה באנשי הקשר שלך",
+      "emailMismatchTitle": "חשבון שגוי",
+      "emailMismatchBody": "ההזמנה נשלחה לכתובת אימייל אחרת. התחבר/י עם החשבון שקיבל את ההזמנה."
+    }
   },
   "invitees": {
     "add": "הוסף אורח",

@@ -67,7 +67,28 @@
     "emailPlaceholder": "email@example.com",
     "linked": "Linked",
     "linkSuccess": "Account linked",
-    "linkNotFound": "No account with this email yet"
+    "linkNotFound": "No account with this email yet",
+    "invite": {
+      "labelContact": "Contact",
+      "loading": "Loading invitation…",
+      "invalidTitle": "Invalid invitation",
+      "invalidBody": "This invitation link is not valid or has already been used.",
+      "expiredTitle": "Invitation expired",
+      "expiredBody": "This invitation from {{name}} has expired. Ask them to send a new one.",
+      "alreadyRespondedTitle": "This invitation has already been responded to.",
+      "acceptTitle": "{{name}} invited you to connect",
+      "acceptSubtitle": "{{name}} wants to add you as a {{label}} on Shop Cook Host.",
+      "signInPrompt": "Sign in or create an account to accept.",
+      "signUp": "Sign up",
+      "logIn": "Log in",
+      "acceptButton": "Accept",
+      "declineButton": "Decline",
+      "acceptSuccess": "You're now connected with {{name}}!",
+      "declineSuccess": "Invitation declined.",
+      "viewContacts": "View your contacts",
+      "emailMismatchTitle": "Wrong account",
+      "emailMismatchBody": "This invitation was sent to a different email address. Please sign in with the account that received the invitation."
+    }
   },
   "invitees": {
     "add": "Add Guest",

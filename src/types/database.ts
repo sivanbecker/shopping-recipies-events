@@ -724,6 +724,7 @@ export type Database = {
           label: string | null
           status: string
           expires_at: string
+          invitee_email: string
         }[]
       }
       revoke_invitation: {
