@@ -131,13 +131,13 @@ Deno.serve(async (req) => {
           port: 587,
           secure: false,
           auth: {
-            user: 'shop-cook-host@gmail.com',
+            user: 'shopcookhost@gmail.com',
             pass: smtpPassword,
           },
         })
 
         await transporter.sendMail({
-          from: '"Shop Cook Host" <shop-cook-host@gmail.com>',
+          from: '"Shop Cook Host" <shopcookhost@gmail.com>',
           to: normalizedEmail,
           subject: `${inviterName} invited you to connect on Shop Cook Host`,
           html: `

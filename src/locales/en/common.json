@@ -102,7 +102,8 @@
       "member_added": "{{actor}} added you to a list",
       "member_removed": "{{actor}} removed you from a list",
       "role_changed": "{{actor}} changed your role",
-      "member_left": "{{actor}} left the list"
+      "member_left": "{{actor}} left the list",
+      "contact_added": "{{actor}} accepted your invitation and is now in your contacts"
     }
   },
   "validation": {

@@ -102,7 +102,8 @@
       "member_added": "{{actor}} הוסיף אותך לרשימה",
       "member_removed": "{{actor}} הסיר אותך מרשימה",
       "role_changed": "{{actor}} שינה את ההרשאות שלך",
-      "member_left": "{{actor}} עזב את הרשימה"
+      "member_left": "{{actor}} עזב את הרשימה",
+      "contact_added": "{{actor}} קיבל/ה את ההזמנה ונוסף/ה לאנשי הקשר שלך"
     }
   },
   "validation": {

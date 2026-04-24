@@ -28,6 +28,11 @@ export function NotificationsPanel({
 
   function handleClick(n: Notification) {
     if (!n.read_at) markRead(n.id)
+    if (n.notification_type === 'contact_added') {
+      navigate('/contacts')
+      onClose()
+      return
+    }
     const listId = n.list_id ?? null
     if (listId) {
       navigate(`/lists/${listId}`)
