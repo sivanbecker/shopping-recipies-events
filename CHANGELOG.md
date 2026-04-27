@@ -7,6 +7,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Releases from v0.10.0 onward are generated automatically by [release-please](https://github.com/googleapis/release-please) from Conventional Commit messages.
 
+## [0.9.3](https://github.com/sivanbecker/shopping-recipies-events/compare/shopping-recipes-events-v0.9.2...shopping-recipes-events-v0.9.3) (2026-04-27)
+
+
+### Features
+
+* **contacts:** add invite button, InviteContactDialog, and pending invitations UI ([a41980b](https://github.com/sivanbecker/shopping-recipies-events/commit/a41980bb02b7ea39581a6036af8d403184815b78))
+* **contacts:** Contacts page UI — invite dialog + pending invitations ([f8d89a6](https://github.com/sivanbecker/shopping-recipies-events/commit/f8d89a67d01e2af0c977d914738716a5fc5615b5))
+* **contacts:** direct RPC for accept + contact_added notification ([3b812ea](https://github.com/sivanbecker/shopping-recipies-events/commit/3b812eafdf0445f5d2359644ac9d957e17e323d1))
+* extend peek_invitation with invitee_email for internal email_mismatch validation ([d6e133e](https://github.com/sivanbecker/shopping-recipies-events/commit/d6e133eb8142d3499c92809e6c2a603a34ee9ea2))
+* **profile:** redesign profile page with tabbed layout ([ba8306b](https://github.com/sivanbecker/shopping-recipies-events/commit/ba8306b9618bb073e1d84d9ab29245af7f700a71))
+* **profile:** render contacts inline in profile tab ([091091f](https://github.com/sivanbecker/shopping-recipies-events/commit/091091f1b3beba20c41b269712f1dfef4a22db06))
+* **profile:** tabbed profile page with sign-out in card ([bde314c](https://github.com/sivanbecker/shopping-recipies-events/commit/bde314cb66cceab9ee720bad3487364af00af92a))
+* **stage-11.9:** backend for contact invitations ([59cd64c](https://github.com/sivanbecker/shopping-recipies-events/commit/59cd64c172a71a1c3ebef51599d897d5b4b18bdb))
+* **stage-11.9:** backend for contact invitations ([88cbd51](https://github.com/sivanbecker/shopping-recipies-events/commit/88cbd511dd063c0173458c7dedf7f8bf83d38901))
+* **stage-11.9:** invite accept page ([93c9588](https://github.com/sivanbecker/shopping-recipies-events/commit/93c95882695fb7e3b7d58fd3f8b0487b0f135394))
+* **stage-11.9:** InviteAcceptPage + public route + i18n ([41739b5](https://github.com/sivanbecker/shopping-recipies-events/commit/41739b583435f02c779e853ed90656da2cd4cbda))
+* **theme:** Stage 11 backgrounds — avatar follows preset, i18n appearance keys ([25df777](https://github.com/sivanbecker/shopping-recipies-events/commit/25df777f28efaeed00eb40c0a689fb5857ecb7a8))
+* **theme:** Stage 11 backgrounds — avatar follows preset, i18n appearance keys ([#99](https://github.com/sivanbecker/shopping-recipies-events/issues/99)) ([f1a97e2](https://github.com/sivanbecker/shopping-recipies-events/commit/f1a97e2683e232f25d351a0a0eaf741c0c8b049d))
+* **theme:** Stage 11 foundation — DB migration, theme token system, Zustand store, FOUC prevention ([#97](https://github.com/sivanbecker/shopping-recipies-events/issues/97)) ([ff276ab](https://github.com/sivanbecker/shopping-recipies-events/commit/ff276ab34d08b019c495bd61e7829d92c32a5ec4))
+* **theme:** Stage 11 UI — Appearance section in ProfilePage ([660c1f8](https://github.com/sivanbecker/shopping-recipies-events/commit/660c1f8123bc355c7d0d7a4cc63f4d49088df041))
+* **theme:** Stage 11 UI — Appearance section in ProfilePage ([846f212](https://github.com/sivanbecker/shopping-recipies-events/commit/846f212dd9d5a204828cbbdb2ff80acda9735312))
+* **theme:** Stage 11.8 — Advanced Appearance Mode ([99cf172](https://github.com/sivanbecker/shopping-recipies-events/commit/99cf1726cbfc93c3fe16d782b2142161be3c6583))
+* **theme:** Stage 11.8 — Advanced Appearance Mode ([befaad3](https://github.com/sivanbecker/shopping-recipies-events/commit/befaad3bfcde673b2e9d9c523022482f670555be))
+* **theme:** Stage 11.8 — Advanced Appearance UI, backgrounds, i18n ([ab85bdb](https://github.com/sivanbecker/shopping-recipies-events/commit/ab85bdba3fc41ea2d056797dd83bb2f1e97f61d9))
+
+
+### Bug Fixes
+
+* **accept-invitation:** always return 200 from edge function so business errors land in data not error ([5a17c87](https://github.com/sivanbecker/shopping-recipies-events/commit/5a17c87a5dec8e718128cc86084b2786f57b1fcb))
+* **accept-invitation:** decline response handling + email mismatch UX ([0258698](https://github.com/sivanbecker/shopping-recipies-events/commit/025869843c8ee048e79d64ce7694861a65a43ad3))
+* **accept-invitation:** rewrite as SECURITY DEFINER RPC, no service role key needed ([ca47705](https://github.com/sivanbecker/shopping-recipies-events/commit/ca477050352af0c5101f1a2af57ec71444ad2803))
+* **appearance:** restore accent color and appearance mode on page load ([2c5e7c1](https://github.com/sivanbecker/shopping-recipies-events/commit/2c5e7c1475709796b101cc0b50a7b8955a22da40))
+* **appearance:** restore accent color and appearance mode on page load ([4bc5047](https://github.com/sivanbecker/shopping-recipies-events/commit/4bc5047ff490c7b54c9a2cce23959a82820c2877))
+* **auth:** redirect back to invite page after login/register ([bba4c1f](https://github.com/sivanbecker/shopping-recipies-events/commit/bba4c1fc1b27909cb22291e849aa1dd659446ec7))
+* **edge-functions:** support new Supabase publishable/secret key names alongside legacy ([f5d2c85](https://github.com/sivanbecker/shopping-recipies-events/commit/f5d2c85dd658536171e35d9755f330494c6174ca))
+* **edge-functions:** use APP_SERVICE_KEY / APP_PUBLISHABLE_KEY to avoid SUPABASE_ prefix restriction ([acf6062](https://github.com/sivanbecker/shopping-recipies-events/commit/acf6062b50d80f4525501e03b37d8603170e7221))
+* **email:** correct Gmail sender address to shopcookhost@gmail.com ([1de5f06](https://github.com/sivanbecker/shopping-recipies-events/commit/1de5f06cb2c172485e9ffe1cd73e7f3cdfbf9f84))
+* **migration-036:** use uuid_send instead of gen_random_bytes for token default ([7655a31](https://github.com/sivanbecker/shopping-recipies-events/commit/7655a314cc3cf8af25e2f74c06e3c11aa87b6c51))
+* **migration:** drop peek_invitation before recreating with extended return type ([ae985da](https://github.com/sivanbecker/shopping-recipies-events/commit/ae985da3a07b165d47e1d98dfdeb7570a42812fa))
+* **migration:** drop peek_invitation before recreating with extended return type ([cec9097](https://github.com/sivanbecker/shopping-recipies-events/commit/cec90972dce2cd29e1942fac99d0b871165d8fc5))
+* **migration:** fix 038 in-place with DROP before recreate; remove redundant 040 ([9578f79](https://github.com/sivanbecker/shopping-recipies-events/commit/9578f7964d69c356ddff337eba8d0387b8697c15))
+* **migration:** rewrite 039 to use CHECK constraints instead of ALTER TYPE ([046873a](https://github.com/sivanbecker/shopping-recipies-events/commit/046873a9469c38460b0eec54f78a3226c097ce54))
+* **send-invitation:** catch email errors so invitation row is still returned on SMTP failure ([acb918b](https://github.com/sivanbecker/shopping-recipies-events/commit/acb918b4abc9a305331ea88f171343348a24f95b))
+* **send-invitation:** remove service role dependency — caller JWT + RLS is sufficient ([ae52228](https://github.com/sivanbecker/shopping-recipies-events/commit/ae522282063b31fffa52ac3b619ecd3c3aff3d19))
+* sync mobile status bar color with active theme ([00a6ba6](https://github.com/sivanbecker/shopping-recipies-events/commit/00a6ba68f929c5319d7bbbebf1d5fdc232631eaf))
+* sync theme-color meta tag with active brand preset ([7f06757](https://github.com/sivanbecker/shopping-recipies-events/commit/7f06757ceb3f3a92222b8c6958815527cc408132))
+* **theme:** make aero/blobs backgrounds visible ([a661749](https://github.com/sivanbecker/shopping-recipies-events/commit/a661749b9cd4bec9613de536a26a269b41f0dadb))
+* **theme:** wire brand-* palette to CSS vars so preset changes propagate ([4a2c7ec](https://github.com/sivanbecker/shopping-recipies-events/commit/4a2c7ece6e0ba6888d4f5769ddac577fdc9c013b))
+* use --merge instead of --squash in release script ([75930fd](https://github.com/sivanbecker/shopping-recipies-events/commit/75930fd80560e34a22a0a2e20e1da1b5385b2fe0))
+* use --merge instead of --squash in release script ([bf2909e](https://github.com/sivanbecker/shopping-recipies-events/commit/bf2909e03d5f8455acc63ce1ac8840d42c635525))
+
+
+### Documentation
+
+* add stage 11.10 profile tab redesign to PROJECT_PLAN.md ([d49b3d3](https://github.com/sivanbecker/shopping-recipies-events/commit/d49b3d392ec46b48d3a694f53e07f6cddcd1efd1))
+* add Stage 11.8 — Advanced Appearance Mode to project plan ([8998913](https://github.com/sivanbecker/shopping-recipies-events/commit/89989136fdb21fb7e1ae3bae75500558e48f614d))
+* add Stage 11.9 Contact Invitations plan and update PROGRESS.md ([aa29b43](https://github.com/sivanbecker/shopping-recipies-events/commit/aa29b432dd80cb04e75a1bc8b4a45c6e982e4c78))
+* mark Stage 11.9 complete in PROJECT_PLAN and PROGRESS ([dd85d55](https://github.com/sivanbecker/shopping-recipies-events/commit/dd85d55ed325f999579acbffffff5e73049e0e63))
+* Stage 11.9 — Contact Invitations plan ([3ed2ec9](https://github.com/sivanbecker/shopping-recipies-events/commit/3ed2ec91069470c0d211fafd4ac37f32f55b813f))
+
 ## [0.9.2](https://github.com/sivanbecker/shopping-recipies-events/compare/shopping-recipes-events-v0.9.1...shopping-recipes-events-v0.9.2) (2026-04-23)
 
 
