@@ -21,3 +21,6 @@
 - fix: on mobile, list detail page has some overlapping elements.
 - check: can i backup supabase DB for local work ?
 - feat: add sorting option inside shopping list, such that i can sort by category.
+- feat: sort products in recipe
+- feat: better cooking UX, add start/end/pause cooking btn and move from step to step. enlarge each step on screen. count cooking time and
+- feat: currently each recipe had the num of portions. add the option to say i want double/tripple instead of incrementing/decreasing by 1 each time.
